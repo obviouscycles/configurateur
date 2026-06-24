@@ -1,3 +1,77 @@
+
+// ─── CHARGEMENT CONFIG DEPUIS URL (?config=OBV-...) ──────────────────────────
+async function loadConfigFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const configId = params.get('config');
+  if (!configId) return;
+
+  try {
+    const cfg = await getConfigFromSupabase(configId);
+    if (!cfg) { console.warn('Config introuvable:', configId); return; }
+
+    const json = cfg.config_json;
+    selModel = json.modele;
+    selOpts  = json.composants || {};
+    selSize  = json.dimensions || {};
+    window._activePreset = json.preset || null;
+    window._singleModel  = selModel;
+
+    // Afficher un bandeau discret
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:56px;left:0;right:0;background:#1a1500;border-bottom:1px solid #F5C400;padding:8px 16px;font-size:12px;color:#F5C400;z-index:500;text-align:center;';
+    banner.innerHTML = '📎 Configuration <strong>' + configId + '</strong> chargée — <a href="' + window.location.pathname + '" style="color:#F5C400;text-decoration:underline;">Nouvelle config</a>';
+    document.body.appendChild(banner);
+
+    // Charger selon contexte desktop ou mobile
+    if (window.innerWidth >= 768) {
+      dtStep = 4; dtRender();
+    } else {
+      renderModels(); switchTab(4);
+    }
+  } catch(e) {
+    console.error('Erreur chargement config:', e);
+  }
+}
+
+
+// ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://tpxfpmubhkvzratnftnn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRweGZwbXViaGt2enJhdG5mdG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzEwMjQsImV4cCI6MjA5NzkwNzAyNH0.-4podykoAjWV3lJDTQelMoYCAqBikGY0yqu9aVXU0qs';
+
+function generateConfigId() {
+  const year = new Date().getFullYear();
+  const num = String(Math.floor(Math.random() * 900000) + 100000); // 6 chiffres
+  return 'OBV-' + year + '-' + num;
+}
+
+async function saveConfigToSupabase(configData) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/configurations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(configData)
+  });
+  if (!res.ok) throw new Error('Supabase error: ' + res.status);
+  const data = await res.json();
+  return data[0];
+}
+
+async function getConfigFromSupabase(configId) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/configurations?config_id=eq.' + configId + '&select=*', {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+    }
+  });
+  if (!res.ok) throw new Error('Supabase error: ' + res.status);
+  const data = await res.json();
+  return data[0] || null;
+}
+
 // ─── DONNÉES ────────────────────────────────────────────────────────────────
 
 
@@ -729,20 +803,53 @@ function closeOrderModal() {
   document.getElementById('order-modal').classList.remove('open');
 }
 async function sendOrder() {
-  const name = document.getElementById('order-name').value.trim();
+  const name  = document.getElementById('order-name').value.trim();
   const email = document.getElementById('order-email').value.trim();
-  const msg = document.getElementById('order-msg').value.trim();
+  const phone = document.getElementById('order-phone').value.trim();
+  const msg   = document.getElementById('order-msg').value.trim();
   const config = document.getElementById('order-config-display').value;
+
   if (!name) { alert('Merci de renseigner votre nom et prénom.'); return; }
-  if (!email && !document.getElementById('order-phone').value.trim()) { alert('Merci de renseigner au moins votre email ou votre téléphone pour que nous puissions vous recontacter.'); return; }
+  if (!email && !phone) { alert('Merci de renseigner au moins votre email ou votre téléphone.'); return; }
 
   const btnSend = document.querySelector('.btn-send');
   btnSend.textContent = 'Envoi en cours...';
   btnSend.disabled = true;
 
-  const phone = document.getElementById('order-phone').value.trim();
-
   try {
+    // 1. Générer l'ID unique
+    const configId = generateConfigId();
+
+    // 2. Construire le JSON de config
+    const model = MODELS.find(m => m.id === selModel);
+    const { price } = computeTotals(selModel, selOpts);
+    const configJson = {
+      config_id: configId,
+      modele: selModel,
+      modele_nom: model ? model.name : '',
+      preset: window._activePreset || null,
+      composants: selOpts,
+      dimensions: selSize || {},
+      prix: price,
+      nom_client: name,
+      email_client: email,
+    };
+
+    // 3. Sauvegarder dans Supabase
+    await saveConfigToSupabase({
+      config_id: configId,
+      modele: selModel,
+      preset: window._activePreset || null,
+      prix: price,
+      config_json: configJson,
+      nom_client: name,
+      email_client: email,
+    });
+
+    // 4. URL partageable
+    const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=' + configId;
+
+    // 5. Envoyer via Formspree
     const response = await fetch('https://formspree.io/f/mqeoqewy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -753,22 +860,25 @@ async function sendOrder() {
         configuration: config,
         dimensions: buildSizeText(),
         message: msg || '—',
+        config_id: configId,
+        url_config: shareUrl,
         _replyto: email,
-        _subject: 'Demande de devis OBVIOUS ON DEMAND — ' + name,
+        _subject: '[' + configId + '] Demande de devis OBVIOUS ON DEMAND — ' + name,
       })
     });
 
     if (response.ok) {
       closeOrderModal();
-      document.getElementById('order-name').value = '';
-      document.getElementById('order-email').value = '';
-      document.getElementById('order-phone').value = '';
-      document.getElementById('order-msg').value = '';
-      alert('✅ Votre demande de devis a bien été envoyée !\n\nNous vous recontacterons par email ou téléphone sous 48h pour finaliser votre projet.');
+      ['order-name','order-email','order-phone','order-msg'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      // Afficher l'ID et l'URL au visiteur
+      alert('✅ Votre demande a bien été envoyée !\n\nVotre référence : ' + configId + '\n\nNous vous recontacterons sous 48h.');
     } else {
-      alert("Une erreur s'est produite. Merci de réessayer ou de nous contacter directement à info@obviouscycles.com");
+      alert("Une erreur s'est produite. Merci de réessayer ou de nous contacter directement.");
     }
   } catch(e) {
+    console.error('sendOrder error:', e);
     alert("Impossible d'envoyer le formulaire. Vérifiez votre connexion internet.");
   } finally {
     btnSend.textContent = '↗ Envoyer';
@@ -1587,6 +1697,7 @@ function dtInit() {
 loadSaved();
 renderModels();
 dtInit();
+loadConfigFromUrl();
 
 // Présélection via paramètre URL (?modele=ON/OFF&roues=roue_gr_ob_35...)
 const ALIASES = {
