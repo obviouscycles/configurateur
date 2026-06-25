@@ -195,6 +195,16 @@
     </div>
 
     <!-- Stats composants -->
+    <div style="margin-top:1.5rem;display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+      <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Statistiques composants</span>
+      <select id="comp-modele-filter" onchange="renderCompStats()" style="background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:6px 10px;font-size:13px;font-family:var(--font);outline:none;">
+        <option value="">Tous les modèles</option>
+        <option value="route">Route — ON/</option>
+        <option value="gravel_racing">Gravel Racing — ON/OFF</option>
+        <option value="gravel_bikepacking">Gravel Bikepacking — OUT/QUEST</option>
+        <option value="vtt_enduro">VTT Enduro — /OFF</option>
+      </select>
+    </div>
     <div class="comp-stats" id="comp-stats"></div>
   </main>
 </div>
@@ -249,7 +259,7 @@ async function loadData() {
   document.getElementById('last-refresh').textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
   populateModelFilter();
   applyFilters();
-  renderCompStats();
+  loadOptionNames().then(() => renderCompStats());
 }
 
 function populateModelFilter() {
@@ -349,26 +359,59 @@ function renderStats() {
 }
 
 // ── COMPOSANTS STATS ──────────────────────────────────────────────────────────
+// Dictionnaire id → nom lisible (chargé depuis composants.js via fetch)
+let optionNames = {};
+async function loadOptionNames() {
+  try {
+    const res = await fetch('../data/composants.js');
+    const text = await res.text();
+    // Parser ALL_OPTIONS pour extraire id → name
+    const match = text.match(/const ALL_OPTIONS\s*=\s*(\{[\s\S]*?\});(?:\s*\/\/|const )/);
+    if (match) {
+      const obj = Function('"use strict"; return ' + match[1])();
+      Object.values(obj).forEach(arr => {
+        if (Array.isArray(arr)) arr.forEach(o => { if (o.id && o.name) optionNames[o.id] = o.name; });
+      });
+    }
+  } catch(e) { console.warn('optionNames load failed', e); }
+}
+
+function getOptName(id) {
+  return optionNames[id] || id.replace(/_/g,' ');
+}
+
 function renderCompStats() {
-  const postes = ['fourche','roues','pneus','transmission','pilotage','selle'];
+  const modeleFilter = document.getElementById('comp-modele-filter')?.value || '';
+  const source = modeleFilter ? allConfigs.filter(c => c.modele === modeleFilter) : allConfigs;
+
+  const postes = ['fourche','roues','pneus','transmission','power','frein','pilotage','selle','tige','pedales'];
   const counts = {};
   postes.forEach(p => { counts[p] = {}; });
-  allConfigs.forEach(c => {
+  source.forEach(c => {
     const comp = c.config_json?.composants || {};
     postes.forEach(p => {
       if (comp[p]) counts[p][comp[p]] = (counts[p][comp[p]] || 0) + 1;
     });
   });
 
-  const labels = { fourche:'Fourche', roues:'Roues', pneus:'Pneus', transmission:'Transmission', pilotage:'Pilotage', selle:'Selle' };
-  document.getElementById('comp-stats').innerHTML = postes.map(p => {
-    const sorted = Object.entries(counts[p]).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const labels = { fourche:'Fourche', roues:'Roues', pneus:'Pneus', transmission:'Transmission', power:'Mesure puissance', frein:'Freins', pilotage:'Pilotage', selle:'Selle', tige:'Tige de selle', pedales:'Pédales' };
+
+  // Garder seulement les postes qui ont des données
+  const activePostes = postes.filter(p => Object.keys(counts[p]).length > 0);
+
+  if (!activePostes.length) {
+    document.getElementById('comp-stats').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:1rem;">Aucune donnée pour ce modèle.</div>';
+    return;
+  }
+
+  document.getElementById('comp-stats').innerHTML = activePostes.map(p => {
+    const sorted = Object.entries(counts[p]).sort((a,b) => b[1]-a[1]).slice(0,6);
     const max = sorted[0]?.[1] || 1;
     return `<div class="comp-stat-card">
-      <h3>${labels[p]}</h3>
+      <h3>${labels[p]||p} <span style="color:var(--text3);font-weight:400">(${sorted.reduce((s,[,n])=>s+n,0)})</span></h3>
       ${sorted.map(([id, n]) => `
         <div class="comp-bar">
-          <div class="comp-bar-name" title="${id}">${id.replace(/_/g,' ')}</div>
+          <div class="comp-bar-name" title="${getOptName(id)}">${getOptName(id)}</div>
           <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
           <div class="comp-bar-count">${n}</div>
         </div>`).join('')}
