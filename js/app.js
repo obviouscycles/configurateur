@@ -1492,39 +1492,23 @@ function dtRenderS3() {
 }
 
 function dtCheckSizeResult() {
-  // Lire le résultat depuis les divs originaux
-  const guideResult  = document.getElementById('guide-result');
-  const dimsResult   = document.getElementById('dims-summary');
-  const resultEl = document.getElementById('dt-s3-result');
-  if (!resultEl) return;
+  const guideResult = document.getElementById('guide-result');
+  const dimsResult  = document.getElementById('dims-summary');
+  let validated = false;
 
-  let html = '';
   // Guide result
   if (guideResult && guideResult.classList.contains('show')) {
     const main = document.getElementById('guide-result-main');
-    const sub  = document.getElementById('guide-result-sub');
-    if (main && main.textContent) {
-      html = '✅ ' + main.innerHTML + (sub ? '<br><span style="font-size:12px;color:#aaa;">' + sub.innerHTML + '</span>' : '');
-      window.sizeValidated = true;
-    }
+    if (main && main.textContent) { window.sizeValidated = true; validated = true; }
   }
   // Manual result
-  if (!html && dimsResult && dimsResult.classList.contains('show')) {
-    html = '✅ <strong style="color:#F5C400;">Dimensions enregistrées</strong><br>' + dimsResult.innerHTML;
-    window.sizeValidated = true;
+  if (dimsResult && dimsResult.classList.contains('show')) {
+    window.sizeValidated = true; validated = true;
   }
-  // Build from selSize
-  if (!html && window.sizeValidated) {
-    const parts = [];
-    if (selSize.taille)        parts.push('<strong>Taille :</strong> ' + selSize.taille);
-    if (selSize.manivelle)     parts.push('<strong>Manivelle :</strong> ' + selSize.manivelle + ' mm');
-    if (selSize.potence)       parts.push('<strong>Potence :</strong> ' + selSize.potence + ' mm');
-    if (selSize.cintre)        parts.push('<strong>Cintre :</strong> ' + selSize.cintre + ' mm');
-    if (parts.length) html = '✅ <strong style="color:#F5C400;">Dimensions</strong> : ' + parts.join(' · ');
-  }
+  // selSize rempli
+  if (!validated && window.sizeValidated) validated = true;
 
-  if (html) {
-    // dt-s3-result retiré — on met juste à jour le bouton
+  if (validated) {
     const lbl = document.getElementById('dt-next-3-lbl');
     if (lbl) lbl.textContent = 'Ma configuration →';
   }
