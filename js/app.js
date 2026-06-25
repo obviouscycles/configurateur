@@ -51,50 +51,8 @@ async function sendBrevoEmail({ toEmail, toName, configId, shareUrl, modeleNom, 
     throw new Error('Edge Function: ' + res.status);
   }
   return await res.json();
-}) {
-  const body = {
-    sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
-    to: [{ email: toEmail, name: toName }],
-    subject: 'Votre configuration Obvious Cycles — ' + configId,
-    htmlContent: `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#111;color:#f2f2f2;padding:2rem;">
-        <div style="margin-bottom:1.5rem;">
-          <img src="https://www.obviouscycles.com/wp-content/uploads/2023/04/favicon-512.png" width="40" style="vertical-align:middle;margin-right:10px;">
-          <span style="font-size:18px;font-weight:700;color:#F5C400;">OBVIOUS ON DEMAND</span>
-        </div>
-        <h2 style="color:#f2f2f2;margin-bottom:.5rem;">Bonjour ${toName},</h2>
-        <p style="color:#aaa;line-height:1.6;">Merci pour votre intérêt. Votre configuration a bien été enregistrée.</p>
-        <div style="background:#1e1e1e;border:1px solid #333;padding:1.25rem;margin:1.5rem 0;">
-          <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Votre référence</div>
-          <div style="font-size:22px;font-weight:700;color:#F5C400;">${configId}</div>
-          <div style="font-size:14px;color:#aaa;margin-top:.5rem;">${modeleNom} — ${prix.toLocaleString('fr-FR')} €</div>
-        </div>
-        <p style="color:#aaa;line-height:1.6;">Retrouvez votre configuration à tout moment via ce lien :</p>
-        <a href="${shareUrl}" style="display:inline-block;background:#F5C400;color:#1a1a00;font-weight:700;padding:12px 24px;text-decoration:none;margin:1rem 0;">Voir ma configuration →</a>
-        <p style="color:#666;font-size:13px;margin-top:2rem;line-height:1.6;">Nous vous recontacterons sous 48h pour finaliser votre projet.<br>
-        Une question ? <a href="mailto:info@obviouscycles.com" style="color:#F5C400;">info@obviouscycles.com</a></p>
-        <hr style="border:none;border-top:1px solid #2a2a2a;margin:2rem 0;">
-        <p style="color:#444;font-size:11px;">Obvious Cycles — Vélos titane sur mesure</p>
-      </div>
-    `
-  };
-
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': BREVO_KEY,
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('Brevo error:', err);
-    throw new Error('Brevo: ' + res.status);
-  }
-  return await res.json();
 }
+
 
 // ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://tpxfpmubhkvzratnftnn.supabase.co';
