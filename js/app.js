@@ -830,7 +830,7 @@ async function sendOrder() {
   const config = document.getElementById('order-config-display').value;
 
   if (!name) { alert('Merci de renseigner votre nom et prénom.'); return; }
-  if (!email && !phone) { alert('Merci de renseigner au moins votre email ou votre téléphone.'); return; }
+  if (!email) { alert('Merci de renseigner votre adresse email.'); return; }
 
   const btnSend = document.querySelector('.btn-send');
   btnSend.textContent = 'Envoi en cours...';
@@ -1082,7 +1082,7 @@ function dtRender() {
 
   // Bouton next step 3
   const next3lbl = el('dt-next-3-lbl');
-  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Voir votre récap' : 'Continuer sans taille';
+  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Ma configuration →' : 'Continuer sans taille';
 
   // Bouton "changer de vélo" dans le récap — visible après reset
 
@@ -1526,7 +1526,7 @@ function dtCheckSizeResult() {
   if (html) {
     // dt-s3-result retiré — on met juste à jour le bouton
     const lbl = document.getElementById('dt-next-3-lbl');
-    if (lbl) lbl.textContent = 'Votre configuration →';
+    if (lbl) lbl.textContent = 'Ma configuration →';
   }
 }
 
