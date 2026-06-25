@@ -7,124 +7,110 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
   :root {
-    --bg: #0d0d0d; --bg2: #141414; --bg3: #1a1a1a; --bg4: #222;
-    --border: #2a2a2a; --border2: #333;
-    --text: #f2f2f2; --text2: #aaa; --text3: #666;
-    --yellow: #F5C400; --font: 'Inter', system-ui, sans-serif;
+    --bg:#0d0d0d;--bg2:#141414;--bg3:#1a1a1a;--bg4:#222;
+    --border:#2a2a2a;--border2:#333;
+    --text:#f2f2f2;--text2:#aaa;--text3:#666;
+    --yellow:#F5C400;--font:'Inter',system-ui,sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; min-height: 100vh; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;}
 
-  /* ── LOGIN ── */
-  #login-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; flex-direction: column; gap: 1.5rem;
-  }
-  #login-screen h1 { font-size: 20px; font-weight: 600; color: var(--yellow); }
-  #login-form { display: flex; flex-direction: column; gap: .75rem; width: 300px; }
-  #login-form input {
-    background: var(--bg3); border: 0.5px solid var(--border2); color: var(--text);
-    padding: 10px 12px; font-size: 14px; font-family: var(--font); outline: none;
-  }
-  #login-form input:focus { border-color: var(--yellow); }
-  #login-btn {
-    background: var(--yellow); color: #1a1a00; font-weight: 700;
-    padding: 10px; border: none; cursor: pointer; font-size: 14px; font-family: var(--font);
-  }
-  #login-error { color: #e24b4a; font-size: 13px; display: none; }
+  /* LOGIN */
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1.5rem;}
+  #login-screen h1{font-size:20px;font-weight:600;color:var(--yellow);}
+  #login-form{display:flex;flex-direction:column;gap:.75rem;width:300px;}
+  #login-form input{background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);padding:10px 12px;font-size:14px;font-family:var(--font);outline:none;}
+  #login-form input:focus{border-color:var(--yellow);}
+  #login-btn{background:var(--yellow);color:#1a1a00;font-weight:700;padding:10px;border:none;cursor:pointer;font-size:14px;font-family:var(--font);}
+  #login-error{color:#e24b4a;font-size:13px;display:none;}
 
-  /* ── ADMIN UI ── */
-  #admin-ui { display: none; }
-  header {
-    background: var(--bg2); border-bottom: 0.5px solid var(--border);
-    padding: .75rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-  }
-  header h1 { font-size: 15px; font-weight: 600; color: var(--yellow); }
-  header .meta { font-size: 12px; color: var(--text3); }
-  .logout-btn { background: none; border: 0.5px solid var(--border2); color: var(--text2); padding: 5px 10px; cursor: pointer; font-size: 12px; font-family: var(--font); }
+  /* ADMIN */
+  #admin-ui{display:none;}
+  header{background:var(--bg2);border-bottom:0.5px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  header h1{font-size:15px;font-weight:600;color:var(--yellow);}
+  .logout-btn{background:none;border:0.5px solid var(--border2);color:var(--text2);padding:5px 10px;cursor:pointer;font-size:12px;font-family:var(--font);}
+  .refresh-btn{background:none;border:0.5px solid var(--border2);color:var(--text2);padding:5px 10px;cursor:pointer;font-size:12px;font-family:var(--font);}
 
-  main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+  main{padding:1.5rem;max-width:1400px;margin:0 auto;}
 
-  /* ── STATS ── */
-  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-  .stat-card { background: var(--bg3); border: 0.5px solid var(--border); padding: 1rem; }
-  .stat-val { font-size: 28px; font-weight: 700; color: var(--yellow); }
-  .stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+  /* STATS */
+  .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .stat-card{background:var(--bg3);border:0.5px solid var(--border);padding:1rem;}
+  .stat-val{font-size:28px;font-weight:700;color:var(--yellow);}
+  .stat-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;}
 
-  /* ── FILTRES ── */
-  .filters {
-    display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem;
-    background: var(--bg3); border: 0.5px solid var(--border); padding: 1rem;
-  }
-  .filters select, .filters input {
-    background: var(--bg4); border: 0.5px solid var(--border2); color: var(--text);
-    padding: 7px 10px; font-size: 13px; font-family: var(--font); outline: none;
-  }
-  .filters select:focus, .filters input:focus { border-color: var(--yellow); }
-  .filters label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; display: flex; flex-direction: column; gap: 4px; }
-  .btn-reset-filter { background: none; border: 0.5px solid var(--border2); color: var(--text2); padding: 7px 12px; cursor: pointer; font-size: 12px; font-family: var(--font); align-self: flex-end; }
-  .btn-export { background: var(--yellow); color: #1a1a00; border: none; padding: 7px 14px; cursor: pointer; font-size: 12px; font-family: var(--font); font-weight: 700; align-self: flex-end; }
+  /* CHARTS */
+  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+  .chart-card{background:var(--bg3);border:0.5px solid var(--border);padding:1rem;}
+  .chart-card h3{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem;}
+  .bar-h{display:flex;align-items:center;gap:.5rem;margin-bottom:8px;font-size:12px;}
+  .bar-h-name{color:var(--text2);min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-h-track{flex:1;background:var(--bg4);height:8px;}
+  .bar-h-fill{height:8px;background:var(--yellow);}
+  .bar-h-val{color:var(--text3);min-width:40px;text-align:right;}
+  canvas{width:100%!important;}
 
-  /* ── TABLE ── */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th {
-    text-align: left; font-size: 11px; color: var(--text3); text-transform: uppercase;
-    letter-spacing: .06em; padding: 8px 12px; border-bottom: 0.5px solid var(--border);
-    background: var(--bg2); white-space: nowrap; cursor: pointer; user-select: none;
-  }
-  th:hover { color: var(--text2); }
-  th .sort-icon { margin-left: 4px; opacity: .4; }
-  th.sorted .sort-icon { opacity: 1; color: var(--yellow); }
-  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
-  tr:hover td { background: var(--bg3); }
-  tr.clickable { cursor: pointer; }
+  /* FILTRES */
+  .filters{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;background:var(--bg3);border:0.5px solid var(--border);padding:1rem;}
+  .filters select,.filters input{background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:7px 10px;font-size:13px;font-family:var(--font);outline:none;}
+  .filters select:focus,.filters input:focus{border-color:var(--yellow);}
+  .filters label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;flex-direction:column;gap:4px;}
+  .btn-sm{background:none;border:0.5px solid var(--border2);color:var(--text2);padding:7px 12px;cursor:pointer;font-size:12px;font-family:var(--font);align-self:flex-end;}
+  .btn-yellow{background:var(--yellow);color:#1a1a00;border:none;padding:7px 14px;cursor:pointer;font-size:12px;font-family:var(--font);font-weight:700;align-self:flex-end;}
 
-  .badge {
-    display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .04em;
-  }
-  .badge-devis { background: #1a2a00; color: var(--yellow); border: 0.5px solid var(--yellow); }
-  .badge-sauvegarde { background: var(--bg4); color: var(--text3); border: 0.5px solid var(--border2); }
+  /* TABLE */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:0.5px solid var(--border);background:var(--bg2);white-space:nowrap;cursor:pointer;user-select:none;}
+  th:hover{color:var(--text2);}
+  th.sorted .sort-icon{color:var(--yellow);}
+  td{padding:10px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle;}
+  tr:hover td{background:var(--bg3);}
+  tr.clickable{cursor:pointer;}
 
-  .no-results { text-align: center; padding: 3rem; color: var(--text3); font-size: 14px; }
+  .badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+  .badge-devis{background:#1a2a00;color:var(--yellow);border:0.5px solid var(--yellow);}
+  .badge-sauvegarde{background:var(--bg4);color:var(--text3);border:0.5px solid var(--border2);}
+  .badge-nouveau{background:#1a1a2a;color:#8888ff;border:0.5px solid #444;}
+  .badge-en_cours{background:#2a1a00;color:#ffaa00;border:0.5px solid #665500;}
+  .badge-commande{background:#0a2a0a;color:#44cc44;border:0.5px solid #226622;}
+  .badge-annule{background:#2a0a0a;color:#cc4444;border:0.5px solid #662222;}
 
-  /* ── DETAIL PANEL ── */
-  #detail-panel {
-    display: none; position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
-    background: var(--bg2); border-left: 0.5px solid var(--border); overflow-y: auto;
-    z-index: 200; padding: 1.5rem;
-  }
-  #detail-panel.open { display: block; }
-  #detail-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199;
-  }
-  #detail-overlay.open { display: block; }
-  .detail-close { float: right; background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; }
-  .detail-section { margin-bottom: 1.25rem; }
-  .detail-section h3 { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; padding-bottom: .5rem; border-bottom: 0.5px solid var(--border); }
-  .detail-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 0.5px solid var(--border); }
-  .detail-row span:first-child { color: var(--text3); }
-  .detail-row span:last-child { color: var(--text); font-weight: 500; }
-  .json-block { background: var(--bg3); border: 0.5px solid var(--border); padding: 1rem; font-size: 11px; color: #7ec8e3; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
-  .btn-copy-url { background: none; border: 0.5px solid var(--border2); color: var(--text2); padding: 7px 12px; cursor: pointer; font-size: 12px; font-family: var(--font); width: 100%; margin-top: .5rem; }
-  .btn-copy-url:hover { border-color: var(--yellow); color: var(--yellow); }
+  /* DETAIL */
+  #detail-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--bg2);border-left:0.5px solid var(--border);overflow-y:auto;z-index:200;padding:1.5rem;}
+  #detail-panel.open{display:block;}
+  #detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199;}
+  #detail-overlay.open{display:block;}
+  .detail-close{float:right;background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;}
+  .detail-section{margin-bottom:1.25rem;}
+  .detail-section h3{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:0.5px solid var(--border);}
+  .detail-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:0.5px solid var(--border);}
+  .detail-row span:first-child{color:var(--text3);}
+  .detail-row span:last-child{color:var(--text);font-weight:500;}
+  .json-block{background:var(--bg3);border:0.5px solid var(--border);padding:1rem;font-size:11px;color:#7ec8e3;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:250px;overflow-y:auto;}
+  .btn-full{background:none;border:0.5px solid var(--border2);color:var(--text2);padding:8px 12px;cursor:pointer;font-size:12px;font-family:var(--font);width:100%;margin-top:.5rem;text-align:center;}
+  .btn-full:hover{border-color:var(--yellow);color:var(--yellow);}
+  .btn-full.danger:hover{border-color:#cc4444;color:#cc4444;}
+  textarea.notes-input{width:100%;background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:8px;font-size:13px;font-family:var(--font);resize:vertical;min-height:80px;outline:none;}
+  textarea.notes-input:focus{border-color:var(--yellow);}
+  select.status-select{width:100%;background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:8px;font-size:13px;font-family:var(--font);outline:none;margin-bottom:.5rem;}
 
-  /* ── COMPOSANTS STATS ── */
-  .comp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
-  .comp-stat-card { background: var(--bg3); border: 0.5px solid var(--border); padding: 1rem; }
-  .comp-stat-card h3 { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; }
-  .comp-bar { display: flex; align-items: center; gap: .5rem; margin-bottom: 6px; font-size: 12px; }
-  .comp-bar-name { color: var(--text2); min-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .comp-bar-track { flex: 1; background: var(--bg4); height: 6px; }
-  .comp-bar-fill { height: 6px; background: var(--yellow); }
-  .comp-bar-count { color: var(--text3); min-width: 30px; text-align: right; }
+  /* COMP STATS */
+  .comp-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:1rem;}
+  .comp-stat-card{background:var(--bg3);border:0.5px solid var(--border);padding:1rem;}
+  .comp-stat-card h3{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;}
+  .comp-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:6px;font-size:12px;}
+  .comp-bar-name{color:var(--text2);min-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .comp-bar-track{flex:1;background:var(--bg4);height:6px;}
+  .comp-bar-fill{height:6px;background:var(--yellow);}
+  .comp-bar-count{color:var(--text3);min-width:30px;text-align:right;}
+
+  .no-results{text-align:center;padding:3rem;color:var(--text3);font-size:14px;}
+  .section-title{font-size:13px;font-weight:600;color:var(--text2);margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:.5rem;}
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
 <div id="login-screen">
   <h1><i class="ti ti-shield-lock"></i> Obvious Cycles — Admin</h1>
   <div id="login-form">
@@ -134,27 +120,61 @@
   </div>
 </div>
 
-<!-- ── ADMIN UI ── -->
 <div id="admin-ui">
   <header>
-    <h1><i class="ti ti-settings"></i> Admin Configurateur</h1>
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <span class="meta" id="last-refresh"></span>
+    <h1><i class="ti ti-settings"></i> Admin Configurateur — Obvious Cycles</h1>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span id="last-refresh" style="font-size:11px;color:var(--text3);"></span>
+      <button class="refresh-btn" onclick="loadData()"><i class="ti ti-refresh"></i> Actualiser</button>
       <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i> Déconnexion</button>
     </div>
   </header>
 
   <main>
-    <!-- Stats -->
+    <!-- Stats globales -->
     <div class="stats" id="stats-cards"></div>
 
+    <!-- Charts : évolution + prix par modèle -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Évolution des configs (4 dernières semaines)</h3>
+        <canvas id="chart-evolution" height="160"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Prix moyen par modèle</h3>
+        <div id="chart-prix-modele"></div>
+      </div>
+    </div>
+
+    <!-- Taux de conversion -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Taux de conversion sauvegarde → devis</h3>
+        <div id="chart-conversion"></div>
+      </div>
+      <div class="chart-card">
+        <h3>Statuts commerciaux</h3>
+        <div id="chart-statuts"></div>
+      </div>
+    </div>
+
     <!-- Filtres -->
+    <div class="section-title"><i class="ti ti-list"></i> Configurations</div>
     <div class="filters">
-      <label>Statut
+      <label>Statut envoi
         <select id="f-statut" onchange="applyFilters()">
           <option value="">Tous</option>
           <option value="devis">Devis demandé</option>
           <option value="sauvegarde">Sauvegardé</option>
+        </select>
+      </label>
+      <label>Statut commercial
+        <select id="f-statut-com" onchange="applyFilters()">
+          <option value="">Tous</option>
+          <option value="nouveau">Nouveau</option>
+          <option value="en_cours">En cours</option>
+          <option value="commande">Commandé</option>
+          <option value="annule">Annulé</option>
         </select>
       </label>
       <label>Modèle
@@ -168,14 +188,13 @@
       <label>Date fin
         <input type="date" id="f-date-end" onchange="applyFilters()">
       </label>
-      <label>Recherche (nom/email/ID)
-        <input type="text" id="f-search" placeholder="Rechercher..." oninput="applyFilters()">
+      <label>Recherche
+        <input type="text" id="f-search" placeholder="Nom, email, ID..." oninput="applyFilters()">
       </label>
-      <button class="btn-reset-filter" onclick="resetFilters()"><i class="ti ti-x"></i> Réinitialiser</button>
-      <button class="btn-export" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+      <button class="btn-sm" onclick="resetFilters()"><i class="ti ti-x"></i> Réinitialiser</button>
+      <button class="btn-yellow" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
     </div>
 
-    <!-- Table -->
     <div class="table-wrap">
       <table id="configs-table">
         <thead>
@@ -186,7 +205,9 @@
             <th onclick="sortBy('modele')" data-col="modele">Modèle <span class="sort-icon">↕</span></th>
             <th onclick="sortBy('prix')" data-col="prix">Prix <span class="sort-icon">↕</span></th>
             <th>Taille</th>
-            <th onclick="sortBy('statut')" data-col="statut">Statut <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('nb_consultations')" data-col="nb_consultations">Vues <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('statut')" data-col="statut">Envoi <span class="sort-icon">↕</span></th>
+            <th onclick="sortBy('statut_commercial')" data-col="statut_commercial">Commercial <span class="sort-icon">↕</span></th>
           </tr>
         </thead>
         <tbody id="configs-tbody"></tbody>
@@ -194,10 +215,10 @@
       <div id="no-results" class="no-results" style="display:none;">Aucune configuration trouvée.</div>
     </div>
 
-    <!-- Stats composants -->
-    <div style="margin-top:1.5rem;display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
-      <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;">Statistiques composants</span>
-      <select id="comp-modele-filter" onchange="renderCompStats()" style="background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:6px 10px;font-size:13px;font-family:var(--font);outline:none;">
+    <!-- Composants stats -->
+    <div class="section-title" style="margin-top:2rem;">
+      <i class="ti ti-chart-bar"></i> Statistiques composants
+      <select id="comp-modele-filter" onchange="renderCompStats()" style="background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:5px 10px;font-size:12px;font-family:var(--font);outline:none;margin-left:.5rem;">
         <option value="">Tous les modèles</option>
         <option value="route">Route — ON/</option>
         <option value="gravel_racing">Gravel Racing — ON/OFF</option>
@@ -209,7 +230,7 @@
   </main>
 </div>
 
-<!-- ── DETAIL PANEL ── -->
+<!-- DETAIL PANEL -->
 <div id="detail-overlay" onclick="closeDetail()"></div>
 <div id="detail-panel">
   <button class="detail-close" onclick="closeDetail()">×</button>
@@ -221,100 +242,113 @@ const SUPABASE_URL = 'https://tpxfpmubhkvzratnftnn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRweGZwbXViaGt2enJhdG5mdG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzEwMjQsImV4cCI6MjA5NzkwNzAyNH0.-4podykoAjWV3lJDTQelMoYCAqBikGY0yqu9aVXU0qs';
 const ADMIN_PWD_HASH = '2b3bcd19407e5da3bd02177d31dcf68c3a0e7ef6ac6e63a2273d3d1c48c5c06f';
 
-let allConfigs = [];
-let filtered = [];
-let sortCol = 'created_at';
-let sortDir = -1;
+let allConfigs = [], filtered = [], sortCol = 'created_at', sortDir = -1;
+let optionNames = {}, refreshTimer = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 async function hashPwd(pwd) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
 async function doLogin() {
   const pwd = document.getElementById('pwd-input').value;
   const hash = await hashPwd(pwd);
   if (hash === ADMIN_PWD_HASH) {
-    sessionStorage.setItem('admin_auth', '1');
+    sessionStorage.setItem('admin_auth','1');
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-ui').style.display = 'block';
     loadData();
+    // Rafraîchissement auto toutes les 5 min
+    refreshTimer = setInterval(loadData, 5 * 60 * 1000);
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
 }
-
 function doLogout() {
   sessionStorage.removeItem('admin_auth');
+  if (refreshTimer) clearInterval(refreshTimer);
   location.reload();
 }
 
-// ── LOAD DATA ─────────────────────────────────────────────────────────────────
-async function loadData() {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/configurations?select=*&order=created_at.desc&limit=1000', {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', ...(opts.headers||{}) }
   });
+  return res;
+}
+
+async function loadData() {
+  const res = await sbFetch('/rest/v1/configurations?select=*&order=created_at.desc&limit=1000');
   allConfigs = await res.json();
-  document.getElementById('last-refresh').textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
+  document.getElementById('last-refresh').textContent = 'Actualisé à ' + new Date().toLocaleTimeString('fr-FR');
   populateModelFilter();
   applyFilters();
+  renderCharts();
   loadOptionNames().then(() => renderCompStats());
 }
 
-function populateModelFilter() {
-  const sel = document.getElementById('f-modele');
-  const models = [...new Set(allConfigs.map(c => c.modele).filter(Boolean))];
-  models.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m; opt.textContent = m;
-    sel.appendChild(opt);
-  });
+// ── OPTION NAMES ──────────────────────────────────────────────────────────────
+async function loadOptionNames() {
+  try {
+    const res = await fetch('../data/composants.js');
+    const text = await res.text();
+    const m = text.match(/const ALL_OPTIONS\s*=\s*(\{)/);
+    if (!m) return;
+    // Extraire tous les {id, name} pairs
+    const pairs = [...text.matchAll(/\{[^}]*id:\s*['"]([^'"]+)['"][^}]*name:\s*['"]([^'"]+)['"]/g)];
+    pairs.forEach(([,id,name]) => { optionNames[id] = name; });
+  } catch(e) { console.warn('optionNames:', e); }
 }
+function getOptName(id) { return optionNames[id] || id.replace(/_/g,' '); }
 
 // ── FILTERS ───────────────────────────────────────────────────────────────────
+function populateModelFilter() {
+  const sel = document.getElementById('f-modele');
+  const existing = [...sel.options].map(o => o.value);
+  const models = [...new Set(allConfigs.map(c => c.modele).filter(Boolean))];
+  models.forEach(m => { if (!existing.includes(m)) { const o = document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); } });
+}
+
 function applyFilters() {
-  const fStatut = document.getElementById('f-statut').value;
-  const fModele = document.getElementById('f-modele').value;
-  const fStart  = document.getElementById('f-date-start').value;
-  const fEnd    = document.getElementById('f-date-end').value;
-  const fSearch = document.getElementById('f-search').value.toLowerCase();
+  const fS  = document.getElementById('f-statut').value;
+  const fSC = document.getElementById('f-statut-com').value;
+  const fM  = document.getElementById('f-modele').value;
+  const fDS = document.getElementById('f-date-start').value;
+  const fDE = document.getElementById('f-date-end').value;
+  const fQ  = document.getElementById('f-search').value.toLowerCase();
 
   filtered = allConfigs.filter(c => {
-    if (fStatut && c.statut !== fStatut) return false;
-    if (fModele && c.modele !== fModele) return false;
-    if (fStart && c.created_at < fStart) return false;
-    if (fEnd   && c.created_at > fEnd + 'T23:59:59') return false;
-    if (fSearch && !JSON.stringify(c).toLowerCase().includes(fSearch)) return false;
+    if (fS  && c.statut !== fS) return false;
+    if (fSC && (c.statut_commercial||'nouveau') !== fSC) return false;
+    if (fM  && c.modele !== fM) return false;
+    if (fDS && c.created_at < fDS) return false;
+    if (fDE && c.created_at > fDE + 'T23:59:59') return false;
+    if (fQ  && !JSON.stringify(c).toLowerCase().includes(fQ)) return false;
     return true;
   });
-
-  sortData();
-  renderTable();
-  renderStats();
+  sortData(); renderTable(); renderStats();
 }
 
 function resetFilters() {
-  ['f-statut','f-modele'].forEach(id => document.getElementById(id).value = '');
+  ['f-statut','f-statut-com','f-modele'].forEach(id => document.getElementById(id).value = '');
   ['f-date-start','f-date-end','f-search'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
 // ── SORT ──────────────────────────────────────────────────────────────────────
 function sortBy(col) {
-  if (sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = -1; }
+  if (sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=-1; }
   document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
-  document.querySelector(`th[data-col="${col}"]`)?.classList.add('sorted');
-  sortData();
-  renderTable();
+  document.querySelector('th[data-col="'+col+'"]')?.classList.add('sorted');
+  sortData(); renderTable();
 }
-
 function sortData() {
-  filtered.sort((a, b) => {
-    let va = a[sortCol] || '', vb = b[sortCol] || '';
-    if (sortCol === 'prix') { va = Number(va); vb = Number(vb); }
-    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  filtered.sort((a,b) => {
+    let va=a[sortCol]||'', vb=b[sortCol]||'';
+    if (sortCol==='prix'||sortCol==='nb_consultations') { va=Number(va); vb=Number(vb); }
+    return va<vb?-sortDir:va>vb?sortDir:0;
   });
 }
 
@@ -322,151 +356,215 @@ function sortData() {
 function renderTable() {
   const tbody = document.getElementById('configs-tbody');
   const noRes = document.getElementById('no-results');
-  if (!filtered.length) { tbody.innerHTML = ''; noRes.style.display = 'block'; return; }
-  noRes.style.display = 'none';
-
+  if (!filtered.length) { tbody.innerHTML=''; noRes.style.display='block'; return; }
+  noRes.style.display='none';
+  const statutComBadge = { nouveau:'badge-nouveau', en_cours:'badge-en_cours', commande:'badge-commande', annule:'badge-annule' };
+  const statutComLabel = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
   tbody.innerHTML = filtered.map(c => {
     const date = new Date(c.created_at).toLocaleDateString('fr-FR');
     const taille = c.config_json?.dimensions?.taille || '—';
-    const badge = c.statut === 'devis'
-      ? '<span class="badge badge-devis">Devis</span>'
-      : '<span class="badge badge-sauvegarde">Sauvegardé</span>';
-    return `<tr class="clickable" onclick="openDetail('${c.config_id}')">
-      <td>${date}</td>
-      <td style="font-family:monospace;font-size:12px;color:var(--yellow)">${c.config_id}</td>
-      <td>${c.nom_client || '—'}</td>
-      <td>${c.modele || '—'}</td>
-      <td style="font-weight:600">${(c.prix||0).toLocaleString('fr-FR')} €</td>
-      <td>${taille}</td>
-      <td>${badge}</td>
-    </tr>`;
+    const sc = c.statut_commercial || 'nouveau';
+    return '<tr class="clickable" onclick="openDetail(''+c.config_id+'')">'+
+      '<td>'+date+'</td>'+
+      '<td style="font-family:monospace;font-size:12px;color:var(--yellow)">'+c.config_id+'</td>'+
+      '<td>'+( c.nom_client||'—')+'</td>'+
+      '<td>'+(c.modele||'—')+'</td>'+
+      '<td style="font-weight:600">'+(c.prix||0).toLocaleString('fr-FR')+' €</td>'+
+      '<td>'+taille+'</td>'+
+      '<td style="text-align:center">'+(c.nb_consultations||0)+'</td>'+
+      '<td><span class="badge '+(c.statut==='devis'?'badge-devis':'badge-sauvegarde')+'">'+(c.statut==='devis'?'Devis':'Sauvegardé')+'</span></td>'+
+      '<td><span class="badge '+statutComBadge[sc]+'">'+statutComLabel[sc]+'</span></td>'+
+    '</tr>';
   }).join('');
 }
 
-// ── STATS ─────────────────────────────────────────────────────────────────────
+// ── STATS CARDS ───────────────────────────────────────────────────────────────
 function renderStats() {
-  const total = filtered.length;
-  const devis = filtered.filter(c => c.statut === 'devis').length;
-  const saved = filtered.filter(c => c.statut === 'sauvegarde').length;
-  const avgPrix = total ? Math.round(filtered.reduce((s,c) => s + (c.prix||0), 0) / total) : 0;
+  const total  = filtered.length;
+  const devis  = filtered.filter(c=>c.statut==='devis').length;
+  const saved  = filtered.filter(c=>c.statut==='sauvegarde').length;
+  const cmd    = filtered.filter(c=>c.statut_commercial==='commande').length;
+  const avgP   = total ? Math.round(filtered.reduce((s,c)=>s+(c.prix||0),0)/total) : 0;
+  const conv   = saved ? Math.round(devis/saved*100) : 0;
+  document.getElementById('stats-cards').innerHTML =
+    stat(total,'Configs total')+stat(devis,'Devis demandés')+stat(saved,'Sauvegardées')+
+    stat(cmd,'Commandées')+stat(avgP.toLocaleString('fr-FR')+' €','Prix moyen')+stat(conv+'%','Taux conversion');
+}
+function stat(v,l) { return '<div class="stat-card"><div class="stat-val">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
-  document.getElementById('stats-cards').innerHTML = `
-    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-lbl">Configs total</div></div>
-    <div class="stat-card"><div class="stat-val">${devis}</div><div class="stat-lbl">Devis demandés</div></div>
-    <div class="stat-card"><div class="stat-val">${saved}</div><div class="stat-lbl">Sauvegardées</div></div>
-    <div class="stat-card"><div class="stat-val">${avgPrix.toLocaleString('fr-FR')} €</div><div class="stat-lbl">Prix moyen</div></div>
-  `;
+// ── CHARTS ────────────────────────────────────────────────────────────────────
+function renderCharts() {
+  renderEvolution();
+  renderPrixParModele();
+  renderConversion();
+  renderStatutsCommerciaux();
 }
 
-// ── COMPOSANTS STATS ──────────────────────────────────────────────────────────
-// Dictionnaire id → nom lisible (chargé depuis composants.js via fetch)
-let optionNames = {};
-async function loadOptionNames() {
-  try {
-    const res = await fetch('../data/composants.js');
-    const text = await res.text();
-    // Parser ALL_OPTIONS pour extraire id → name
-    const match = text.match(/const ALL_OPTIONS\s*=\s*(\{[\s\S]*?\});(?:\s*\/\/|const )/);
-    if (match) {
-      const obj = Function('"use strict"; return ' + match[1])();
-      Object.values(obj).forEach(arr => {
-        if (Array.isArray(arr)) arr.forEach(o => { if (o.id && o.name) optionNames[o.id] = o.name; });
-      });
-    }
-  } catch(e) { console.warn('optionNames load failed', e); }
-}
-
-function getOptName(id) {
-  return optionNames[id] || id.replace(/_/g,' ');
-}
-
-function renderCompStats() {
-  const modeleFilter = document.getElementById('comp-modele-filter')?.value || '';
-  const source = modeleFilter ? allConfigs.filter(c => c.modele === modeleFilter) : allConfigs;
-
-  const postes = ['fourche','roues','pneus','transmission','power','frein','pilotage','selle','tige','pedales'];
-  const counts = {};
-  postes.forEach(p => { counts[p] = {}; });
-  source.forEach(c => {
-    const comp = c.config_json?.composants || {};
-    postes.forEach(p => {
-      if (comp[p]) counts[p][comp[p]] = (counts[p][comp[p]] || 0) + 1;
-    });
-  });
-
-  const labels = { fourche:'Fourche', roues:'Roues', pneus:'Pneus', transmission:'Transmission', power:'Mesure puissance', frein:'Freins', pilotage:'Pilotage', selle:'Selle', tige:'Tige de selle', pedales:'Pédales' };
-
-  // Garder seulement les postes qui ont des données
-  const activePostes = postes.filter(p => Object.keys(counts[p]).length > 0);
-
-  if (!activePostes.length) {
-    document.getElementById('comp-stats').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:1rem;">Aucune donnée pour ce modèle.</div>';
-    return;
+function renderEvolution() {
+  const canvas = document.getElementById('chart-evolution');
+  const ctx = canvas.getContext('2d');
+  // 4 semaines
+  const weeks = [];
+  const now = new Date();
+  for (let i=3; i>=0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i*7);
+    const start = new Date(d); start.setDate(start.getDate()-6);
+    const label = start.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+    const count = allConfigs.filter(c => {
+      const cd = new Date(c.created_at);
+      return cd >= start && cd <= d;
+    }).length;
+    weeks.push({label, count});
   }
+  const W = canvas.offsetWidth || 400, H = 160;
+  canvas.width = W; canvas.height = H;
+  const max = Math.max(...weeks.map(w=>w.count), 1);
+  const bw = W/(weeks.length*2), gap = bw;
+  ctx.clearRect(0,0,W,H);
+  weeks.forEach((w,i) => {
+    const x = gap + i*(bw+gap);
+    const bh = (w.count/max)*(H-40);
+    ctx.fillStyle = '#F5C400';
+    ctx.fillRect(x, H-bh-20, bw, bh);
+    ctx.fillStyle = '#666';
+    ctx.font = '10px Inter,system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(w.label, x+bw/2, H-5);
+    ctx.fillStyle = '#F5C400';
+    ctx.fillText(w.count, x+bw/2, H-bh-25);
+  });
+}
 
-  document.getElementById('comp-stats').innerHTML = activePostes.map(p => {
-    const sorted = Object.entries(counts[p]).sort((a,b) => b[1]-a[1]).slice(0,6);
-    const max = sorted[0]?.[1] || 1;
-    return `<div class="comp-stat-card">
-      <h3>${labels[p]||p} <span style="color:var(--text3);font-weight:400">(${sorted.reduce((s,[,n])=>s+n,0)})</span></h3>
-      ${sorted.map(([id, n]) => `
-        <div class="comp-bar">
-          <div class="comp-bar-name" title="${getOptName(id)}">${getOptName(id)}</div>
-          <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
-          <div class="comp-bar-count">${n}</div>
-        </div>`).join('')}
-    </div>`;
+function renderPrixParModele() {
+  const modeles = [...new Set(allConfigs.map(c=>c.modele).filter(Boolean))];
+  const data = modeles.map(m => {
+    const cs = allConfigs.filter(c=>c.modele===m && c.prix);
+    const avg = cs.length ? Math.round(cs.reduce((s,c)=>s+c.prix,0)/cs.length) : 0;
+    return {m, avg};
+  }).sort((a,b)=>b.avg-a.avg);
+  const max = data[0]?.avg || 1;
+  document.getElementById('chart-prix-modele').innerHTML = data.map(d =>
+    '<div class="bar-h">'+
+      '<div class="bar-h-name" title="'+d.m+'">'+d.m+'</div>'+
+      '<div class="bar-h-track"><div class="bar-h-fill" style="width:'+Math.round(d.avg/max*100)+'%"></div></div>'+
+      '<div class="bar-h-val">'+d.avg.toLocaleString('fr-FR')+' €</div>'+
+    '</div>'
+  ).join('');
+}
+
+function renderConversion() {
+  const modeles = [...new Set(allConfigs.map(c=>c.modele).filter(Boolean))];
+  const data = modeles.map(m => {
+    const total = allConfigs.filter(c=>c.modele===m).length;
+    const devis = allConfigs.filter(c=>c.modele===m && c.statut==='devis').length;
+    const taux = total ? Math.round(devis/total*100) : 0;
+    return {m, taux, devis, total};
+  }).sort((a,b)=>b.taux-a.taux);
+  document.getElementById('chart-conversion').innerHTML = data.map(d =>
+    '<div class="bar-h">'+
+      '<div class="bar-h-name" title="'+d.m+'">'+d.m+'</div>'+
+      '<div class="bar-h-track"><div class="bar-h-fill" style="width:'+d.taux+'%;background:#44cc44"></div></div>'+
+      '<div class="bar-h-val">'+d.taux+'% ('+d.devis+'/'+d.total+')</div>'+
+    '</div>'
+  ).join('');
+}
+
+function renderStatutsCommerciaux() {
+  const labels = {nouveau:'Nouveau',en_cours:'En cours',commande:'Commandé',annule:'Annulé'};
+  const colors = {nouveau:'#8888ff',en_cours:'#ffaa00',commande:'#44cc44',annule:'#cc4444'};
+  const counts = {};
+  allConfigs.forEach(c => {
+    const s = c.statut_commercial||'nouveau';
+    counts[s] = (counts[s]||0)+1;
+  });
+  const max = Math.max(...Object.values(counts), 1);
+  document.getElementById('chart-statuts').innerHTML = Object.entries(labels).map(([k,l]) =>
+    '<div class="bar-h">'+
+      '<div class="bar-h-name">'+l+'</div>'+
+      '<div class="bar-h-track"><div class="bar-h-fill" style="width:'+Math.round((counts[k]||0)/max*100)+'%;background:'+colors[k]+'"></div></div>'+
+      '<div class="bar-h-val">'+(counts[k]||0)+'</div>'+
+    '</div>'
+  ).join('');
+}
+
+// ── COMP STATS ────────────────────────────────────────────────────────────────
+function renderCompStats() {
+  const modeleFilter = document.getElementById('comp-modele-filter')?.value||'';
+  const source = modeleFilter ? allConfigs.filter(c=>c.modele===modeleFilter) : allConfigs;
+  const postes = ['fourche','roues','pneus','transmission','power','frein','pilotage','selle','tige','pedales'];
+  const counts = {}; postes.forEach(p=>{counts[p]={};});
+  source.forEach(c => {
+    const comp = c.config_json?.composants||{};
+    postes.forEach(p => { if(comp[p]) counts[p][comp[p]]=(counts[p][comp[p]]||0)+1; });
+  });
+  const labels = {fourche:'Fourche',roues:'Roues',pneus:'Pneus',transmission:'Transmission',power:'Mesure puissance',frein:'Freins',pilotage:'Pilotage',selle:'Selle',tige:'Tige de selle',pedales:'Pédales'};
+  const active = postes.filter(p=>Object.keys(counts[p]).length>0);
+  if (!active.length) { document.getElementById('comp-stats').innerHTML='<div style="color:var(--text3);font-size:13px;padding:1rem;">Aucune donnée.</div>'; return; }
+  document.getElementById('comp-stats').innerHTML = active.map(p => {
+    const sorted = Object.entries(counts[p]).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const max = sorted[0]?.[1]||1;
+    return '<div class="comp-stat-card"><h3>'+labels[p]+' <span style="color:var(--text3);font-weight:400">('+sorted.reduce((s,[,n])=>s+n,0)+')</span></h3>'+
+      sorted.map(([id,n])=>'<div class="comp-bar"><div class="comp-bar-name" title="'+getOptName(id)+'">'+getOptName(id)+'</div><div class="comp-bar-track"><div class="comp-bar-fill" style="width:'+Math.round(n/max*100)+'%"></div></div><div class="comp-bar-count">'+n+'</div></div>').join('')+
+    '</div>';
   }).join('');
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
 function openDetail(configId) {
-  const c = allConfigs.find(x => x.config_id === configId);
+  const c = allConfigs.find(x=>x.config_id===configId);
   if (!c) return;
-  const comp = c.config_json?.composants || {};
-  const dims = c.config_json?.dimensions || {};
-  const shareUrl = `https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=${c.config_id}`;
+  const comp = c.config_json?.composants||{};
+  const dims = c.config_json?.dimensions||{};
+  const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config='+c.config_id;
+  const sc = c.statut_commercial||'nouveau';
+  const scLabels = {nouveau:'Nouveau',en_cours:'En cours',commande:'Commandé',annule:'Annulé'};
 
-  document.getElementById('detail-content').innerHTML = `
-    <h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">${c.config_id}</h2>
+  document.getElementById('detail-content').innerHTML =
+    '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">'+c.config_id+'</h2>'+
 
-    <div class="detail-section">
-      <h3>Client</h3>
-      <div class="detail-row"><span>Nom</span><span>${c.nom_client||'—'}</span></div>
-      <div class="detail-row"><span>Email</span><span>${c.email_client||'—'}</span></div>
-      <div class="detail-row"><span>Date</span><span>${new Date(c.created_at).toLocaleString('fr-FR')}</span></div>
-      <div class="detail-row"><span>Statut</span><span>${c.statut === 'devis' ? '✅ Devis demandé' : '📌 Sauvegardé'}</span></div>
-    </div>
+    '<div class="detail-section"><h3>Client</h3>'+
+      '<div class="detail-row"><span>Nom</span><span>'+(c.nom_client||'—')+'</span></div>'+
+      '<div class="detail-row"><span>Email</span><span>'+(c.email_client ? '<a href="mailto:'+c.email_client+'" style="color:var(--yellow)">'+c.email_client+'</a>' : '—')+'</span></div>'+
+      '<div class="detail-row"><span>Date</span><span>'+new Date(c.created_at).toLocaleString('fr-FR')+'</span></div>'+
+      '<div class="detail-row"><span>Vues config</span><span>'+(c.nb_consultations||0)+'</span></div>'+
+    '</div>'+
 
-    <div class="detail-section">
-      <h3>Configuration</h3>
-      <div class="detail-row"><span>Modèle</span><span>${c.config_json?.modele_nom||c.modele}</span></div>
-      <div class="detail-row"><span>Preset</span><span>${c.preset||'—'}</span></div>
-      <div class="detail-row"><span>Prix</span><span style="color:var(--yellow);font-weight:700">${(c.prix||0).toLocaleString('fr-FR')} €</span></div>
-    </div>
+    '<div class="detail-section"><h3>Configuration</h3>'+
+      '<div class="detail-row"><span>Modèle</span><span>'+(c.config_json?.modele_nom||c.modele)+'</span></div>'+
+      '<div class="detail-row"><span>Preset</span><span>'+(c.preset||'—')+'</span></div>'+
+      '<div class="detail-row"><span>Prix</span><span style="color:var(--yellow);font-weight:700">'+(c.prix||0).toLocaleString('fr-FR')+' €</span></div>'+
+      '<div class="detail-row"><span>Statut envoi</span><span>'+(c.statut==='devis'?'✅ Devis demandé':'📌 Sauvegardé')+'</span></div>'+
+    '</div>'+
 
-    ${Object.keys(comp).length ? `<div class="detail-section">
-      <h3>Composants</h3>
-      ${Object.entries(comp).map(([k,v]) => `<div class="detail-row"><span>${k}</span><span>${v}</span></div>`).join('')}
-    </div>` : ''}
+    (Object.keys(comp).length ? '<div class="detail-section"><h3>Composants</h3>'+
+      Object.entries(comp).map(([k,v])=>'<div class="detail-row"><span>'+k+'</span><span>'+getOptName(v)+'</span></div>').join('')+
+    '</div>' : '')+
 
-    ${Object.keys(dims).filter(k=>dims[k]).length ? `<div class="detail-section">
-      <h3>Dimensions</h3>
-      ${Object.entries(dims).filter(([k,v])=>v).map(([k,v]) => `<div class="detail-row"><span>${k}</span><span>${v}</span></div>`).join('')}
-    </div>` : ''}
+    (Object.keys(dims).filter(k=>dims[k]).length ? '<div class="detail-section"><h3>Dimensions</h3>'+
+      Object.entries(dims).filter(([k,v])=>v).map(([k,v])=>'<div class="detail-row"><span>'+k+'</span><span>'+v+'</span></div>').join('')+
+    '</div>' : '')+
 
-    <div class="detail-section">
-      <h3>URL partageable</h3>
-      <div style="font-size:11px;color:var(--text3);word-break:break-all;margin-bottom:.5rem;">${shareUrl}</div>
-      <button class="btn-copy-url" onclick="copyUrl('${shareUrl}')"><i class="ti ti-copy"></i> Copier le lien</button>
-      <a href="${shareUrl}" target="_blank" style="display:block;text-align:center;margin-top:.5rem;color:var(--yellow);font-size:12px;">Ouvrir →</a>
-    </div>
+    '<div class="detail-section"><h3>Statut commercial</h3>'+
+      '<select class="status-select" id="sc-select-'+c.config_id+'" onchange="updateStatutCom(''+c.config_id+'',this.value)">'+
+        ['nouveau','en_cours','commande','annule'].map(s=>'<option value="'+s+'"'+(sc===s?' selected':'')+'>'+scLabels[s]+'</option>').join('')+
+      '</select>'+
+    '</div>'+
 
-    <div class="detail-section">
-      <h3>JSON brut</h3>
-      <div class="json-block">${JSON.stringify(c.config_json, null, 2)}</div>
-    </div>
-  `;
+    '<div class="detail-section"><h3>Notes admin</h3>'+
+      '<textarea class="notes-input" id="notes-'+c.config_id+'" placeholder="Notes internes...">'+(c.notes_admin||'')+'</textarea>'+
+      '<button class="btn-full" onclick="saveNotes(''+c.config_id+'')"><i class="ti ti-device-floppy"></i> Sauvegarder les notes</button>'+
+    '</div>'+
+
+    '<div class="detail-section"><h3>Actions</h3>'+
+      '<button class="btn-full" onclick="copyUrl(''+shareUrl+'')"><i class="ti ti-copy"></i> Copier le lien config</button>'+
+      '<a href="'+shareUrl+'" target="_blank" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--yellow);font-size:12px;border:0.5px solid var(--border2);">Ouvrir la config →</a>'+
+      (c.email_client ? '<a href="mailto:'+c.email_client+'?subject=Votre configuration Obvious Cycles — '+c.config_id+'" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--text2);font-size:12px;border:0.5px solid var(--border2);">Envoyer un email →</a>' : '')+
+      '<button class="btn-full danger" onclick="deleteConfig(''+c.config_id+'')" style="margin-top:1rem;color:#cc4444;border-color:#662222;"><i class="ti ti-trash"></i> Supprimer cette config</button>'+
+    '</div>'+
+
+    '<div class="detail-section"><h3>JSON brut</h3>'+
+      '<div class="json-block">'+JSON.stringify(c.config_json,null,2)+'</div>'+
+    '</div>';
 
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('detail-overlay').classList.add('open');
@@ -477,35 +575,58 @@ function closeDetail() {
   document.getElementById('detail-overlay').classList.remove('open');
 }
 
-function copyUrl(url) {
-  navigator.clipboard.writeText(url).then(() => alert('Lien copié !'));
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+async function updateStatutCom(configId, val) {
+  await sbFetch('/rest/v1/configurations?config_id=eq.'+configId, {
+    method: 'PATCH', body: JSON.stringify({statut_commercial: val})
+  });
+  const c = allConfigs.find(x=>x.config_id===configId);
+  if (c) c.statut_commercial = val;
+  applyFilters(); renderCharts();
 }
+
+async function saveNotes(configId) {
+  const notes = document.getElementById('notes-'+configId)?.value || '';
+  await sbFetch('/rest/v1/configurations?config_id=eq.'+configId, {
+    method: 'PATCH', body: JSON.stringify({notes_admin: notes})
+  });
+  const c = allConfigs.find(x=>x.config_id===configId);
+  if (c) c.notes_admin = notes;
+  const btn = event.target;
+  btn.innerHTML = '<i class="ti ti-check"></i> Sauvegardé !';
+  setTimeout(() => { btn.innerHTML = '<i class="ti ti-device-floppy"></i> Sauvegarder les notes'; }, 2000);
+}
+
+async function deleteConfig(configId) {
+  if (!confirm('Supprimer la config '+configId+' ? Cette action est irréversible.')) return;
+  await sbFetch('/rest/v1/configurations?config_id=eq.'+configId, { method: 'DELETE' });
+  allConfigs = allConfigs.filter(x=>x.config_id!==configId);
+  closeDetail(); applyFilters(); renderCharts();
+}
+
+function copyUrl(url) { navigator.clipboard.writeText(url).then(()=>alert('Lien copié !')); }
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────────────
 function exportCSV() {
-  const cols = ['config_id','created_at','nom_client','email_client','modele','preset','prix','statut','taille','composants'];
+  const cols = ['config_id','created_at','nom_client','email_client','modele','preset','prix','statut','statut_commercial','notes_admin','nb_consultations','taille','composants'];
   const rows = [cols.join(';')];
   filtered.forEach(c => {
-    const taille = c.config_json?.dimensions?.taille || '';
-    const comp = Object.entries(c.config_json?.composants||{}).map(([k,v])=>k+':'+v).join(' | ');
-    rows.push([
-      c.config_id, c.created_at, c.nom_client||'', c.email_client||'',
-      c.modele||'', c.preset||'', c.prix||0, c.statut||'',
-      taille, comp
-    ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(';'));
+    const taille = c.config_json?.dimensions?.taille||'';
+    const comp = Object.entries(c.config_json?.composants||{}).map(([k,v])=>k+':'+getOptName(v)).join(' | ');
+    rows.push([c.config_id,c.created_at,c.nom_client||'',c.email_client||'',c.modele||'',c.preset||'',c.prix||0,c.statut||'',c.statut_commercial||'',c.notes_admin||'',c.nb_consultations||0,taille,comp]
+      .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';'));
   });
-  const blob = new Blob(['\uFEFF'+rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'configs-obvious-' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
+  const blob = new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='configs-obvious-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-if (sessionStorage.getItem('admin_auth') === '1') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-ui').style.display = 'block';
+if (sessionStorage.getItem('admin_auth')==='1') {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('admin-ui').style.display='block';
   loadData();
+  refreshTimer = setInterval(loadData, 5*60*1000);
 }
 </script>
 </body>
