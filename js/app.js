@@ -1593,20 +1593,22 @@ function dtRenderS4() {
   const mc = dtModifCount();
 
   inner.innerHTML =
-    '<div style="display:grid;grid-template-columns:280px 1fr;gap:2rem;align-items:start;">' +
+    '<div style="display:grid;grid-template-columns:'+(document.body.classList.contains('config-shared-mode')?'340px':'280px')+' 1fr;gap:2rem;align-items:start;">' +
       // Colonne gauche : photo + infos
       '<div>' +
-        (model.photo ? '<img src="'+model.photo+'" style="width:100%;height:180px;object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
+        (model.photo ? '<img src="'+model.photo+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.5rem;">'+price.toLocaleString('fr-FR')+' €</div>' +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
-        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
-          '<button class="dtr-btn-main" onclick="openOrderModal()"><i class="ti ti-send"></i> Recevoir mon étude personnalisée</button>' +
-          '<button class="dtr-btn-sec" onclick="dtQuickSave()"><i class="ti ti-bookmark"></i> Sauvegarder</button>' +
-          '<button class="dtr-btn-sec" onclick="dtReset()"><i class="ti ti-refresh"></i> Nouvelle configuration</button>' +
-        '</div>' +
+        (!document.body.classList.contains('config-shared-mode') ?
+          '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
+            '<button class="dtr-btn-main" onclick="openOrderModal()"><i class="ti ti-send"></i> Recevoir mon étude personnalisée</button>' +
+            '<button class="dtr-btn-sec" onclick="dtQuickSave()"><i class="ti ti-bookmark"></i> Sauvegarder</button>' +
+            '<button class="dtr-btn-sec" onclick="dtReset()"><i class="ti ti-refresh"></i> Nouvelle configuration</button>' +
+          '</div>'
+        : '') +
       '</div>' +
       // Colonne droite : composants
       '<div>' +
