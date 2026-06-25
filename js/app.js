@@ -1082,7 +1082,7 @@ function dtRender() {
 
   // Bouton next step 3
   const next3lbl = el('dt-next-3-lbl');
-  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Ma configuration →' : 'Continuer sans taille';
+  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer sans taille';
 
   // Bouton "changer de vélo" dans le récap — visible après reset
 
@@ -1510,7 +1510,7 @@ function dtCheckSizeResult() {
 
   if (validated) {
     const lbl = document.getElementById('dt-next-3-lbl');
-    if (lbl) lbl.textContent = 'Ma configuration →';
+    if (lbl) lbl.textContent = 'Ma configuration';
   }
 }
 
@@ -2433,9 +2433,9 @@ function validateDims() {
   showSizeActionBtns();
   // Mettre à jour le bouton mobile ET desktop
   const _lbl = document.getElementById('p11-next-label');
-  if (_lbl) _lbl.textContent = 'Ma configuration →';
+  if (_lbl) _lbl.textContent = 'Ma configuration';
   const _lbl2 = document.getElementById('dt-next-3-lbl');
-  if (_lbl2) _lbl2.textContent = 'Ma configuration →';
+  if (_lbl2) _lbl2.textContent = 'Ma configuration';
 }
 
 // ─── DRAWER AIDE-CONTACT (mobile) ─────────────────────────────────────────────
@@ -2930,7 +2930,7 @@ function p11CalcSize() {
     sub.innerHTML = info;
     // Mettre à jour le bouton
     const _nextLbl = document.getElementById('p11-next-label');
-    if (_nextLbl) _nextLbl.textContent = 'Ma configuration →';
+    if (_nextLbl) _nextLbl.textContent = 'Ma configuration';
     return;
   }
   p11OverlapTailles = matches;
@@ -2948,7 +2948,7 @@ function p11ChooseUsage(usage) {
   window.sizeValidated = true;
   selSize.taille = chosen.taille;
   const _cLbl = document.getElementById('p11-next-label');
-  if (_cLbl) _cLbl.textContent = 'Ma configuration →';
+  if (_cLbl) _cLbl.textContent = 'Ma configuration';
   const defs = DEFAULTS_BY_TAILLE[selModel]?.[chosen.taille] || {};
   Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
   const acroRaw = parseFloat(document.getElementById('p11-guide-acro').value) || null;
