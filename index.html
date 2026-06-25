@@ -2,8 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=configurateur/proto14.html">
 <title>Obvious Cycles — Configurateur</title>
 </head>
-<body></body>
+<body>
+<script>
+// Charge le contenu de proto14 sans changer l'URL visible
+fetch('configurateur/proto14.html')
+  .then(r => r.text())
+  .then(html => {
+    document.open();
+    document.write(html);
+    document.close();
+  });
+</script>
+</body>
 </html>
