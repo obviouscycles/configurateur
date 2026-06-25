@@ -2447,6 +2447,11 @@ function validateDims() {
   }
   summary.classList.add('show');
   showSizeActionBtns();
+  // Mettre à jour le bouton mobile ET desktop
+  const _lbl = document.getElementById('p11-next-label');
+  if (_lbl) _lbl.textContent = 'Ma configuration →';
+  const _lbl2 = document.getElementById('dt-next-3-lbl');
+  if (_lbl2) _lbl2.textContent = 'Ma configuration →';
 }
 
 // ─── DRAWER AIDE-CONTACT (mobile) ─────────────────────────────────────────────
@@ -2939,9 +2944,9 @@ function p11CalcSize() {
     let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
     if (acro && selSize.cintre) info += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
     sub.innerHTML = info;
-  // Mettre à jour le bouton "Continuer sans taille" → "Voir votre configuration"
-  const _nextLbl = document.getElementById('p11-next-label');
-  if (_nextLbl && p11CurrentStep === 3) _nextLbl.textContent = 'Voir votre configuration';
+    // Mettre à jour le bouton
+    const _nextLbl = document.getElementById('p11-next-label');
+    if (_nextLbl) _nextLbl.textContent = 'Ma configuration →';
     return;
   }
   p11OverlapTailles = matches;
@@ -2958,6 +2963,8 @@ function p11ChooseUsage(usage) {
   const chosen = usage==='sport' ? sorted[0] : sorted[sorted.length-1];
   window.sizeValidated = true;
   selSize.taille = chosen.taille;
+  const _cLbl = document.getElementById('p11-next-label');
+  if (_cLbl) _cLbl.textContent = 'Ma configuration →';
   const defs = DEFAULTS_BY_TAILLE[selModel]?.[chosen.taille] || {};
   Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
   const acroRaw = parseFloat(document.getElementById('p11-guide-acro').value) || null;
