@@ -45,6 +45,8 @@ async function loadConfigFromUrl() {
     // ── Mode "config partagée" : adapter l'interface ──────────────────
     // Marquer le body pour le CSS
     document.body.classList.add('config-shared-mode');
+    if (typeof dtRenderS4 === 'function') dtRenderS4();
+    if (typeof dtRenderS4 === 'function') dtRenderS4();
 
     // Masquer les boutons inutiles dans le récap droit
     setTimeout(() => {
