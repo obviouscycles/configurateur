@@ -839,6 +839,7 @@ async function sendOrder() {
   try {
     // 1. Générer l'ID unique
     const configId = generateConfigId();
+    console.log('CONFIG ID:', configId);
 
     // 2. Construire le JSON de config
     const model = MODELS.find(m => m.id === selModel);
@@ -856,6 +857,7 @@ async function sendOrder() {
     };
 
     // 3. Sauvegarder dans Supabase
+    console.log('SAVING TO SUPABASE...');
     await saveConfigToSupabase({
       config_id: configId,
       modele: selModel,
@@ -866,6 +868,7 @@ async function sendOrder() {
       email_client: email,
     });
 
+    console.log('SUPABASE SAVED OK');
     // 4. URL partageable
     const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=' + configId;
 
@@ -894,6 +897,7 @@ async function sendOrder() {
       });
       // Afficher l'ID et l'URL au visiteur
       // Envoyer mail visiteur via Brevo
+      console.log('SENDING BREVO...');
       if (email) {
         try {
           const model = MODELS.find(m => m.id === selModel);
