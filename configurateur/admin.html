@@ -358,27 +358,30 @@ function renderTable() {
   const noRes = document.getElementById('no-results');
   if (!filtered.length) { tbody.innerHTML=''; noRes.style.display='block'; return; }
   noRes.style.display='none';
-  const statutComBadge = { nouveau:'badge-nouveau', en_cours:'badge-en_cours', commande:'badge-commande', annule:'badge-annule' };
-  const statutComLabel = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
-  tbody.innerHTML = filtered.map(c => {
+  const scBadge = { nouveau:'badge-nouveau', en_cours:'badge-en_cours', commande:'badge-commande', annule:'badge-annule' };
+  const scLabel = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.className = 'clickable';
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', () => openDetail(c.config_id));
     const date = new Date(c.created_at).toLocaleDateString('fr-FR');
     const taille = c.config_json?.dimensions?.taille || '—';
     const sc = c.statut_commercial || 'nouveau';
-    return '<tr class="clickable" onclick="openDetail(''+c.config_id+'')">'+
-      '<td>'+date+'</td>'+
-      '<td style="font-family:monospace;font-size:12px;color:var(--yellow)">'+c.config_id+'</td>'+
-      '<td>'+( c.nom_client||'—')+'</td>'+
-      '<td>'+(c.modele||'—')+'</td>'+
-      '<td style="font-weight:600">'+(c.prix||0).toLocaleString('fr-FR')+' €</td>'+
-      '<td>'+taille+'</td>'+
-      '<td style="text-align:center">'+(c.nb_consultations||0)+'</td>'+
-      '<td><span class="badge '+(c.statut==='devis'?'badge-devis':'badge-sauvegarde')+'">'+(c.statut==='devis'?'Devis':'Sauvegardé')+'</span></td>'+
-      '<td><span class="badge '+statutComBadge[sc]+'">'+statutComLabel[sc]+'</span></td>'+
-    '</tr>';
-  }).join('');
+    tr.innerHTML =
+      '<td>' + date + '</td>' +
+      '<td style="font-family:monospace;font-size:12px;color:var(--yellow)">' + c.config_id + '</td>' +
+      '<td>' + (c.nom_client||'—') + '</td>' +
+      '<td>' + (c.modele||'—') + '</td>' +
+      '<td style="font-weight:600">' + (c.prix||0).toLocaleString('fr-FR') + ' €</td>' +
+      '<td>' + taille + '</td>' +
+      '<td style="text-align:center">' + (c.nb_consultations||0) + '</td>' +
+      '<td><span class="badge ' + (c.statut==='devis'?'badge-devis':'badge-sauvegarde') + '">' + (c.statut==='devis'?'Devis':'Sauvegardé') + '</span></td>' +
+      '<td><span class="badge ' + scBadge[sc] + '">' + scLabel[sc] + '</span></td>';
+    tbody.appendChild(tr);
+  });
 }
-
-// ── STATS CARDS ───────────────────────────────────────────────────────────────
 function renderStats() {
   const total  = filtered.length;
   const devis  = filtered.filter(c=>c.statut==='devis').length;
@@ -511,65 +514,85 @@ function renderCompStats() {
 
 // ── DETAIL ────────────────────────────────────────────────────────────────────
 function openDetail(configId) {
-  const c = allConfigs.find(x=>x.config_id===configId);
+  const c = allConfigs.find(x => x.config_id === configId);
   if (!c) return;
-  const comp = c.config_json?.composants||{};
-  const dims = c.config_json?.dimensions||{};
-  const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config='+c.config_id;
-  const sc = c.statut_commercial||'nouveau';
-  const scLabels = {nouveau:'Nouveau',en_cours:'En cours',commande:'Commandé',annule:'Annulé'};
+  const comp = c.config_json?.composants || {};
+  const dims = c.config_json?.dimensions || {};
+  const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=' + c.config_id;
+  const sc = c.statut_commercial || 'nouveau';
+  const scLabels = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
+  const scKeys = ['nouveau','en_cours','commande','annule'];
 
-  document.getElementById('detail-content').innerHTML =
-    '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">'+c.config_id+'</h2>'+
+  let html = '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">' + c.config_id + '</h2>';
 
-    '<div class="detail-section"><h3>Client</h3>'+
-      '<div class="detail-row"><span>Nom</span><span>'+(c.nom_client||'—')+'</span></div>'+
-      '<div class="detail-row"><span>Email</span><span>'+(c.email_client ? '<a href="mailto:'+c.email_client+'" style="color:var(--yellow)">'+c.email_client+'</a>' : '—')+'</span></div>'+
-      '<div class="detail-row"><span>Date</span><span>'+new Date(c.created_at).toLocaleString('fr-FR')+'</span></div>'+
-      '<div class="detail-row"><span>Vues config</span><span>'+(c.nb_consultations||0)+'</span></div>'+
-    '</div>'+
+  // Client
+  html += '<div class="detail-section"><h3>Client</h3>';
+  html += '<div class="detail-row"><span>Nom</span><span>' + (c.nom_client||'—') + '</span></div>';
+  html += '<div class="detail-row"><span>Email</span><span>' + (c.email_client ? c.email_client : '—') + '</span></div>';
+  html += '<div class="detail-row"><span>Date</span><span>' + new Date(c.created_at).toLocaleString('fr-FR') + '</span></div>';
+  html += '<div class="detail-row"><span>Vues config</span><span>' + (c.nb_consultations||0) + '</span></div></div>';
 
-    '<div class="detail-section"><h3>Configuration</h3>'+
-      '<div class="detail-row"><span>Modèle</span><span>'+(c.config_json?.modele_nom||c.modele)+'</span></div>'+
-      '<div class="detail-row"><span>Preset</span><span>'+(c.preset||'—')+'</span></div>'+
-      '<div class="detail-row"><span>Prix</span><span style="color:var(--yellow);font-weight:700">'+(c.prix||0).toLocaleString('fr-FR')+' €</span></div>'+
-      '<div class="detail-row"><span>Statut envoi</span><span>'+(c.statut==='devis'?'✅ Devis demandé':'📌 Sauvegardé')+'</span></div>'+
-    '</div>'+
+  // Config
+  html += '<div class="detail-section"><h3>Configuration</h3>';
+  html += '<div class="detail-row"><span>Modèle</span><span>' + (c.config_json?.modele_nom||c.modele) + '</span></div>';
+  html += '<div class="detail-row"><span>Preset</span><span>' + (c.preset||'—') + '</span></div>';
+  html += '<div class="detail-row"><span>Prix</span><span style="color:var(--yellow);font-weight:700">' + (c.prix||0).toLocaleString('fr-FR') + ' €</span></div>';
+  html += '<div class="detail-row"><span>Statut envoi</span><span>' + (c.statut==='devis'?'✅ Devis demandé':'📌 Sauvegardé') + '</span></div></div>';
 
-    (Object.keys(comp).length ? '<div class="detail-section"><h3>Composants</h3>'+
-      Object.entries(comp).map(([k,v])=>'<div class="detail-row"><span>'+k+'</span><span>'+getOptName(v)+'</span></div>').join('')+
-    '</div>' : '')+
+  // Composants
+  if (Object.keys(comp).length) {
+    html += '<div class="detail-section"><h3>Composants</h3>';
+    Object.entries(comp).forEach(([k,v]) => { html += '<div class="detail-row"><span>' + k + '</span><span>' + getOptName(v) + '</span></div>'; });
+    html += '</div>';
+  }
 
-    (Object.keys(dims).filter(k=>dims[k]).length ? '<div class="detail-section"><h3>Dimensions</h3>'+
-      Object.entries(dims).filter(([k,v])=>v).map(([k,v])=>'<div class="detail-row"><span>'+k+'</span><span>'+v+'</span></div>').join('')+
-    '</div>' : '')+
+  // Dimensions
+  const dimEntries = Object.entries(dims).filter(([k,v]) => v);
+  if (dimEntries.length) {
+    html += '<div class="detail-section"><h3>Dimensions</h3>';
+    dimEntries.forEach(([k,v]) => { html += '<div class="detail-row"><span>' + k + '</span><span>' + v + '</span></div>'; });
+    html += '</div>';
+  }
 
-    '<div class="detail-section"><h3>Statut commercial</h3>'+
-      '<select class="status-select" id="sc-select-'+c.config_id+'" onchange="updateStatutCom(''+c.config_id+'',this.value)">'+
-        ['nouveau','en_cours','commande','annule'].map(s=>'<option value="'+s+'"'+(sc===s?' selected':'')+'>'+scLabels[s]+'</option>').join('')+
-      '</select>'+
-    '</div>'+
+  // Statut commercial
+  html += '<div class="detail-section"><h3>Statut commercial</h3>';
+  html += '<select class="status-select" id="sc-select-' + c.config_id + '">';
+  scKeys.forEach(s => { html += '<option value="' + s + '"' + (sc===s?' selected':'') + '>' + scLabels[s] + '</option>'; });
+  html += '</select></div>';
 
-    '<div class="detail-section"><h3>Notes admin</h3>'+
-      '<textarea class="notes-input" id="notes-'+c.config_id+'" placeholder="Notes internes...">'+(c.notes_admin||'')+'</textarea>'+
-      '<button class="btn-full" onclick="saveNotes(''+c.config_id+'')"><i class="ti ti-device-floppy"></i> Sauvegarder les notes</button>'+
-    '</div>'+
+  // Notes
+  html += '<div class="detail-section"><h3>Notes admin</h3>';
+  html += '<textarea class="notes-input" id="notes-' + c.config_id + '" placeholder="Notes internes...">' + (c.notes_admin||'') + '</textarea>';
+  html += '<button class="btn-full" id="btn-notes-' + c.config_id + '"><i class="ti ti-device-floppy"></i> Sauvegarder les notes</button></div>';
 
-    '<div class="detail-section"><h3>Actions</h3>'+
-      '<button class="btn-full" onclick="copyUrl(''+shareUrl+'')"><i class="ti ti-copy"></i> Copier le lien config</button>'+
-      '<a href="'+shareUrl+'" target="_blank" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--yellow);font-size:12px;border:0.5px solid var(--border2);">Ouvrir la config →</a>'+
-      (c.email_client ? '<a href="mailto:'+c.email_client+'?subject=Votre configuration Obvious Cycles — '+c.config_id+'" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--text2);font-size:12px;border:0.5px solid var(--border2);">Envoyer un email →</a>' : '')+
-      '<button class="btn-full danger" onclick="deleteConfig(''+c.config_id+'')" style="margin-top:1rem;color:#cc4444;border-color:#662222;"><i class="ti ti-trash"></i> Supprimer cette config</button>'+
-    '</div>'+
+  // Actions
+  html += '<div class="detail-section"><h3>Actions</h3>';
+  html += '<button class="btn-full" id="btn-copy-' + c.config_id + '"><i class="ti ti-copy"></i> Copier le lien config</button>';
+  html += '<a href="' + shareUrl + '" target="_blank" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--yellow);font-size:12px;border:0.5px solid var(--border2);">Ouvrir la config →</a>';
+  if (c.email_client) html += '<a href="mailto:' + c.email_client + '?subject=Votre configuration Obvious Cycles %E2%80%94 ' + c.config_id + '" style="display:block;text-align:center;padding:8px;margin-top:.5rem;color:var(--text2);font-size:12px;border:0.5px solid var(--border2);">Envoyer un email →</a>';
+  html += '<button class="btn-full danger" id="btn-del-' + c.config_id + '" style="margin-top:1rem;color:#cc4444;border-color:#662222;"><i class="ti ti-trash"></i> Supprimer cette config</button></div>';
 
-    '<div class="detail-section"><h3>JSON brut</h3>'+
-      '<div class="json-block">'+JSON.stringify(c.config_json,null,2)+'</div>'+
-    '</div>';
+  // JSON
+  html += '<div class="detail-section"><h3>JSON brut</h3><div class="json-block">' + JSON.stringify(c.config_json, null, 2) + '</div></div>';
+
+  document.getElementById('detail-content').innerHTML = html;
+
+  // Event listeners (pas de inline onclick)
+  const scSel = document.getElementById('sc-select-' + c.config_id);
+  if (scSel) scSel.addEventListener('change', e => updateStatutCom(c.config_id, e.target.value));
+
+  const btnNotes = document.getElementById('btn-notes-' + c.config_id);
+  if (btnNotes) btnNotes.addEventListener('click', () => saveNotes(c.config_id));
+
+  const btnCopy = document.getElementById('btn-copy-' + c.config_id);
+  if (btnCopy) btnCopy.addEventListener('click', () => copyUrl(shareUrl));
+
+  const btnDel = document.getElementById('btn-del-' + c.config_id);
+  if (btnDel) btnDel.addEventListener('click', () => deleteConfig(c.config_id));
 
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('detail-overlay').classList.add('open');
 }
-
 function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
   document.getElementById('detail-overlay').classList.remove('open');
@@ -616,7 +639,7 @@ function exportCSV() {
     rows.push([c.config_id,c.created_at,c.nom_client||'',c.email_client||'',c.modele||'',c.preset||'',c.prix||0,c.statut||'',c.statut_commercial||'',c.notes_admin||'',c.nb_consultations||0,taille,comp]
       .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';'));
   });
-  const blob = new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const blob = new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='configs-obvious-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
 }
