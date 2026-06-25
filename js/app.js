@@ -16,11 +16,12 @@ async function loadConfigFromUrl() {
     window._activePreset = json.preset || null;
     window._singleModel  = selModel;
 
-    // Afficher un bandeau discret
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:56px;left:0;right:0;background:#1a1500;border-bottom:1px solid #F5C400;padding:8px 16px;font-size:12px;color:#F5C400;z-index:500;text-align:center;';
-    banner.innerHTML = '📎 Configuration <strong>' + configId + '</strong> chargée — <a href="' + window.location.pathname + '" style="color:#F5C400;text-decoration:underline;">Nouvelle config</a>';
-    document.body.appendChild(banner);
+    // Afficher l'info dans le header principal (badge proto)
+    const protoBadge = document.getElementById('proto-badge');
+    if (protoBadge) {
+      protoBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:none;color:#F5C400;font-size:11px;font-weight:600;padding:2px 0;letter-spacing:.03em;';
+      protoBadge.textContent = (cfg.nom_client || '') + ' — ' + configId;
+    }
 
     // Charger selon contexte desktop ou mobile
     if (window.innerWidth >= 768) {
