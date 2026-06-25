@@ -31,8 +31,8 @@ async function loadConfigFromUrl() {
     // Afficher l'info dans le header principal (badge proto)
     const protoBadge = document.getElementById('proto-badge');
     if (protoBadge) {
-      protoBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:none;color:#F5C400;font-size:11px;font-weight:600;padding:2px 0;letter-spacing:.03em;';
-      protoBadge.textContent = (cfg.nom_client || '') + ' — ' + configId;
+      protoBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:none;color:#ffffff;font-size:13px;font-weight:700;padding:2px 0;letter-spacing:.02em;';
+      protoBadge.textContent = (cfg.nom_client || '') + ' — Configuration ' + configId;
     }
 
     // Charger selon contexte desktop ou mobile
