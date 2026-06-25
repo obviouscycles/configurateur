@@ -907,6 +907,7 @@ async function sendOrder() {
       config_json: configJson,
       nom_client: name,
       email_client: email,
+      statut: 'devis',
     });
 
     // 4. URL partageable
@@ -1720,6 +1721,11 @@ function dtQuickSave() {
   persistSaved();
   loadSaved(); // recharger pour sync
   dtUpdateSavedBadge();
+  // Aussi sauvegarder dans Supabase
+  const { price: qPrice } = computeTotals(selModel, selOpts);
+  const qId = generateConfigId();
+  const qJson = { config_id: qId, modele: selModel, modele_nom: (MODELS.find(m=>m.id===selModel)||{}).name||'', preset: window._activePreset||null, composants: selOpts, dimensions: selSize||{}, prix: qPrice, nom_client: name.trim(), email_client: '' };
+  saveConfigToSupabase({ config_id: qId, modele: selModel, preset: window._activePreset||null, prix: qPrice, config_json: qJson, nom_client: name.trim(), email_client: '', statut: 'sauvegarde' }).catch(e => console.warn('Supabase save error:', e));
   // Feedback visuel
   const btn = document.getElementById('dtr-btn-save');
   if (btn) {
