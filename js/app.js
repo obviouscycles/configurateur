@@ -29,6 +29,33 @@ async function loadConfigFromUrl() {
     } else {
       renderModels(); switchTab(4);
     }
+
+    // ── Mode "config partagée" : adapter l'interface ──────────────────
+    // Marquer le body pour le CSS
+    document.body.classList.add('config-shared-mode');
+
+    // Masquer les boutons inutiles dans le récap droit
+    setTimeout(() => {
+      const btnDevis = document.getElementById('dtr-btn-devis');
+      const btnSave  = document.getElementById('dtr-btn-save');
+      const btnReset = document.getElementById('dtr-btn-reset');
+      if (btnDevis) btnDevis.style.display = 'none';
+      if (btnSave)  btnSave.style.display  = 'none';
+
+      // Injecter le bloc "en cours de traitement" dans le récap
+      const actions = document.querySelector('.dtr-actions');
+      if (actions && btnReset) {
+        const bloc = document.createElement('div');
+        bloc.style.cssText = 'background:#1a1a1a;border:0.5px solid #333;padding:1rem;margin-bottom:.75rem;';
+        bloc.innerHTML =
+          '<div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Votre demande est en cours</div>' +
+          '<p style="font-size:12px;color:#aaa;line-height:1.5;margin-bottom:.75rem;">Nous vous contacterons sous 48h pour finaliser votre projet.</p>' +
+          '<button onclick="openContactDrawer()" style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:.5rem;"><i class="ti ti-message"></i> Poser une question</button>' +
+          '<button onclick="document.body.classList.remove('config-shared-mode');window.history.pushState({},'',window.location.pathname);['dtr-btn-devis','dtr-btn-save'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=''});" style="width:100%;background:none;border:0.5px solid #555;color:#888;padding:9px;font-size:12px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit"></i> Modifier ma configuration</button>';
+        actions.insertBefore(bloc, btnReset);
+      }
+    }, 300);
+
   } catch(e) {
     console.error('Erreur chargement config:', e);
   }
