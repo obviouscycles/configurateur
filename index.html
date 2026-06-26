@@ -2,20 +2,39 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Obvious Cycles — Configurateur</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurateur vélo titane — Obvious Cycles</title>
+
+<!-- SEO -->
+<meta name="description" content="Configurez votre vélo titane sur mesure Obvious Cycles : modèle, composants, taille. Recevez votre étude personnalisée.">
+<link rel="canonical" href="https://www.obviouscycles.com/configurateur/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Configurateur vélo titane — Obvious Cycles">
+<meta property="og:description" content="Composez votre vélo titane à la carte : choisissez votre modèle, vos composants, votre taille. Recevez votre étude personnalisée sous 48h.">
+<meta property="og:image" content="https://www.obviouscycles.com/wp-content/uploads/2026/06/obvious-cycles-og.jpg">
+<meta property="og:url" content="https://www.obviouscycles.com/configurateur/">
+<meta property="og:site_name" content="Obvious Cycles">
+<meta property="og:locale" content="fr_FR">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Configurateur vélo titane — Obvious Cycles">
+<meta name="twitter:description" content="Composez votre vélo titane sur mesure et recevez votre étude personnalisée sous 48h.">
+<meta name="twitter:image" content="https://www.obviouscycles.com/wp-content/uploads/2026/06/obvious-cycles-og.jpg">
+
+<link rel="icon" type="image/webp" href="https://www.obviouscycles.com/wp-content/uploads/2023/04/favicon-512-light.webp">
 </head>
 <body>
 <script>
-// Transmettre les paramètres URL à proto14
-var params = window.location.search; // ex: ?modele=route
+var params = window.location.search;
 fetch('configurateur/proto14.html' + params)
   .then(r => r.text())
   .then(html => {
     document.open();
     document.write(html);
     document.close();
-    // Corriger l'URL affichée
-    window.history.replaceState({}, '', '/' + 'configurateur/' + params);
   });
 </script>
 </body>
