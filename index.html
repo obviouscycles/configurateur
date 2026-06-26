@@ -6,13 +6,16 @@
 </head>
 <body>
 <script>
-// Charge le contenu de proto14 sans changer l'URL visible
-fetch('configurateur/proto14.html')
+// Transmettre les paramètres URL à proto14
+var params = window.location.search; // ex: ?modele=route
+fetch('configurateur/proto14.html' + params)
   .then(r => r.text())
   .then(html => {
     document.open();
     document.write(html);
     document.close();
+    // Corriger l'URL affichée
+    window.history.replaceState({}, '', '/' + 'configurateur/' + params);
   });
 </script>
 </body>
