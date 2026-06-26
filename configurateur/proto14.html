@@ -1485,15 +1485,32 @@
     /* Popup OOD desktop : plus large (x4/3 ≈ 373px) */
     #dt-ood-popup { width: 373px !important; }
   }
+
+  /* ── Cookie banner ── */
+  #cookie-banner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a1a1a; border-top: 0.5px solid #333;
+    padding: 10px 20px; z-index: 9999;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; font-size: 12px; color: #aaa;
+  }
+  #cookie-banner a { color: #F5C400; text-decoration: none; }
+  #cookie-banner a:hover { text-decoration: underline; }
+  .cookie-btn {
+    background: none; border: 0.5px solid #444; color: #aaa;
+    padding: 6px 14px; cursor: pointer; font-size: 12px;
+    font-family: var(--font); white-space: nowrap; transition: border-color .15s, color .15s;
+  }
+  .cookie-btn:hover { border-color: #888; color: #f2f2f2; }
+  .cookie-btn.accept { background: #F5C400; color: #1a1a00; border-color: #F5C400; font-weight: 600; }
+  .cookie-btn.accept:hover { background: #d4a900; border-color: #d4a900; }
+  @media (max-width: 767px) {
+    #cookie-banner { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
+    #cookie-banner .cookie-btns { display: flex; gap: .5rem; width: 100%; }
+    .cookie-btn { flex: 1; text-align: center; }
+  }
 </style>
-  <!-- Google Analytics GA4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KGZDWLZ7JZ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-KGZDWLZ7JZ');
-  </script>
+  <!-- Google Analytics — chargé uniquement après consentement (voir cookie banner) -->
 </head>
 <body>
 
@@ -2254,5 +2271,44 @@
       <div id="cmm-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
     </div>
   </div>
+
+<!-- Cookie banner -->
+<div id="cookie-banner" style="display:none;">
+  <span>Ce site utilise Google Analytics pour mesurer l'audience. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank">Politique de confidentialité</a></span>
+  <div class="cookie-btns">
+    <button class="cookie-btn" onclick="cookieChoice(false)">Refuser</button>
+    <button class="cookie-btn accept" onclick="cookieChoice(true)">Accepter</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  var consent = localStorage.getItem('obv_cookie_consent');
+  if (consent === null) {
+    document.getElementById('cookie-banner').style.display = 'flex';
+  } else if (consent === 'true') {
+    enableGA();
+  }
+})();
+
+function cookieChoice(accepted) {
+  localStorage.setItem('obv_cookie_consent', accepted ? 'true' : 'false');
+  document.getElementById('cookie-banner').style.display = 'none';
+  if (accepted) enableGA();
+}
+
+function enableGA() {
+  // Charger Google Analytics si consentement donné
+  var s = document.createElement('script');
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-KGZDWLZ7JZ';
+  s.async = true;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', 'G-KGZDWLZ7JZ');
+}
+</script>
 </body>
 </html>
