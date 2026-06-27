@@ -1636,7 +1636,6 @@ function dtRenderS4() {
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
       ((!window.sizeValidated || !Object.keys(selSize).some(k => selSize[k])) ?
         '<div style="font-size:13px;color:#555;font-style:italic;">Non renseignées — nous vous contacterons pour affiner et valider vos cotes.</div>' :
-        '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
         (() => {
           const parts = [];
           if (selSize.taille)        parts.push('<span><strong>Taille :</strong> ' + selSize.taille + '</span>');
