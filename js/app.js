@@ -1607,7 +1607,7 @@ function dtRenderS4() {
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
-            '<button class="dtr-btn-main" onclick="openOrderModal()"><i class="ti ti-send"></i> Recevoir mon étude personnalisée</button>' +
+            '<button class="dtr-btn-main" onclick="openOrderModal()"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>' +
             '<button class="dtr-btn-sec" onclick="dtQuickSave()"><i class="ti ti-bookmark"></i> Sauvegarder</button>' +
             '<button class="dtr-btn-sec" onclick="dtReset()"><i class="ti ti-refresh"></i> Nouvelle configuration</button>' +
           '</div>'
