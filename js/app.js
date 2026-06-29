@@ -1804,6 +1804,18 @@ if (modeleParam) {
       }
     });
 
+    // Présélection via paramètre URL ?preset=Signature|Ti1|Ti2
+    const presetParam = urlParams.get('preset');
+    if (presetParam && PRESETS[modeleAuto.id] && PRESETS[modeleAuto.id][presetParam]) {
+      window._activePreset = presetParam;
+      selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
+      document.getElementById('posts-section').style.display = 'block';
+      renderPosts();
+      updateRecap();
+      renderModels();
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 10);
+    }
+
     if (hasPreset) {
       Object.keys(selOpts).forEach(postId => {
         const optId = selOpts[postId];
