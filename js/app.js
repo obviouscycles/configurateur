@@ -1809,7 +1809,11 @@ if (modeleParam) {
     if (presetParam && PRESETS[modeleAuto.id] && PRESETS[modeleAuto.id][presetParam]) {
       window._activePreset = presetParam;
       selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
-      document.getElementById('posts-section').style.display = 'block';
+      // Masquer la grille des modèles, afficher directement l'étape 2
+      const step1Wrap = document.getElementById('step1-wrap');
+      const postsSection = document.getElementById('posts-section');
+      if (step1Wrap) step1Wrap.style.display = 'none';
+      if (postsSection) postsSection.style.display = 'block';
       renderPosts();
       updateRecap();
       renderModels();
