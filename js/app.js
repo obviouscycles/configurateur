@@ -1809,7 +1809,7 @@ if (modeleParam) {
     if (presetParam && PRESETS[modeleAuto.id] && PRESETS[modeleAuto.id][presetParam]) {
       window._activePreset = presetParam;
       selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
-      // Masquer la grille des modèles, afficher directement l'étape 2
+      // Mobile : masquer grille, afficher composants
       const step1Wrap = document.getElementById('step1-wrap');
       const postsSection = document.getElementById('posts-section');
       if (step1Wrap) step1Wrap.style.display = 'none';
@@ -1817,6 +1817,15 @@ if (modeleParam) {
       renderPosts();
       updateRecap();
       renderModels();
+      // Desktop : forcer step 2 avec le bon preset APRES que selectModel a tout initialisé
+      if (window.innerWidth >= 768) {
+        setTimeout(() => {
+          window._activePreset = presetParam;
+          selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
+          dtStep = 2;
+          dtRender();
+        }, 50);
+      }
       setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 10);
     }
 
