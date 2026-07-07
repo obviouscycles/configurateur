@@ -2455,19 +2455,7 @@ function buildDimsGrid() {
     if (secondaryFields.length > 0) {
       guideSec.innerHTML = '<hr style="border:none;border-top:0.5px solid #444;margin:1.5rem 0 1.25rem;">' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;">' +
-        secondaryFields.map(f => {
-          const optHTML = f.options.map(o =>
-            `<option value="${o}" ${selSize[f.key]==o?'selected':''}>${o}</option>`
-          ).join('');
-          return `<div class="dim-field">
-            <label>${f.label}</label>
-            <select class="size-select" id="guide-${f.id}" onchange="selSize['${f.key}']=this.value">
-              <option value="">— choisir —</option>${optHTML}
-              ${f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : ''}
-            </select>
-            ${f.note ? `<span class="dim-note" style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">${f.note}</span>` : ''}
-          </div>`;
-        }).join('') + '</div>';
+        secondaryFields.map(f => renderField(f)).join('') + '</div>';
     } else {
       guideSec.innerHTML = '';
     }
