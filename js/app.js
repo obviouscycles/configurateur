@@ -2384,7 +2384,7 @@ function buildDimsGrid() {
     });
   }
 
-  const SECONDARY_KEYS = ['plateaux', 'cassette', 'section', 'debattement'];
+  const SECONDARY_KEYS = ['plateaux', 'cassette', 'section', 'debattement', 'largeur_selle'];
   const primaryFields   = fields.filter(f => !SECONDARY_KEYS.includes(f.key));
   const secondaryFields = fields.filter(f =>  SECONDARY_KEYS.includes(f.key));
 
@@ -2461,6 +2461,7 @@ function buildDimsGrid() {
             <label>${f.label}</label>
             <select class="size-select" id="guide-${f.id}" onchange="selSize['${f.key}']=this.value">
               <option value="">— choisir —</option>${optHTML}
+              <option value="" disabled style="color:#555;">Je ne sais pas encore</option>
             </select>
             ${f.note ? `<span class="dim-note" style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">${f.note}</span>` : ''}
           </div>`;
@@ -3132,7 +3133,7 @@ function p11BuildDimsGrid() {
     });
   }
 
-  const P11_SEC = ['plateaux','cassette','section','debattement'];
+  const P11_SEC = ['plateaux','cassette','section','debattement','largeur_selle'];
   const p11Primary   = fields.filter(f => !P11_SEC.includes(f.key));
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
