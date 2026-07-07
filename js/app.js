@@ -2331,8 +2331,7 @@ function buildDimsGrid() {
     }
     if (sectionOpts.length >= 1)
       fields.push({id:'dim-section', label:'Section pneu', options: sectionOpts, key:'section',
-        note: selModel === 'vtt_enduro' ? 'en pouces' : null,
-        unit: selModel === 'vtt_enduro' ? '"' : null});
+        });
   }
 
   // Fourche VTT
@@ -3093,7 +3092,7 @@ function p11BuildDimsGrid() {
     }
     if (sectionOpts.length >= 1)
       fields.push({id:'p11-dim-section', label:'Section pneu', options:sectionOpts, key:'section',
-        note: selModel==='vtt_enduro' ? 'en pouces' : null});
+        });
   }
 
   // Fourche VTT
