@@ -2388,15 +2388,7 @@ function buildDimsGrid() {
   const secondaryFields = fields.filter(f =>  SECONDARY_KEYS.includes(f.key));
 
   function renderField(f) {
-    if (f.options.length === 1) {
-      selSize[f.key] = String(f.options[0]);
-      const unit = ['manivelle','potence','cintre','debattement','largeur_selle'].includes(f.key) ? ' mm' : '';
-      return `<div class="dim-field">
-        <label>${f.label}</label>
-        <div class="dim-single">${f.options[0]}${unit}</div>
-        ${f.note ? `<span class="dim-note">${f.note}</span>` : ''}
-      </div>`;
-    }
+    selSize[f.key] = selSize[f.key] || null;
     const optHTML = f.options.map(o =>
       `<option value="${o}" ${selSize[f.key]==o?'selected':''}>${o}${f.key==='manivelle'||f.key==='potence'?' mm':''}</option>`
     ).join('');
@@ -2406,9 +2398,11 @@ function buildDimsGrid() {
     const jnspOption = f.options.length >= 2
       ? `<option value="">Je ne sais pas encore</option>`
       : '';
+    // Valeur unique : pré-sélectionner silencieusement
+    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
     return `<div class="dim-field">
       <label>${f.label}</label>
-      <select class="size-select" id="${f.id}" onchange="${onchangeFn}">
+      <select class="size-select" id="${f.id}" onchange="${onchangeFn}" ${f.options.length === 1 ? 'disabled style="opacity:0.6;"' : ''}>
         <option value="">— choisir —</option>
         ${optHTML}
         ${jnspOption}
@@ -3128,13 +3122,7 @@ function p11BuildDimsGrid() {
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
   function p11RenderField(f) {
-    if (f.options.length === 1) {
-      selSize[f.key] = String(f.options[0]);
-      const unit = ['manivelle','potence','cintre','debattement','largeur_selle'].includes(f.key) ? ' mm' : '';
-      return '<div class="dim-field"><label>' + f.label + '</label>' +
-        '<div class="dim-single">' + f.options[0] + unit + '</div>' +
-        (f.note ? '<span class="dim-note">' + f.note + '</span>' : '') + '</div>';
-    }
+    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
     const optHTML = f.options.map(o =>
       '<option value="' + o + '"' + (selSize[f.key]==o?' selected':'') + '>' + o +
       (['manivelle','potence'].includes(f.key) ? ' mm' : '') + '</option>'
@@ -3143,7 +3131,8 @@ function p11BuildDimsGrid() {
       ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; p11BuildDimsGrid();"
       : "selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
-      '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
+      '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '"' +
+      (f.options.length === 1 ? ' disabled style="opacity:0.6;"' : '') + '>' +
       '<option value="">— choisir —</option>' + optHTML +
       (f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : '') +
       '</select>' +
