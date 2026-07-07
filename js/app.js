@@ -2296,9 +2296,9 @@ function buildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'dim-manivelle', label:'Longueur manivelle (mm)', options: transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length > 1)
+    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
       fields.push({id:'dim-plateaux', label:'Plateau(x)', options: transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length > 1)
+    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
       fields.push({id:'dim-cassette', label:'Cassette', options: transOpt.dims.cassette, key:'cassette'});
   }
 
@@ -2320,10 +2320,20 @@ function buildDimsGrid() {
 
   // Pneus
   const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o => o.id === selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length > 1)
-    fields.push({id:'dim-section', label:'Section pneu', options: pneuOpt.dims.section, key:'section',
-      note: selModel === 'vtt_enduro' ? 'en pouces' : null,
-      unit: selModel === 'vtt_enduro' ? '"' : null});
+  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
+    // Modification 1 : gravel_bikepacking = max 42mm (cadre limité)
+    let sectionOpts = pneuOpt.dims.section;
+    if (selModel === 'gravel_bikepacking') {
+      sectionOpts = sectionOpts.filter(s => {
+        const num = parseFloat(String(s).replace(',', '.'));
+        return isNaN(num) || num <= 42;
+      });
+    }
+    if (sectionOpts.length >= 1)
+      fields.push({id:'dim-section', label:'Section pneu', options: sectionOpts, key:'section',
+        note: selModel === 'vtt_enduro' ? 'en pouces' : null,
+        unit: selModel === 'vtt_enduro' ? '"' : null});
+  }
 
   // Fourche VTT
   const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o => o.id === selOpts.fourche) : null;
@@ -2332,7 +2342,7 @@ function buildDimsGrid() {
 
   // Selle
   const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o => o.id === selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length > 1)
+  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
     fields.push({id:'dim-largeur-selle', label:'Largeur selle (mm)', options: selleOpt.dims.largeur_selle, key:'largeur_selle'});
 
   if (fields.length === 0) {
@@ -2399,6 +2409,7 @@ function buildDimsGrid() {
       <select class="size-select" id="${f.id}" onchange="${onchangeFn}">
         <option value="">— choisir —</option>
         ${optHTML}
+        <option value="" disabled style="color:#555;">Je ne sais pas encore</option>
       </select>
       ${f.note ? `<span class="dim-note">${f.note}</span>` : ''}
     </div>`;
@@ -3049,9 +3060,9 @@ function p11BuildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'p11-dim-manivelle', label:'Longueur manivelle (mm)', options:transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length > 1)
+    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
       fields.push({id:'p11-dim-plateaux', label:'Plateau(x)', options:transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length > 1)
+    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
       fields.push({id:'p11-dim-cassette', label:'Cassette', options:transOpt.dims.cassette, key:'cassette'});
   }
 
@@ -3071,9 +3082,15 @@ function p11BuildDimsGrid() {
 
   // Pneus
   const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o=>o.id===selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length > 1)
-    fields.push({id:'p11-dim-section', label:'Section pneu', options:pneuOpt.dims.section, key:'section',
-      note: selModel==='vtt_enduro' ? 'en pouces' : null});
+  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
+    let sectionOpts = pneuOpt.dims.section;
+    if (selModel === 'gravel_bikepacking') {
+      sectionOpts = sectionOpts.filter(s => { const num = parseFloat(String(s).replace(',','.')); return isNaN(num) || num <= 42; });
+    }
+    if (sectionOpts.length >= 1)
+      fields.push({id:'p11-dim-section', label:'Section pneu', options:sectionOpts, key:'section',
+        note: selModel==='vtt_enduro' ? 'en pouces' : null});
+  }
 
   // Fourche VTT
   const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o=>o.id===selOpts.fourche) : null;
@@ -3082,7 +3099,7 @@ function p11BuildDimsGrid() {
 
   // Selle
   const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o=>o.id===selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length > 1)
+  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
     fields.push({id:'p11-dim-largeur-selle', label:'Largeur selle (mm)', options:selleOpt.dims.largeur_selle, key:'largeur_selle'});
 
   if (fields.length === 0) {
@@ -3136,7 +3153,9 @@ function p11BuildDimsGrid() {
       : "selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
-      '<option value="">— choisir —</option>' + optHTML + '</select>' +
+      '<option value="">— choisir —</option>' + optHTML +
+      '<option value="" disabled style="color:#555;">Je ne sais pas encore</option>' +
+      '</select>' +
       (f.note ? '<span class="dim-note">' + f.note + '</span>' : '') + '</div>';
   }
 
