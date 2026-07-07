@@ -2404,12 +2404,15 @@ function buildDimsGrid() {
     const onchangeFn = f.key === 'taille'
       ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; buildDimsGrid();`
       : `selSize['${f.key}']=this.value`;
+    const jnspOption = f.options.length >= 2
+      ? `<option value="">Je ne sais pas encore</option>`
+      : '';
     return `<div class="dim-field">
       <label>${f.label}</label>
       <select class="size-select" id="${f.id}" onchange="${onchangeFn}">
         <option value="">— choisir —</option>
         ${optHTML}
-        <option value="" disabled style="color:#555;">Je ne sais pas encore</option>
+        ${jnspOption}
       </select>
       ${f.note ? `<span class="dim-note">${f.note}</span>` : ''}
     </div>`;
@@ -2461,7 +2464,7 @@ function buildDimsGrid() {
             <label>${f.label}</label>
             <select class="size-select" id="guide-${f.id}" onchange="selSize['${f.key}']=this.value">
               <option value="">— choisir —</option>${optHTML}
-              <option value="" disabled style="color:#555;">Je ne sais pas encore</option>
+              ${f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : ''}
             </select>
             ${f.note ? `<span class="dim-note" style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">${f.note}</span>` : ''}
           </div>`;
@@ -3155,7 +3158,7 @@ function p11BuildDimsGrid() {
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
       '<option value="">— choisir —</option>' + optHTML +
-      '<option value="" disabled style="color:#555;">Je ne sais pas encore</option>' +
+      (f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : '') +
       '</select>' +
       (f.note ? '<span class="dim-note">' + f.note + '</span>' : '') + '</div>';
   }
