@@ -1143,7 +1143,7 @@ function dtRender() {
   if (n === 2) dtRenderS2();
   if (n === 3) {
     document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-    document.getElementById('dt-s3')?.classList.add('active');
+    document.getElementById('dt-s3bif')?.classList.add('active');
   }
   if (n === 4) {
     if (v2Parcours === 'standard') { dtRenderS3(); setTimeout(() => dtToggleSizeMode('guide'), 50); }
@@ -1945,6 +1945,7 @@ function v2ChooseParcours(parcours) {
 
     if (parcours === 'standard' || parcours === 'standard_evo') {
       dtStep = 4;
+      document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
       document.getElementById('dt-s3')?.classList.add('active');
       dtRenderS3();
       setTimeout(() => dtToggleSizeMode('guide'), 50);
