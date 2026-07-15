@@ -158,9 +158,15 @@ function persistSaved() {
   try { localStorage.setItem('velo_configs', JSON.stringify(savedConfigs)); } catch(e) {}
 }
 function updateSavedCount() {
-  document.getElementById('saved-count').textContent = savedConfigs.length;
+  const sc = document.getElementById('saved-count');
+  if (sc) sc.textContent = savedConfigs.length;
   const tabSaved = document.getElementById('tab-saved');
   if (tabSaved) tabSaved.style.display = savedConfigs.length === 0 ? 'none' : 'flex';
+  const dtCount = document.getElementById('dt-saved-count');
+  if (dtCount) {
+    dtCount.textContent = savedConfigs.length;
+    dtCount.style.display = savedConfigs.length > 0 ? 'inline' : 'none';
+  }
 }
 
 // ─── UTILITAIRES ─────────────────────────────────────────────────────────────
