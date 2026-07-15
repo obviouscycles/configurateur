@@ -1,5 +1,99 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html 
+
+  <!-- Récap droit -->
+  <aside id="dt-recap">
+    <img id="dtr-thumb" class="dtr-thumb" src="" alt="" style="display:none;">
+    <div id="dtr-model" class="dtr-model" style="display:none;"></div>
+    <div id="dtr-preset" class="dtr-preset"></div>
+    <div id="dtr-price" class="dtr-price" style="display:none;"></div>
+    <div class="dtr-modif" id="dtr-modif"><span class="dtr-modif-dot"></span><span id="dtr-modif-txt"></span></div>
+    <hr class="dtr-sep" id="dtr-sep" style="display:none;">
+    <div class="dtr-rows" id="dtr-rows"></div>
+    <div class="dtr-actions">
+      <button class="dtr-btn-main" id="dtr-btn-devis" onclick="openOrderModal()" style="opacity:.3;pointer-events:none;"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
+      <button class="dtr-btn-sec" id="dtr-btn-save" onclick="dtQuickSave()" style="opacity:.3;pointer-events:none;"><i class="ti ti-bookmark"></i> Sauvegarder</button>
+      <button class="dtr-btn-sec" id="dtr-btn-reset" onclick="dtReset()" style="opacity:.3;pointer-events:none;"><i class="ti ti-refresh"></i> Nouvelle configuration</button>
+
+    </div>
+  </aside>
+
+</main>
+
+<!-- MODAL COMMANDE -->
+
+<!-- ── MODAL ALERTE TAILLE ──────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="size-alert-modal" style="z-index:200">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:1rem;"><i class="ti ti-alert-triangle" style="color:#F5C400;"></i></div>
+    <h2 style="font-size:16px;margin-bottom:1rem;">Taille non validée</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
+      Vous n'avez pas validé la taille de votre vélo.<br>
+      Nous vous recontacterons pour la définir ensemble.<br><br>
+      Voulez-vous continuer ?
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSizeAlert()">Annuler</button>
+      <button class="btn-send" onclick="closeSizeAlert(); openOrderModal();"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="order-modal">
+  <div class="modal">
+    <h3><i class="ti ti-file-invoice"></i> Demander mon devis</h3>
+    <p>Renseignez vos coordonnées et nous vous enverrons un devis personnalisé rapidement.</p>
+    <div class="field">
+      <label>Votre nom et prénom</label>
+      <input type="text" id="order-name" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Votre email</label>
+      <input type="email" id="order-email" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Votre n° de téléphone</label>
+      <input type="tel" id="order-phone" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Message (optionnel)</label>
+      <textarea id="order-msg" rows="3" placeholder="Questions, précisions..."></textarea>
+    </div>
+    <div class="field">
+      <label>Votre configuration</label>
+      <textarea id="order-config-display" rows="5" readonly style="font-size:11px;color:var(--text2);background:var(--bg3)"></textarea>
+    </div>
+    <div class="field" id="order-size-field" style="display:none">
+      <label>Dimensions</label>
+      <textarea id="order-size-display" rows="4" readonly style="font-size:11px;color:var(--text2);background:var(--bg3)"></textarea>
+    </div>
+    <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:1rem;padding:10px;background:var(--bg3);border-left:2px solid #333;">
+      <i class="ti ti-shield-lock" style="font-size:12px;margin-right:4px;"></i>
+      <strong style="color:var(--text2);">Données personnelles (RGPD)</strong><br>
+      Vos informations (nom, email, téléphone) sont utilisées uniquement pour traiter votre demande de configuration et vous recontacter. Elles ne sont ni vendues ni transmises à des tiers. Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression — contactez-nous à <a href="mailto:info@obviouscycles.com" style="color:var(--text2);">info@obviouscycles.com</a>.
+      <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:var(--text3);display:block;margin-top:4px;">→ Politique de confidentialité</a>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeOrderModal()">Annuler</button>
+      <button class="btn-send" onclick="sendOrder()"><i class="ti ti-send"></i> Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preload photos vélos -->
+  <link rel="preload" href="/configurateur/assets/velos/ON_2025.webp" as="image" type="image/webp">
+  <link rel="preload" href="/configurateur/assets/velos/ONOFF_2024.webp" as="image" type="image/webp">
+  <link rel="preload" href="/configurateur/assets/velos/OUTQUEST_2024.webp" as="image" type="image/webp">
+  <link rel="preload" href="/configurateur/assets/velos/OFF_2025.webp" as="image" type="image/webp">
+  <link rel="preload" href="/configurateur/data/modeles.js" as="script">
+<link rel="preload" href="/configurateur/data/composants.js" as="script">
+<link rel="preload" href="/configurateur/data/geometries.js" as="script">
+<link rel="preload" href="/configurateur/js/app.js" as="script">
+<script src="/configurateur/data/modeles.js"></script>
+<script src="/configurateur/data/composants.js"></script>
+<script src="/configurateur/data/geometries.js"></script>
+<script src="/configurateur/js/app.js"></script>
+lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2182,11 +2276,47 @@
     </div>
 
     <!-- ÉTAPE 4 (1-standard) : Taille -->
-    <!-- ÉTAPE 4 (2-standard_evo) : Taille + prépa évolution -->
-    <div class="dt-step-content" id="dt-s4stdevo">
-      <!-- Même contenu que dt-s4std — la taille standard -->
-      <!-- Le bouton "Continuer" ira vers dt-s5evo au lieu du devis -->
+    <!-- ÉTAPE 4 (1-standard) : Taille -->
+    <div class="dt-step-content" id="dt-s4std">
+      <!-- Ligne 1 : 2 cartes de choix côte à côte -->
+      <div id="dt-s4std-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
+      <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
+      <div id="dt-s4std-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <div id="dt-s4std-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
+        Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
+      </p>
+      <!-- dt-s3-result supprimé : double récap retiré -->
+      <div class="dt-step-footer">
+        <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
+        <button class="dt-btn-next" id="dt-next-4std" onclick="v2GoDevis()">
+          <span id="dt-next-4std-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
     </div>
+
+
+    <!-- ÉTAPE 4 (2-standard_evo) : Taille -->
+    <div class="dt-step-content" id="dt-s4stdevo">
+      <!-- Ligne 1 : 2 cartes de choix côte à côte -->
+      <div id="dt-s4stdevo-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
+      <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
+      <div id="dt-s4stdevo-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <div id="dt-s4stdevo-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
+        Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
+      </p>
+      <!-- dt-s3-result supprimé : double récap retiré -->
+      <div class="dt-step-footer">
+        <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
+        <button class="dt-btn-next" id="dt-next-4stdevo" onclick="v2GoEvo()">
+          <span id="dt-next-4stdevo-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+
+
 
     <!-- ÉTAPE 4 (3-sur_mesure) : Description projet sur mesure -->
     <div class="dt-step-content" id="dt-s4mesure">
