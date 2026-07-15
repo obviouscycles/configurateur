@@ -1530,11 +1530,43 @@
     #cookie-banner .cookie-btns { display: flex; gap: .5rem; width: 100%; }
     .cookie-btn { flex: 1; text-align: center; }
   }
+
+  /* ── Écran de chargement ── */
+  #obv-loader {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #0d0d0d;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1.5rem;
+    transition: opacity .4s ease;
+  }
+  #obv-loader.hidden { opacity: 0; pointer-events: none; }
+  .obv-loader-logo {
+    font-size: 13px; font-weight: 600; letter-spacing: .15em;
+    color: #F5C400; text-transform: uppercase;
+  }
+  .obv-loader-spinner {
+    width: 36px; height: 36px;
+    border: 2px solid #333;
+    border-top-color: #F5C400;
+    border-radius: 50%;
+    animation: obv-spin .8s linear infinite;
+  }
+  .obv-loader-text {
+    font-size: 12px; color: #555; letter-spacing: .05em;
+  }
+  @keyframes obv-spin { to { transform: rotate(360deg); } }
 </style>
   <!-- Google Analytics — chargé uniquement après consentement (voir cookie banner) -->
 </head>
 <body>
 
+
+<!-- Écran de chargement -->
+<div id="obv-loader">
+  <div class="obv-loader-logo">OBVIOUS ON DEMAND</div>
+  <div class="obv-loader-spinner"></div>
+  <div class="obv-loader-text">Chargement en cours…</div>
+</div>
 <header>
   <div class="logo" style="display:flex;align-items:center;gap:10px;">
     <img src="https://www.obviouscycles.com/wp-content/uploads/2023/04/favicon-512.png" alt="Obvious Cycles" style="height:32px;width:32px;object-fit:contain;">
