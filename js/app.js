@@ -1794,12 +1794,25 @@ if (isEmbed) {
 
   // Envoyer la hauteur au parent Wordpress pour ajustement dynamique
   function sendHeight() {
-    const h = document.documentElement.scrollHeight;
+    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
     window.parent.postMessage({ type: 'obv-height', height: h }, '*');
   }
-  // Envoyer à chaque changement de step et au chargement
-  window.addEventListener('load', sendHeight);
-  new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+
+  // Envoyer au chargement
+  window.addEventListener('load', function() {
+    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 1000);
+  });
+
+  // Envoyer à chaque mutation du DOM (changement de step, ouverture accordéon...)
+  new MutationObserver(function() {
+    setTimeout(sendHeight, 100);
+  }).observe(document.body, { childList: true, subtree: true });
+
+  // Répondre aux demandes explicites du parent
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'obv-request-height') sendHeight();
+  });
 }
 if (modeleParam) {
   const decoded = decodeURIComponent(modeleParam);
