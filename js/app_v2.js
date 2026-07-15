@@ -1776,6 +1776,7 @@ function dtInit() {
 }
 
 
+
 // ─── OBVIOUS ON DEMAND — DONNÉES ÉVOLUTION ────────────────────────────────────
 const EVO_FIXE = 50;
 const EVO_OPTIONS = [
@@ -1844,49 +1845,62 @@ const EVO_OPTIONS = [
   }
 ];
 
-// État des options cochées
 let evoChecked = {};
+let v2Parcours = 'standard'; // 'standard' | 'standard_evo' | 'sur_mesure' | 'hors_gamme'
 
-// Calcul du prix Évolution
-function evoCalcPrice() {
-  const checked = Object.keys(evoChecked).filter(k => evoChecked[k]);
-  const totalXX = checked.reduce((sum, id) => {
-    const opt = EVO_OPTIONS.find(o => o.id === id);
-    return sum + (opt ? opt.price : 0);
-  }, 0);
-  // Si aucune option cochée : afficher "À partir de X€" (fixe + min option)
-  if (checked.length === 0) {
-    const minPrice = EVO_FIXE + Math.min(...EVO_OPTIONS.map(o => o.price));
-    return { total: minPrice, isMin: true };
-  }
-  return { total: EVO_FIXE + totalXX, isMin: false };
+// Calcul du prix affiché pour UNE option
+// Si rien de coché : fixe + xx
+// Si au moins 1 coché et cette option pas cochée : xx seul
+function evoOptionPrice(optId) {
+  const opt = EVO_OPTIONS.find(o => o.id === optId);
+  if (!opt) return 0;
+  const anyChecked = Object.values(evoChecked).some(v => v);
+  return anyChecked && !evoChecked[optId] ? opt.price : EVO_FIXE + opt.price;
 }
 
-// Rendu des options Évolution (filtré par modèle)
+// Total global = fixe (1 seul) + somme des xx cochés
+function evoTotalPrice() {
+  const checked = EVO_OPTIONS.filter(o => evoChecked[o.id]);
+  if (checked.length === 0) return null; // rien de coché
+  return EVO_FIXE + checked.reduce((sum, o) => sum + o.price, 0);
+}
+
+// Rendu des options Évolution
 function evoRender() {
   const container = document.getElementById('v2-evo-options');
   if (!container) return;
-  
   const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
-  
+  const anyChecked = Object.values(evoChecked).some(v => v);
+
   container.innerHTML = opts.map(opt => {
     const checked = evoChecked[opt.id] || false;
+    const displayPrice = checked
+      ? EVO_FIXE + opt.price   // option cochée : affiche son prix total
+      : anyChecked
+        ? opt.price             // autre option cochée : affiche xx seulement
+        : EVO_FIXE + opt.price; // rien de coché : affiche fixe+xx
+    const priceLabel = checked
+      ? EVO_FIXE + opt.price + ' €'
+      : anyChecked
+        ? opt.price + ' €'
+        : 'à partir de ' + (EVO_FIXE + opt.price) + ' €';
+
     return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;cursor:pointer;transition:border-color .15s;" onclick="evoToggle('${opt.id}')" id="evo-card-${opt.id}">
       <div style="display:flex;align-items:flex-start;gap:.75rem;">
         <div style="width:18px;height:18px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
         </div>
         <div style="flex:1;">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
-            <span style="font-size:13px;font-weight:500;color:#F5C400;">${opt.price} €</span>
+            <span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : anyChecked ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>
           </div>
-          ${opt.note ? `<div style="font-size:12px;color:#666;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+          ${opt.note ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
       </div>
     </div>`;
   }).join('');
-  
+
   evoUpdateTotal();
 }
 
@@ -1896,18 +1910,89 @@ function evoToggle(id) {
 }
 
 function evoUpdateTotal() {
-  const priceEl = document.getElementById('v2-evo-prix-val');
-  const totalEl = document.getElementById('v2-evo-prix-total');
-  if (!priceEl || !totalEl) return;
-  const { total, isMin } = evoCalcPrice();
-  priceEl.textContent = total;
-  totalEl.innerHTML = isMin 
-    ? `À partir de <span id="v2-evo-prix-val">${total}</span> €`
-    : `Total options : <span id="v2-evo-prix-val">${total}</span> €`;
+  const totalEl = document.getElementById('v2-evo-total');
+  if (!totalEl) return;
+  const total = evoTotalPrice();
+  if (total === null) {
+    totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Sélectionnez les options souhaitées</span>';
+  } else {
+    totalEl.innerHTML = 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong><span style="font-size:11px;color:#555;"> (mise en plan incluse)</span>';
+  }
 }
 
 // ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
-let v2Parcours = 'standard'; // 'standard' ou 'personnalise'
+
+function v2ChooseParcours(parcours) {
+  v2Parcours = parcours;
+
+  // Highlight carte sélectionnée
+  ['standard','standard_evo','sur_mesure','hors_gamme'].forEach(p => {
+    const c = document.getElementById('v2-card-' + p);
+    if (c) c.style.borderColor = p === parcours ? '#F5C400' : '#333';
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+    if (parcours === 'standard') {
+      dtStep = 4;
+      document.getElementById('dt-s4std')?.classList.add('active');
+      dtRenderS3();
+      setTimeout(() => dtToggleSizeMode('guide'), 50);
+    } else if (parcours === 'standard_evo') {
+      dtStep = 4;
+      document.getElementById('dt-s4stdevo')?.classList.add('active');
+      dtRenderS3();
+      setTimeout(() => dtToggleSizeMode('guide'), 50);
+    } else if (parcours === 'sur_mesure') {
+      dtStep = 4;
+      document.getElementById('dt-s4mesure')?.classList.add('active');
+    } else if (parcours === 'hors_gamme') {
+      dtStep = 4;
+      document.getElementById('dt-s4horsgamme')?.classList.add('active');
+    }
+    v2UpdateStepper();
+    const main = document.getElementById('dt-main');
+    if (main) main.scrollTop = 0;
+  }, 150);
+}
+
+// Depuis taille (parcours standard_evo) -> Évolution
+function v2GoEvo() {
+  dtStep = 5;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s5evo')?.classList.add('active');
+  v2UpdateStepper();
+  evoRender();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+// Depuis Évolution ou message -> Devis
+function v2GoDevis() {
+  dtStep = 6;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s6devis')?.classList.add('active');
+  document.body.classList.add('dt-step-4');
+  v2UpdateStepper();
+  dtRenderS4();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+function v2UpdateStepper() {
+  const labels = {1:'Modèle',2:'Composants',3:'Cadre',4:'Taille / Options',5:'Personnalisation',6:'Devis'};
+  const maxStep = 6;
+  for (let i = 1; i <= maxStep; i++) {
+    const s = document.getElementById('dts-' + i);
+    const d = document.getElementById('dts-dot-' + i);
+    if (!s || !d) continue;
+    const n = dtStep;
+    s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
+    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === maxStep ? '→' : String(i);
+  }
+}
+
+// ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
 
 function v2ChooseParcours(parcours) {
   v2Parcours = parcours;
@@ -1993,6 +2078,16 @@ function v2UpdateStepper() {
     if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille enregistrée ✓' : 'Optionnel';
     else d4.textContent = Object.values(evoChecked).some(v=>v) ? 'Options sélectionnées ✓' : 'Optionnel';
   }
+}
+
+
+function v2GoBackToTailleEvo() {
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4stdevo')?.classList.add('active');
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
