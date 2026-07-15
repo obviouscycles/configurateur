@@ -2241,4 +2241,128 @@
       </div>
     </div>
 
+<link rel="preload" href="/configurateur/data/modeles.js" as="script">
+<link rel="preload" href="/configurateur/data/composants.js" as="script">
+<link rel="preload" href="/configurateur/data/geometries.js" as="script">
+<link rel="preload" href="/configurateur/js/app_v2.js" as="script">
+<script src="/configurateur/data/modeles.js"></script>
+<script src="/configurateur/data/composants.js"></script>
+<script src="/configurateur/data/geometries.js"></script>
+<script src="/configurateur/js/app_v2.js"></script>
 
+
+  <!-- Fenêtre prix flottante -->
+  <div id="floating-price" class="hidden" style="cursor:pointer">
+    <span class="fp-price-label">Prix total</span>
+    <div class="fp-price" id="fp-price">—</div>
+  </div>
+
+  <!-- FAB Aide-Contact (mobile onglet taille) -->
+  <div id="fab-contact" onclick="openContactDrawer()">
+    <i class="ti ti-headset" style="font-size:17px;"></i>
+    <span>Aide &amp; Contact</span>
+  </div>
+
+  <!-- Drawer Aide-Contact -->
+  <div id="contact-drawer-overlay" onclick="closeContactDrawer()"></div>
+  <div id="contact-drawer">
+    <div class="drawer-header">
+      <div class="step-label" style="color:#888;">Aide - Contact</div>
+      <button class="drawer-close" onclick="closeContactDrawer()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Wrapper flex pour réordonner desktop vs mobile -->
+    <div id="drawer-inner" style="display:flex;flex-direction:column;">
+
+      <!-- Section contact (order:1 mobile, order:0 desktop) -->
+      <div class="drawer-contact-section">
+        <div class="contact-col-title" style="color:#f2f2f2;text-transform:none;font-size:16px;font-weight:500;letter-spacing:0;margin-bottom:.5rem;">Contacter Obvious</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem;line-height:1.5;">Un autre montage, une question sur les tailles, besoin d'aide.</p>
+        <div class="contact-btns" style="margin-bottom:1.25rem;">
+          <a href="tel:+33695582935" class="contact-btn contact-btn-tel"><i class="ti ti-phone"></i> 06 95 58 29 35</a>
+          <a href="https://www.obviouscycles.com/contact/#ancragemail" target="_blank" class="contact-btn contact-btn-msg"><i class="ti ti-message"></i> Message</a>
+          <a href="https://www.obviouscycles.com/contact/#ancragerdv" target="_blank" class="contact-btn contact-btn-rdv"><i class="ti ti-calendar"></i> Prendre rdv</a>
+        </div>
+        <div style="border-top:0.5px solid #2a2a2a;margin:0 0 1.25rem;"></div>
+        <div class="contact-col-title" style="color:#f2f2f2;text-transform:none;font-size:16px;font-weight:500;letter-spacing:0;margin-bottom:.5rem;">Être rappelé</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem;line-height:1.5;">Nous vous contacterons pour vous aider à finaliser votre vélo.</p>
+        <div class="contact-form">
+          <input type="tel" id="cf-phone-d" placeholder="Téléphone" class="contact-input" />
+          <input type="email" id="cf-email-d" placeholder="E-mail" class="contact-input" />
+          <button class="contact-btn contact-btn-send" onclick="sendCallbackDrawer()"><i class="ti ti-send"></i> Envoyer</button>
+          <div id="cf-toast-d" class="cf-toast" style="display:none"><i class="ti ti-check"></i> Message envoyé !</div>
+          <div id="cf-error-d" class="cf-error" style="display:none">Merci de renseigner au moins un contact.</div>
+          <p style="font-size:10px;color:#555;line-height:1.4;margin-top:.75rem;">Vos données sont utilisées uniquement pour votre demande. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:#666;">Politique de confidentialité →</a></p>
+        </div>
+      </div>
+
+      <!-- Section OOD (order:0 mobile = en premier, order:1 desktop = en bas) -->
+      <div class="drawer-ood-section">
+        <div style="border-top:0.5px solid #2a2a2a;margin:0 0 1.25rem;"></div>
+        <div style="background:#1e1e1e;border:0.5px solid #333;padding:1.25rem;">
+          <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Pour aller plus loin</div>
+          <div style="font-size:17px;font-weight:700;color:#f2f2f2;margin-bottom:.5rem;">OBVIOUS ON DEMAND</div>
+          <p style="font-size:13px;color:#f2f2f2;line-height:1.6;margin-bottom:.4rem;font-weight:500;">Géométrie personnalisée, adaptations cadre, sur-mesure total.</p>
+          <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:1rem;">3 niveaux supplémentaires de personnalisation pour un vélo vraiment unique.</p>
+          <a href="https://www.obviouscycles.com/velos-titane/velo-titane-sur-mesure/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;color:#1a1a00;text-decoration:none;font-weight:700;background:#F5C400;padding:12px 14px;width:100%;box-sizing:border-box;"><i class="ti ti-external-link" style="font-size:13px;"></i> Découvrir OBVIOUS ON DEMAND</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ MODALE CHANGER DE MODÈLE ═══════════════════════════════════════ -->
+  <div id="modal-change-model" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;overflow-y:auto;">
+    <div style="max-width:720px;margin:3rem auto;background:#1a1a1a;border:0.5px solid #333;padding:2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div>
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">OBVIOUS ON DEMAND</div>
+          <h2 style="font-size:20px;font-weight:500;color:#f2f2f2;">Choisir un autre modèle</h2>
+        </div>
+        <button onclick="closeChangeModelModal()" style="background:none;border:none;color:#666;font-size:24px;cursor:pointer;line-height:1;"><i class="ti ti-x"></i></button>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.6;">Votre configuration actuelle sera remplacée par la préconfig Ti1 du nouveau modèle.</p>
+      <div id="cmm-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+    </div>
+  </div>
+
+<!-- Cookie banner -->
+<div id="cookie-banner" style="display:none;">
+  <span>Ce site utilise Google Analytics pour mesurer l'audience. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank">Politique de confidentialité</a></span>
+  <div class="cookie-btns">
+    <button class="cookie-btn" onclick="cookieChoice(false)">Refuser</button>
+    <button class="cookie-btn accept" onclick="cookieChoice(true)">Accepter</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  var consent = localStorage.getItem('obv_cookie_consent');
+  if (consent === null) {
+    document.getElementById('cookie-banner').style.display = 'flex';
+  } else if (consent === 'true') {
+    enableGA();
+  }
+})();
+
+function cookieChoice(accepted) {
+  localStorage.setItem('obv_cookie_consent', accepted ? 'true' : 'false');
+  document.getElementById('cookie-banner').style.display = 'none';
+  if (accepted) enableGA();
+}
+
+function enableGA() {
+  // Charger Google Analytics si consentement donné
+  var s = document.createElement('script');
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-KGZDWLZ7JZ';
+  s.async = true;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', 'G-KGZDWLZ7JZ');
+}
+</script>
+</body>
+</html>
