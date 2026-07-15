@@ -1771,6 +1771,17 @@ renderModels();
 dtInit();
 loadConfigFromUrl();
 
+// ── Masquer l'écran de chargement une fois tout initialisé ──
+(function hideLoader() {
+  const loader = document.getElementById('obv-loader');
+  if (!loader) return;
+  // Petit délai pour laisser le rendu se stabiliser
+  setTimeout(function() {
+    loader.classList.add('hidden');
+    setTimeout(function() { loader.style.display = 'none'; }, 450);
+  }, 400);
+})();
+
 // Présélection via paramètre URL (?modele=ON/OFF&roues=roue_gr_ob_35...)
 const ALIASES = {
   'ON/':       'route',
