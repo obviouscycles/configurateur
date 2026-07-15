@@ -1936,13 +1936,11 @@ function v2ChooseParcours(parcours) {
     if (parcours === 'standard') {
       dtStep = 4;
       document.getElementById('dt-s4std')?.classList.add('active');
-      dtRenderS3();
-      setTimeout(() => dtToggleSizeMode('guide'), 50);
+      v2RenderTaille('dt-s4std');
     } else if (parcours === 'standard_evo') {
       dtStep = 4;
       document.getElementById('dt-s4stdevo')?.classList.add('active');
-      dtRenderS3();
-      setTimeout(() => dtToggleSizeMode('guide'), 50);
+      v2RenderTaille('dt-s4stdevo');
     } else if (parcours === 'sur_mesure') {
       dtStep = 4;
       document.getElementById('dt-s4mesure')?.classList.add('active');
@@ -2081,10 +2079,39 @@ function v2UpdateStepper() {
 }
 
 
+
+// Render taille section for a given prefix (dt-s4std or dt-s4stdevo)
+function v2RenderTaille(prefix) {
+  // The taille section uses dt-s3-xxx IDs in proto14
+  // In v2 they are prefixed differently — we activate the section and call dtRenderS3
+  // but dtRenderS3 looks for dt-s3-cards etc. We need to make those visible
+
+  // Temporarily show the correct section so dtRenderS3 finds its elements
+  const section = document.getElementById(prefix);
+  if (!section) return;
+
+  // dtRenderS3 targets elements with IDs like dt-s3-cards, dt-s4std-cards...
+  // We patched the HTML to use prefix-based IDs, so we need a prefix-aware render
+  const cardsZone = section.querySelector('[id$="-cards"]') ||
+                    document.getElementById(prefix + '-cards') ||
+                    document.getElementById('dt-s3-cards');
+  
+  // Just call the original dtRenderS3 which targets dt-s3-* IDs
+  // These should exist in dt-s4std since we copied the HTML
+  dtRenderS3();
+  setTimeout(() => dtToggleSizeMode('guide'), 50);
+
+  // Update next button label
+  const nextLbl = document.getElementById(prefix.replace('dt-s', 'dt-next-').replace('dt-s4', 'dt-next-4') + '-lbl') ||
+                  document.getElementById('dt-next-3-lbl');
+  if (nextLbl) nextLbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer';
+}
+
 function v2GoBackToTailleEvo() {
   dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s4stdevo')?.classList.add('active');
+  v2RenderTaille('dt-s4stdevo');
   v2UpdateStepper();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
