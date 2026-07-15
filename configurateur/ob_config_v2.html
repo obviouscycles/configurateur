@@ -2134,304 +2134,111 @@
       </div>
     </div>
 
-    <!-- ÉTAPE 3 : Bifurcation Standard / Personnalisé -->
+    <!-- ÉTAPE 3 : Bifurcation 4 choix -->
     <div class="dt-step-content" id="dt-s3">
       <div style="padding:2rem;">
         <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 3</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Votre cadre</div>
-        <div style="font-size:13px;color:#888;margin-bottom:2rem;">Choisissez entre un cadre standard ou une personnalisation sur mesure.</div>
+        <div style="font-size:13px;color:#888;margin-bottom:2rem;line-height:1.6;">Choisissez la nature de votre cadre. Chaque option ouvre un parcours adapté.</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
 
-          <!-- Cadre standard -->
-          <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.5rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#555'" onmouseout="this.style.borderColor='#333'">
-            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Cadre standard</div>
-            <div style="font-size:18px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Tailles XS à XL</div>
-            <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1.5rem;">Cadre titane Obvious dans les tailles disponibles. Livraison standard.</div>
-            <button style="width:100%;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Choisir ma taille →</button>
+          <!-- 1 — Cadre standard -->
+          <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard')this.style.borderColor='#333'">
+            <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Cadre standard</div>
+            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Tailles XS à XL</div>
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Cadre titane Obvious dans les tailles disponibles.</div>
+            <div style="font-size:11px;color:#F5C400;">Choisir ma taille →</div>
           </div>
 
-          <!-- Cadre personnalisé -->
-          <div id="v2-card-perso" onclick="v2ChooseParcours('personnalise')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.5rem;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#F5C400'" onmouseout="this.style.borderColor='#333'">
-            <div style="display:inline-block;background:#F5C400;color:#1a1a00;font-size:10px;font-weight:700;padding:2px 8px;letter-spacing:.05em;margin-bottom:.5rem;">OBVIOUS ON DEMAND</div>
-            <div style="font-size:18px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Sur mesure</div>
-            <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1.5rem;">Adaptations fonctionnelles, géométrie personnalisée, intégrations spécifiques.</div>
-            <button style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Personnaliser mon cadre →</button>
+          <!-- 2 — Cadre standard + personnalisations -->
+          <div id="v2-card-standard_evo" onclick="v2ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard_evo')this.style.borderColor='#333'">
+            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">OBVIOUS ON DEMAND</div>
+            <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;margin-top:.5rem;">Cadre standard</div>
+            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">+ personnalisations</div>
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Taille standard avec ajouts fonctionnels sur mesure.</div>
+            <div style="font-size:11px;color:#F5C400;">Personnaliser mon cadre →</div>
+          </div>
+
+          <!-- 3 — Cadre sur mesure -->
+          <div id="v2-card-sur_mesure" onclick="v2ChooseParcours('sur_mesure')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='sur_mesure')this.style.borderColor='#333'">
+            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">OBVIOUS ON DEMAND</div>
+            <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;margin-top:.5rem;">Cadre sur mesure</div>
+            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Votre géométrie</div>
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Géométrie adaptée à votre morphologie et votre pratique.</div>
+            <div style="font-size:11px;color:#F5C400;">Décrire mon projet →</div>
+          </div>
+
+          <!-- 4 — Hors gamme -->
+          <div id="v2-card-hors_gamme" onclick="v2ChooseParcours('hors_gamme')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='hors_gamme')this.style.borderColor='#333'">
+            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">OBVIOUS ON DEMAND</div>
+            <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;margin-top:.5rem;">Projet spécifique</div>
+            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Un vélo unique</div>
+            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Votre projet ne correspond à aucun modèle de la gamme.</div>
+            <div style="font-size:11px;color:#F5C400;">Parler de mon projet →</div>
           </div>
 
         </div>
       </div>
     </div>
 
-    <!-- ÉTAPE 5 (standard) (personnalisé) : Évolution -->
-    <div class="dt-step-content" id="dt-s4evo">
+    <!-- ÉTAPE 4 (1-standard) : Taille -->
+    <!-- ÉTAPE 4 (2-standard_evo) : Taille + prépa évolution -->
+    <div class="dt-step-content" id="dt-s4stdevo">
+      <!-- Même contenu que dt-s4std — la taille standard -->
+      <!-- Le bouton "Continuer" ira vers dt-s5evo au lieu du devis -->
+    </div>
+
+    <!-- ÉTAPE 4 (3-sur_mesure) : Description projet sur mesure -->
+    <div class="dt-step-content" id="dt-s4mesure">
       <div style="padding:2rem;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 4 — Évolution</div>
-        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Ajoutez des options à votre cadre</div>
-        <div style="font-size:13px;color:#888;margin-bottom:.5rem;">Sélectionnez les adaptations souhaitées. Le tarif inclut la mise en plan (forfait unique).</div>
-        <div id="v2-evo-prix-total" style="font-size:24px;font-weight:500;color:#F5C400;margin-bottom:1.5rem;">À partir de <span id="v2-evo-prix-val">60</span> €</div>
-        <div id="v2-evo-options" style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem;"></div>
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 4 — Cadre sur mesure</div>
+        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Décrivez votre projet</div>
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Morphologie, vélo actuel, changement d'usage, contraintes physiques... Partagez ce qui nous permettra de définir votre géométrie idéale.</div>
+        <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.25rem;">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Performance — 300 €</div>
+          <div style="font-size:12px;color:#555;line-height:1.5;">Géométrie adaptée à votre morphologie et votre pratique. Inclut les niveaux Essentiel et Évolution.</div>
+        </div>
+        <textarea id="v2-mesure-message" rows="6" placeholder="Décrivez votre projet : morphologie, vélo actuel, usage, contraintes physiques, envies particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:1rem;"></textarea>
+        <div style="font-size:12px;color:#555;margin-bottom:1.25rem;">💡 Vous pourrez joindre une étude morphologique ou tout autre document lors de votre échange avec notre équipe.</div>
         <div style="display:flex;gap:1rem;">
-          <button onclick="dtGo(2)" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
-          <button onclick="v2GoPerf()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Continuer →</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ÉTAPE 5 (personnalisé) : Performance -->
-    <div class="dt-step-content" id="dt-s5perf">
-      <div style="padding:2rem;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 5 — Performance</div>
-        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Votre géométrie personnalisée</div>
-        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1.5rem;">Décrivez votre projet, vos contraintes ou vos envies. Notre équipe vous recontacte sous 48h pour définir ensemble votre géométrie sur mesure.</div>
-        <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.5rem;">
-          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Niveau Performance — 300 €</div>
-          <div style="font-size:12px;color:#aaa;line-height:1.6;">Géométrie adaptée à votre morphologie et votre pratique. Position plus juste, comportement sur-mesure.</div>
-        </div>
-        <textarea id="v2-perf-message" rows="6" placeholder="Décrivez votre projet : morphologie, vélo actuel, usage, contraintes physiques, envies..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;"></textarea>
-        <div style="display:flex;gap:1rem;margin-top:1rem;">
-          <button onclick="dtGo(4)" id="v2-perf-back" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
+          <button onclick="dtGo(3)" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
           <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Recevoir mon devis personnalisé →</button>
         </div>
       </div>
     </div>
 
-    <!-- ÉTAPE 5 (standard) (standard) : Taille -->
-    <div class="dt-step-content" id="dt-s4std">
-      <!-- Ligne 1 : 2 cartes de choix côte à côte -->
-      <div id="dt-s4std-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
-      <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
-      <div id="dt-s4std-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <div id="dt-s4std-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
-        Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
-      </p>
-      <!-- dt-s3-result supprimé : double récap retiré -->
-      <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
-        <button class="dt-btn-next" id="dt-next-4std" onclick="dtGo(4)">
-          <span id="dt-next-4std-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- ÉTAPE 5 (standard) : Récap devis -->
-    <div class="dt-step-content" id="dt-s5std">
-      <div id="dt-s4-inner" class="dt-step-body">
-        <!-- Rempli par dtRenderS4() -->
-      </div>
-      <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="dtGo(3)"><i class="ti ti-chevron-left"></i> Retour</button>
-      </div>
-    </div>
-
-  </div><!-- /dt-main -->
-
-  <!-- Récap droit -->
-  <aside id="dt-recap">
-    <img id="dtr-thumb" class="dtr-thumb" src="" alt="" style="display:none;">
-    <div id="dtr-model" class="dtr-model" style="display:none;"></div>
-    <div id="dtr-preset" class="dtr-preset"></div>
-    <div id="dtr-price" class="dtr-price" style="display:none;"></div>
-    <div class="dtr-modif" id="dtr-modif"><span class="dtr-modif-dot"></span><span id="dtr-modif-txt"></span></div>
-    <hr class="dtr-sep" id="dtr-sep" style="display:none;">
-    <div class="dtr-rows" id="dtr-rows"></div>
-    <div class="dtr-actions">
-      <button class="dtr-btn-main" id="dtr-btn-devis" onclick="openOrderModal()" style="opacity:.3;pointer-events:none;"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
-      <button class="dtr-btn-sec" id="dtr-btn-save" onclick="dtQuickSave()" style="opacity:.3;pointer-events:none;"><i class="ti ti-bookmark"></i> Sauvegarder</button>
-      <button class="dtr-btn-sec" id="dtr-btn-reset" onclick="dtReset()" style="opacity:.3;pointer-events:none;"><i class="ti ti-refresh"></i> Nouvelle configuration</button>
-
-    </div>
-  </aside>
-
-</main>
-
-<!-- MODAL COMMANDE -->
-
-<!-- ── MODAL ALERTE TAILLE ──────────────────────────────────────────────────── -->
-<div class="modal-overlay" id="size-alert-modal" style="z-index:200">
-  <div class="modal" style="max-width:400px;text-align:center;">
-    <div style="font-size:32px;margin-bottom:1rem;"><i class="ti ti-alert-triangle" style="color:#F5C400;"></i></div>
-    <h2 style="font-size:16px;margin-bottom:1rem;">Taille non validée</h2>
-    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
-      Vous n'avez pas validé la taille de votre vélo.<br>
-      Nous vous recontacterons pour la définir ensemble.<br><br>
-      Voulez-vous continuer ?
-    </p>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeSizeAlert()">Annuler</button>
-      <button class="btn-send" onclick="closeSizeAlert(); openOrderModal();"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="order-modal">
-  <div class="modal">
-    <h3><i class="ti ti-file-invoice"></i> Demander mon devis</h3>
-    <p>Renseignez vos coordonnées et nous vous enverrons un devis personnalisé rapidement.</p>
-    <div class="field">
-      <label>Votre nom et prénom</label>
-      <input type="text" id="order-name" placeholder="" />
-    </div>
-    <div class="field">
-      <label>Votre email</label>
-      <input type="email" id="order-email" placeholder="" />
-    </div>
-    <div class="field">
-      <label>Votre n° de téléphone</label>
-      <input type="tel" id="order-phone" placeholder="" />
-    </div>
-    <div class="field">
-      <label>Message (optionnel)</label>
-      <textarea id="order-msg" rows="3" placeholder="Questions, précisions..."></textarea>
-    </div>
-    <div class="field">
-      <label>Votre configuration</label>
-      <textarea id="order-config-display" rows="5" readonly style="font-size:11px;color:var(--text2);background:var(--bg3)"></textarea>
-    </div>
-    <div class="field" id="order-size-field" style="display:none">
-      <label>Dimensions</label>
-      <textarea id="order-size-display" rows="4" readonly style="font-size:11px;color:var(--text2);background:var(--bg3)"></textarea>
-    </div>
-    <div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:1rem;padding:10px;background:var(--bg3);border-left:2px solid #333;">
-      <i class="ti ti-shield-lock" style="font-size:12px;margin-right:4px;"></i>
-      <strong style="color:var(--text2);">Données personnelles (RGPD)</strong><br>
-      Vos informations (nom, email, téléphone) sont utilisées uniquement pour traiter votre demande de configuration et vous recontacter. Elles ne sont ni vendues ni transmises à des tiers. Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression — contactez-nous à <a href="mailto:info@obviouscycles.com" style="color:var(--text2);">info@obviouscycles.com</a>.
-      <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:var(--text3);display:block;margin-top:4px;">→ Politique de confidentialité</a>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeOrderModal()">Annuler</button>
-      <button class="btn-send" onclick="sendOrder()"><i class="ti ti-send"></i> Envoyer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Preload photos vélos -->
-  <link rel="preload" href="/configurateur/assets/velos/ON_2025.webp" as="image" type="image/webp">
-  <link rel="preload" href="/configurateur/assets/velos/ONOFF_2024.webp" as="image" type="image/webp">
-  <link rel="preload" href="/configurateur/assets/velos/OUTQUEST_2024.webp" as="image" type="image/webp">
-  <link rel="preload" href="/configurateur/assets/velos/OFF_2025.webp" as="image" type="image/webp">
-  <link rel="preload" href="/configurateur/data/modeles.js" as="script">
-<link rel="preload" href="/configurateur/data/composants.js" as="script">
-<link rel="preload" href="/configurateur/data/geometries.js" as="script">
-<link rel="preload" href="/configurateur/js/app_v2.js" as="script">
-<script src="/configurateur/data/modeles.js"></script>
-<script src="/configurateur/data/composants.js"></script>
-<script src="/configurateur/data/geometries.js"></script>
-<script src="/configurateur/js/app_v2.js"></script>
-
-
-  <!-- Fenêtre prix flottante -->
-  <div id="floating-price" class="hidden" style="cursor:pointer">
-    <span class="fp-price-label">Prix total</span>
-    <div class="fp-price" id="fp-price">—</div>
-  </div>
-
-  <!-- FAB Aide-Contact (mobile onglet taille) -->
-  <div id="fab-contact" onclick="openContactDrawer()">
-    <i class="ti ti-headset" style="font-size:17px;"></i>
-    <span>Aide &amp; Contact</span>
-  </div>
-
-  <!-- Drawer Aide-Contact -->
-  <div id="contact-drawer-overlay" onclick="closeContactDrawer()"></div>
-  <div id="contact-drawer">
-    <div class="drawer-header">
-      <div class="step-label" style="color:#888;">Aide - Contact</div>
-      <button class="drawer-close" onclick="closeContactDrawer()"><i class="ti ti-x"></i></button>
-    </div>
-
-    <!-- Wrapper flex pour réordonner desktop vs mobile -->
-    <div id="drawer-inner" style="display:flex;flex-direction:column;">
-
-      <!-- Section contact (order:1 mobile, order:0 desktop) -->
-      <div class="drawer-contact-section">
-        <div class="contact-col-title" style="color:#f2f2f2;text-transform:none;font-size:16px;font-weight:500;letter-spacing:0;margin-bottom:.5rem;">Contacter Obvious</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem;line-height:1.5;">Un autre montage, une question sur les tailles, besoin d'aide.</p>
-        <div class="contact-btns" style="margin-bottom:1.25rem;">
-          <a href="tel:+33695582935" class="contact-btn contact-btn-tel"><i class="ti ti-phone"></i> 06 95 58 29 35</a>
-          <a href="https://www.obviouscycles.com/contact/#ancragemail" target="_blank" class="contact-btn contact-btn-msg"><i class="ti ti-message"></i> Message</a>
-          <a href="https://www.obviouscycles.com/contact/#ancragerdv" target="_blank" class="contact-btn contact-btn-rdv"><i class="ti ti-calendar"></i> Prendre rdv</a>
+    <!-- ÉTAPE 4 (4-hors_gamme) : Description projet hors gamme -->
+    <div class="dt-step-content" id="dt-s4horsgamme">
+      <div style="padding:2rem;">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 4 — Projet spécifique</div>
+        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Parlez-nous de votre vélo</div>
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Votre projet ne correspond à aucun modèle de la gamme Obvious ? Décrivez-le — nous étudierons sa faisabilité avec vous.</div>
+        <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.25rem;">
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Titanium — 720 €</div>
+          <div style="font-size:12px;color:#555;line-height:1.5;">Personnalisation avancée. Tubes spécifiques, intégrations atypiques, géométrie entièrement sur mesure. Inclut tous les niveaux inférieurs.</div>
         </div>
-        <div style="border-top:0.5px solid #2a2a2a;margin:0 0 1.25rem;"></div>
-        <div class="contact-col-title" style="color:#f2f2f2;text-transform:none;font-size:16px;font-weight:500;letter-spacing:0;margin-bottom:.5rem;">Être rappelé</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem;line-height:1.5;">Nous vous contacterons pour vous aider à finaliser votre vélo.</p>
-        <div class="contact-form">
-          <input type="tel" id="cf-phone-d" placeholder="Téléphone" class="contact-input" />
-          <input type="email" id="cf-email-d" placeholder="E-mail" class="contact-input" />
-          <button class="contact-btn contact-btn-send" onclick="sendCallbackDrawer()"><i class="ti ti-send"></i> Envoyer</button>
-          <div id="cf-toast-d" class="cf-toast" style="display:none"><i class="ti ti-check"></i> Message envoyé !</div>
-          <div id="cf-error-d" class="cf-error" style="display:none">Merci de renseigner au moins un contact.</div>
-          <p style="font-size:10px;color:#555;line-height:1.4;margin-top:.75rem;">Vos données sont utilisées uniquement pour votre demande. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:#666;">Politique de confidentialité →</a></p>
+        <textarea id="v2-horsgamme-message" rows="6" placeholder="Décrivez votre projet : type de vélo, usage, inspirations, contraintes techniques particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:1rem;"></textarea>
+        <div style="font-size:12px;color:#555;margin-bottom:1.25rem;">💡 Vous pourrez joindre tout document utile lors de votre échange avec notre équipe.</div>
+        <div style="display:flex;gap:1rem;">
+          <button onclick="dtGo(3)" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
+          <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Recevoir mon devis personnalisé →</button>
         </div>
       </div>
+    </div>
 
-      <!-- Section OOD (order:0 mobile = en premier, order:1 desktop = en bas) -->
-      <div class="drawer-ood-section">
-        <div style="border-top:0.5px solid #2a2a2a;margin:0 0 1.25rem;"></div>
-        <div style="background:#1e1e1e;border:0.5px solid #333;padding:1.25rem;">
-          <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Pour aller plus loin</div>
-          <div style="font-size:17px;font-weight:700;color:#f2f2f2;margin-bottom:.5rem;">OBVIOUS ON DEMAND</div>
-          <p style="font-size:13px;color:#f2f2f2;line-height:1.6;margin-bottom:.4rem;font-weight:500;">Géométrie personnalisée, adaptations cadre, sur-mesure total.</p>
-          <p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:1rem;">3 niveaux supplémentaires de personnalisation pour un vélo vraiment unique.</p>
-          <a href="https://www.obviouscycles.com/velos-titane/velo-titane-sur-mesure/" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;color:#1a1a00;text-decoration:none;font-weight:700;background:#F5C400;padding:12px 14px;width:100%;box-sizing:border-box;"><i class="ti ti-external-link" style="font-size:13px;"></i> Découvrir OBVIOUS ON DEMAND</a>
+    <!-- ÉTAPE 5 (2-standard_evo) : Options Évolution -->
+    <div class="dt-step-content" id="dt-s5evo">
+      <div style="padding:2rem;">
+        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 5 — Évolution</div>
+        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Ajoutez des options à votre cadre</div>
+        <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Sélectionnez les adaptations souhaitées. La mise en plan est mutualisée — vous ne la payez qu'une fois.</div>
+        <div id="v2-evo-total" style="font-size:13px;color:#666;margin-bottom:1.5rem;padding:.75rem;background:#111;border:0.5px solid #222;">Sélectionnez les options souhaitées</div>
+        <div id="v2-evo-options" style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:2rem;"></div>
+        <div style="display:flex;gap:1rem;">
+          <button onclick="v2GoBackToTailleEvo()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
+          <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Recevoir mon devis personnalisé →</button>
         </div>
       </div>
-
     </div>
-  </div>
 
-  <!-- ═══ MODALE CHANGER DE MODÈLE ═══════════════════════════════════════ -->
-  <div id="modal-change-model" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;overflow-y:auto;">
-    <div style="max-width:720px;margin:3rem auto;background:#1a1a1a;border:0.5px solid #333;padding:2rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-        <div>
-          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">OBVIOUS ON DEMAND</div>
-          <h2 style="font-size:20px;font-weight:500;color:#f2f2f2;">Choisir un autre modèle</h2>
-        </div>
-        <button onclick="closeChangeModelModal()" style="background:none;border:none;color:#666;font-size:24px;cursor:pointer;line-height:1;"><i class="ti ti-x"></i></button>
-      </div>
-      <p style="font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.6;">Votre configuration actuelle sera remplacée par la préconfig Ti1 du nouveau modèle.</p>
-      <div id="cmm-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
-    </div>
-  </div>
 
-<!-- Cookie banner -->
-<div id="cookie-banner" style="display:none;">
-  <span>Ce site utilise Google Analytics pour mesurer l'audience. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank">Politique de confidentialité</a></span>
-  <div class="cookie-btns">
-    <button class="cookie-btn" onclick="cookieChoice(false)">Refuser</button>
-    <button class="cookie-btn accept" onclick="cookieChoice(true)">Accepter</button>
-  </div>
-</div>
-
-<script>
-(function() {
-  var consent = localStorage.getItem('obv_cookie_consent');
-  if (consent === null) {
-    document.getElementById('cookie-banner').style.display = 'flex';
-  } else if (consent === 'true') {
-    enableGA();
-  }
-})();
-
-function cookieChoice(accepted) {
-  localStorage.setItem('obv_cookie_consent', accepted ? 'true' : 'false');
-  document.getElementById('cookie-banner').style.display = 'none';
-  if (accepted) enableGA();
-}
-
-function enableGA() {
-  // Charger Google Analytics si consentement donné
-  var s = document.createElement('script');
-  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-KGZDWLZ7JZ';
-  s.async = true;
-  document.head.appendChild(s);
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  window.gtag = gtag;
-  gtag('js', new Date());
-  gtag('config', 'G-KGZDWLZ7JZ');
-}
-</script>
-</body>
-</html>
