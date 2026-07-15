@@ -1928,17 +1928,21 @@ function evoUpdateTotal() {
 
 // ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
 
+
+// ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
+
 function v2ChooseParcours(parcours) {
   v2Parcours = parcours;
 
-  // Highlight carte sélectionnée
   ['standard','standard_evo','sur_mesure','hors_gamme'].forEach(p => {
-    const c = document.getElementById('v2-card-' + p);
-    if (c) c.style.borderColor = p === parcours ? '#F5C400' : '#333';
+    const card = document.getElementById('v2-card-' + p);
+    if (card) card.style.borderColor = p === parcours ? '#F5C400' : '#333';
   });
 
   setTimeout(() => {
     document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+    const main = document.getElementById('dt-main');
+
     if (parcours === 'standard') {
       dtStep = 4;
       document.getElementById('dt-s4std')?.classList.add('active');
@@ -1955,12 +1959,20 @@ function v2ChooseParcours(parcours) {
       document.getElementById('dt-s4horsgamme')?.classList.add('active');
     }
     v2UpdateStepper();
-    const main = document.getElementById('dt-main');
     if (main) main.scrollTop = 0;
   }, 150);
 }
 
-// Depuis taille (parcours standard_evo) -> Évolution
+function v2RenderTaille(prefix) {
+  // Call original size render — works because IDs are duplicated in dt-s4std/stdevo
+  // We need to map dt-s3-xxx -> prefix-xxx
+  // Simpler: dtRenderS3 targets dt-s3-* but our sections use dt-s4std-*
+  // We make dtRenderS3 work by temporarily aliasing
+  dtRenderS3 && dtRenderS3();
+  setTimeout(() => dtToggleSizeMode && dtToggleSizeMode('guide'), 50);
+  v2UpdateStepper();
+}
+
 function v2GoEvo() {
   dtStep = 5;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
@@ -1971,146 +1983,45 @@ function v2GoEvo() {
   if (main) main.scrollTop = 0;
 }
 
-// Depuis Évolution ou message -> Devis
 function v2GoDevis() {
+  // Collect data from current parcours
+  if (v2Parcours === 'sur_mesure') {
+    window._v2Message = document.getElementById('v2-mesure-message')?.value || '';
+  } else if (v2Parcours === 'hors_gamme') {
+    window._v2Message = document.getElementById('v2-horsgamme-message')?.value || '';
+  }
+
   dtStep = 6;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s6devis')?.classList.add('active');
   document.body.classList.add('dt-step-4');
   v2UpdateStepper();
-  dtRenderS4();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
-}
-
-function v2UpdateStepper() {
-  const labels = {1:'Modèle',2:'Composants',3:'Cadre',4:'Taille / Options',5:'Personnalisation',6:'Devis'};
-  const maxStep = 6;
-  for (let i = 1; i <= maxStep; i++) {
-    const s = document.getElementById('dts-' + i);
-    const d = document.getElementById('dts-dot-' + i);
-    if (!s || !d) continue;
-    const n = dtStep;
-    s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === maxStep ? '→' : String(i);
-  }
-}
-
-// ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
-
-function v2ChooseParcours(parcours) {
-  v2Parcours = parcours;
-  
-  // Mettre à jour visuellement les cartes
-  const cardStd = document.getElementById('v2-card-standard');
-  const cardPerso = document.getElementById('v2-card-perso');
-  if (cardStd) cardStd.style.borderColor = parcours === 'standard' ? '#F5C400' : '#333';
-  if (cardPerso) cardPerso.style.borderColor = parcours === 'personnalise' ? '#F5C400' : '#333';
-  
-  setTimeout(() => {
-    if (parcours === 'standard') {
-      // Aller au Step 4 standard (taille)
-      dtStep = 4;
-      document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-      document.getElementById('dt-s4std')?.classList.add('active');
-      v2UpdateStepper();
-      dtRenderS3(); // ancienne fonction taille
-      setTimeout(() => dtToggleSizeMode('guide'), 50);
-    } else {
-      // Aller au Step 4 évolution
-      dtStep = 4;
-      document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-      document.getElementById('dt-s4evo')?.classList.add('active');
-      v2UpdateStepper();
-      evoRender();
-    }
-    const main = document.getElementById('dt-main');
-    if (main) main.scrollTop = 0;
-  }, 150);
-}
-
-function v2GoPerf() {
-  dtStep = 5;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s5perf')?.classList.add('active');
-  // Bouton retour performance -> step 4 evo
-  const backBtn = document.getElementById('v2-perf-back');
-  if (backBtn) backBtn.onclick = () => {
-    dtStep = 4;
-    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-    document.getElementById('dt-s4evo')?.classList.add('active');
-    v2UpdateStepper();
-    evoRender();
-  };
-  v2UpdateStepper();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
-}
-
-function v2GoDevis() {
-  // Collecter les données Performance
-  const msg = document.getElementById('v2-perf-message')?.value || '';
-  window._v2PerfMessage = msg;
-  
-  // Aller au Step 5 standard (récap/devis) — réutilise l'existant
-  dtStep = 5;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s5std')?.classList.add('active');
-  document.body.classList.add('dt-step-4'); // garde le style récap
-  v2UpdateStepper();
-  dtRenderS4();
+  dtRenderS4 && dtRenderS4();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
 }
 
 function v2UpdateStepper() {
   const n = dtStep;
-  const maxStep = 5;
-  for (let i = 1; i <= maxStep; i++) {
+  for (let i = 1; i <= 6; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === maxStep ? '→' : String(i);
+    d.innerHTML = i < n
+      ? '<i class="ti ti-check" style="font-size:9px;"></i>'
+      : i === 6 ? '→' : String(i);
   }
-  // Detail Step 3
   const d3 = document.getElementById('dts-d3');
-  if (d3) d3.textContent = n > 3 ? (v2Parcours === 'standard' ? 'Standard ✓' : 'Sur mesure ✓') : 'Standard / Sur mesure';
-  // Detail Step 4
+  if (d3) d3.textContent = n > 3
+    ? ({standard:'Standard',standard_evo:'Standard + perso',sur_mesure:'Sur mesure',hors_gamme:'Projet unique'}[v2Parcours] || '') + ' ✓'
+    : '';
   const d4 = document.getElementById('dts-d4');
   if (d4) {
-    if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille enregistrée ✓' : 'Optionnel';
-    else d4.textContent = Object.values(evoChecked).some(v=>v) ? 'Options sélectionnées ✓' : 'Optionnel';
+    if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
+    else if (v2Parcours === 'standard_evo') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
+    else d4.textContent = '';
   }
-}
-
-
-
-// Render taille section for a given prefix (dt-s4std or dt-s4stdevo)
-function v2RenderTaille(prefix) {
-  // The taille section uses dt-s3-xxx IDs in proto14
-  // In v2 they are prefixed differently — we activate the section and call dtRenderS3
-  // but dtRenderS3 looks for dt-s3-cards etc. We need to make those visible
-
-  // Temporarily show the correct section so dtRenderS3 finds its elements
-  const section = document.getElementById(prefix);
-  if (!section) return;
-
-  // dtRenderS3 targets elements with IDs like dt-s3-cards, dt-s4std-cards...
-  // We patched the HTML to use prefix-based IDs, so we need a prefix-aware render
-  const cardsZone = section.querySelector('[id$="-cards"]') ||
-                    document.getElementById(prefix + '-cards') ||
-                    document.getElementById('dt-s3-cards');
-  
-  // Just call the original dtRenderS3 which targets dt-s3-* IDs
-  // These should exist in dt-s4std since we copied the HTML
-  dtRenderS3();
-  setTimeout(() => dtToggleSizeMode('guide'), 50);
-
-  // Update next button label
-  const nextLbl = document.getElementById(prefix.replace('dt-s', 'dt-next-').replace('dt-s4', 'dt-next-4') + '-lbl') ||
-                  document.getElementById('dt-next-3-lbl');
-  if (nextLbl) nextLbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer';
 }
 
 function v2GoBackToTailleEvo() {
