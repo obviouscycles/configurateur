@@ -1771,15 +1771,42 @@ renderModels();
 dtInit();
 loadConfigFromUrl();
 
-// ── Masquer l'écran de chargement une fois tout initialisé ──
+// ── Masquer l'écran de chargement après init + chargement des photos ──
 (function hideLoader() {
   const loader = document.getElementById('obv-loader');
   if (!loader) return;
-  // Petit délai pour laisser le rendu se stabiliser
-  setTimeout(function() {
-    loader.classList.add('hidden');
-    setTimeout(function() { loader.style.display = 'none'; }, 450);
-  }, 400);
+
+  // Précharger les photos des 4 modèles
+  const photos = MODELS.map(m => m.photo).filter(Boolean);
+  let loaded = 0;
+
+  function tryHide() {
+    loaded++;
+    if (loaded >= photos.length) {
+      loader.classList.add('hidden');
+      setTimeout(function() { loader.style.display = 'none'; }, 450);
+    }
+  }
+
+  if (photos.length === 0) {
+    // Pas de photos — masquer directement
+    setTimeout(function() {
+      loader.classList.add('hidden');
+      setTimeout(function() { loader.style.display = 'none'; }, 450);
+    }, 400);
+  } else {
+    photos.forEach(function(src) {
+      const img = new Image();
+      img.onload = tryHide;
+      img.onerror = tryHide; // ne pas bloquer si une photo est manquante
+      img.src = src;
+    });
+    // Sécurité : masquer après 5s max quoi qu'il arrive
+    setTimeout(function() {
+      loader.classList.add('hidden');
+      setTimeout(function() { loader.style.display = 'none'; }, 450);
+    }, 5000);
+  }
 })();
 
 // Présélection via paramètre URL (?modele=ON/OFF&roues=roue_gr_ob_35...)
