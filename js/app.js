@@ -1781,6 +1781,26 @@ const ALIASES = {
 
 const urlParams = new URLSearchParams(window.location.search);
 const modeleParam = urlParams.get('modele');
+
+// ── Mode embed (?embed=1) : masquer header pour intégration iframe Wordpress ──
+const isEmbed = urlParams.get('embed') === '1';
+if (isEmbed) {
+  const style = document.createElement('style');
+  style.textContent = `
+    /* Embed mode — masquer tout le header */
+    header { display: none !important; }
+  `;
+  document.head.appendChild(style);
+
+  // Envoyer la hauteur au parent Wordpress pour ajustement dynamique
+  function sendHeight() {
+    const h = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: 'obv-height', height: h }, '*');
+  }
+  // Envoyer à chaque changement de step et au chargement
+  window.addEventListener('load', sendHeight);
+  new MutationObserver(sendHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+}
 if (modeleParam) {
   const decoded = decodeURIComponent(modeleParam);
   const resolvedId = ALIASES[decoded] || ALIASES[modeleParam] || decoded || modeleParam;
