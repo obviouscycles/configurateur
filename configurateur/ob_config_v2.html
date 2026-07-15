@@ -2183,42 +2183,25 @@
     </div>
 
     <!-- ÉTAPE 4 (standard) : Taille -->
-    <div class="dt-step-content" id="dt-s4std">
+    <!-- ÉTAPE 4 : Taille (partagée standard et standard_evo) -->
+    <div class="dt-step-content" id="dt-s3">
       <!-- Ligne 1 : 2 cartes de choix côte à côte -->
-      <div id="dt-s4std-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
+      <div id="dt-s3-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
       <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
-      <div id="dt-s4std-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <div id="dt-s4std-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <div id="dt-s3-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
+      <div id="dt-s3-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
       <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
         Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
       </p>
       <!-- dt-s3-result supprimé : double récap retiré -->
       <div class="dt-step-footer">
         <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
-        <button class="dt-btn-next" id="dt-next-3" onclick="v2GoDevis()">
-          <span id="dt-next-3-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
+        <button class="dt-btn-next" id="dt-next-taille" onclick="v2NextFromTaille()">
+          <span id="dt-next-taille-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
         </button>
       </div>
     </div>
 
-    <!-- ÉTAPE 4 (standard+evo) : Taille -->
-    <div class="dt-step-content" id="dt-s4stdevo">
-      <!-- Ligne 1 : 2 cartes de choix côte à côte -->
-      <div id="dt-s4stdevo-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
-      <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
-      <div id="dt-s4stdevo-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <div id="dt-s4stdevo-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
-        Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
-      </p>
-      <!-- dt-s3-result supprimé : double récap retiré -->
-      <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
-        <button class="dt-btn-next" id="dt-next-3" onclick="v2GoEvo()">
-          <span id="dt-next-3-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
-        </button>
-      </div>
-    </div>
 
     <!-- ÉTAPE 4 (sur_mesure) : Description -->
     <div class="dt-step-content" id="dt-s4mesure">
