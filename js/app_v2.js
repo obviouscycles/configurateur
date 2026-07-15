@@ -1943,14 +1943,14 @@ function v2ChooseParcours(parcours) {
     document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
     const main = document.getElementById('dt-main');
 
-    if (parcours === 'standard') {
+    if (parcours === 'standard' || parcours === 'standard_evo') {
       dtStep = 4;
-      document.getElementById('dt-s4std')?.classList.add('active');
-      v2RenderTaille('dt-s4std');
-    } else if (parcours === 'standard_evo') {
-      dtStep = 4;
-      document.getElementById('dt-s4stdevo')?.classList.add('active');
-      v2RenderTaille('dt-s4stdevo');
+      document.getElementById('dt-s3')?.classList.add('active');
+      dtRenderS3();
+      setTimeout(() => dtToggleSizeMode('guide'), 50);
+      // Update next button label
+      const lbl = document.getElementById('dt-next-taille-lbl');
+      if (lbl) lbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer sans taille';
     } else if (parcours === 'sur_mesure') {
       dtStep = 4;
       document.getElementById('dt-s4mesure')?.classList.add('active');
@@ -1963,15 +1963,32 @@ function v2ChooseParcours(parcours) {
   }, 150);
 }
 
-function v2RenderTaille(prefix) {
-  // Call original size render — works because IDs are duplicated in dt-s4std/stdevo
-  // We need to map dt-s3-xxx -> prefix-xxx
-  // Simpler: dtRenderS3 targets dt-s3-* but our sections use dt-s4std-*
-  // We make dtRenderS3 work by temporarily aliasing
+function v2RenderTaille() {
   dtRenderS3 && dtRenderS3();
   setTimeout(() => dtToggleSizeMode && dtToggleSizeMode('guide'), 50);
   v2UpdateStepper();
 }
+// Bouton "Suivant" depuis la taille — selon le parcours
+function v2NextFromTaille() {
+  if (v2Parcours === 'standard') {
+    v2GoRecap();
+  } else if (v2Parcours === 'standard_evo') {
+    v2GoEvo();
+  }
+}
+
+// Aller au récap avant devis
+function v2GoRecap() {
+  dtStep = 6;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s6devis')?.classList.add('active');
+  document.body.classList.add('dt-step-4');
+  v2UpdateStepper();
+  dtRenderS4 && dtRenderS4();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
 
 function v2GoEvo() {
   dtStep = 5;
@@ -1990,15 +2007,7 @@ function v2GoDevis() {
   } else if (v2Parcours === 'hors_gamme') {
     window._v2Message = document.getElementById('v2-horsgamme-message')?.value || '';
   }
-
-  dtStep = 6;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s6devis')?.classList.add('active');
-  document.body.classList.add('dt-step-4');
-  v2UpdateStepper();
-  dtRenderS4 && dtRenderS4();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
+  v2GoRecap();
 }
 
 function v2UpdateStepper() {
@@ -2027,8 +2036,8 @@ function v2UpdateStepper() {
 function v2GoBackToTailleEvo() {
   dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s4stdevo')?.classList.add('active');
-  v2RenderTaille('dt-s4stdevo');
+  document.getElementById('dt-s3')?.classList.add('active');
+  v2RenderTaille();
   v2UpdateStepper();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
