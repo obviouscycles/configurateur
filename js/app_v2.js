@@ -1786,31 +1786,10 @@ function dtInit() {
 const EVO_FIXE = 50;
 const EVO_OPTIONS = [
   {
-    "id": "CODE",
-    "label": "OPTION",
-    "price": "SURCOUT (€TTC)",
-    "note": "NOTES",
-    "modeles": [
-      "MODELES"
-    ]
-  },
-  {
     "id": "evo_inserts",
     "label": "Ajout d'inserts",
     "price": 10,
-    "note": "ajout d'inserts taraudés pour fixations sur cadre - porte bidons, bagagerie, porte-bagages, garde boue - prix unique quelque soit la quantité",
-    "modeles": [
-      "route",
-      "gravel_racing",
-      "gravel_bikepacking",
-      "vtt_enduro"
-    ]
-  },
-  {
-    "id": "evo_gravure",
-    "label": "Gravure sur tube supérieur",
-    "price": 10,
-    "note": "graver votre nom, votre groupe sanguin ou autre sur le tube supérieur - maxi 25 caractères",
+    "note": "Ajout d'inserts taraudés pour fixations sur cadre — porte-bidons, bagagerie, porte-bagages, garde-boue. Prix unique quelle que soit la quantité.",
     "modeles": [
       "route",
       "gravel_racing",
@@ -1822,7 +1801,7 @@ const EVO_OPTIONS = [
     "id": "evo_iscg",
     "label": "Fixation ISCG05",
     "price": 20,
-    "note": "ajout d'une patte de fixation pour guide chaine ISCG05 sur VTT",
+    "note": "Ajout d'une patte de fixation pour guide-chaîne ISCG05 sur VTT.",
     "modeles": [
       "vtt_enduro"
     ]
@@ -1831,7 +1810,7 @@ const EVO_OPTIONS = [
     "id": "evo_integ",
     "label": "Intégration direction",
     "price": 50,
-    "note": "intégration des gaines et durites dans la direction",
+    "note": "Intégration des gaines et durites dans la direction.",
     "modeles": [
       "gravel_bikepacking"
     ]
@@ -1840,7 +1819,19 @@ const EVO_OPTIONS = [
     "id": "evo_sloping",
     "label": "Modification sloping",
     "price": 10,
-    "note": "changement de l'inclinaison du tube supérieur - sans changement de géométrie - dans la limite fixée par Obvious",
+    "note": "Changement de l'inclinaison du tube supérieur, sans changement de géométrie, dans la limite fixée par Obvious.",
+    "modeles": [
+      "route",
+      "gravel_racing",
+      "gravel_bikepacking",
+      "vtt_enduro"
+    ]
+  },
+  {
+    "id": "evo_gravure",
+    "label": "Gravure sur tube supérieur",
+    "price": 10,
+    "note": "Gravez votre nom, votre groupe sanguin ou autre sur le tube supérieur — 20 caractères maximum.",
     "modeles": [
       "route",
       "gravel_racing",
@@ -1851,16 +1842,30 @@ const EVO_OPTIONS = [
 ];
 
 let evoChecked = {};
+let evoGravureText = '';
+
+function evoUpdateGravureText(val) {
+  evoGravureText = val;
+  // Re-render juste la partie erreur/compteur sans perdre le focus
+  const input = document.getElementById('evo-gravure-input');
+  const errorSpan = input ? input.parentElement.querySelector('span') : null;
+  const isError = val.length > 20;
+  if (input) input.style.borderColor = isError ? '#e05555' : '#333';
+  if (errorSpan) {
+    errorSpan.style.color = isError ? '#e05555' : '#555';
+    errorSpan.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (val.length + ' / 20 caractères');
+  }
+}
 let v2Parcours = 'standard'; // 'standard' | 'standard_evo' | 'sur_mesure' | 'hors_gamme'
 
 // Calcul du prix affiché pour UNE option
-// Si rien de coché : fixe + xx
-// Si au moins 1 coché et cette option pas cochée : xx seul
+// Si rien de coché : fixe + xx (pour toutes les options)
+// Dès qu'au moins 1 option est cochée : xx seul pour TOUTES les options (cochée ou non)
 function evoOptionPrice(optId) {
   const opt = EVO_OPTIONS.find(o => o.id === optId);
   if (!opt) return 0;
   const anyChecked = Object.values(evoChecked).some(v => v);
-  return anyChecked && !evoChecked[optId] ? opt.price : EVO_FIXE + opt.price;
+  return anyChecked ? opt.price : EVO_FIXE + opt.price;
 }
 
 // Total global = fixe (1 seul) + somme des xx cochés
@@ -1879,19 +1884,13 @@ function evoRender() {
 
   container.innerHTML = opts.map(opt => {
     const checked = evoChecked[opt.id] || false;
-    const displayPrice = checked
-      ? EVO_FIXE + opt.price   // option cochée : affiche son prix total
-      : anyChecked
-        ? opt.price             // autre option cochée : affiche xx seulement
-        : EVO_FIXE + opt.price; // rien de coché : affiche fixe+xx
-    const priceLabel = checked
-      ? EVO_FIXE + opt.price + ' €'
-      : anyChecked
-        ? opt.price + ' €'
-        : (EVO_FIXE + opt.price) + ' €';
+    const priceLabel = (anyChecked ? opt.price : EVO_FIXE + opt.price) + ' €';
+    const isGravure = opt.id === 'evo_gravure';
+    const gravureText = evoGravureText || '';
+    const gravureError = gravureText.length > 20;
 
-    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;cursor:pointer;transition:border-color .15s;" onclick="evoToggle('${opt.id}')" id="evo-card-${opt.id}">
-      <div style="display:flex;align-items:flex-start;gap:.75rem;">
+    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;transition:border-color .15s;">
+      <div style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;" onclick="evoToggle('${opt.id}')">
         <div style="width:18px;height:18px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
         </div>
@@ -1903,6 +1902,13 @@ function evoRender() {
           ${opt.note ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
       </div>
+      ${isGravure && checked ? `
+      <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
+        <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="Texte à graver (20 caractères max)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);">
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-size:11px;color:${gravureError ? '#e05555' : '#555'};">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</span>
+        </div>
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -2019,6 +2025,12 @@ function v2GoEvo() {
 }
 
 function v2GoDevis() {
+  // Blocage si gravure trop longue
+  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+    const input = document.getElementById('evo-gravure-input');
+    if (input) { input.style.borderColor = '#e05555'; input.focus(); }
+    return;
+  }
   // Collect data from current parcours
   if (v2Parcours === 'sur_mesure') {
     window._v2Message = document.getElementById('v2-mesure-message')?.value || '';
