@@ -1939,7 +1939,7 @@ function evoRender() {
   const container = document.getElementById('v2-evo-options');
   if (!container) return;
   const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
-  const firstId = evoCheckOrder[0];
+  const firstId = evoOrder[0];
 
   container.innerHTML = opts.map(opt => {
     const checked = evoChecked[opt.id] || false;
