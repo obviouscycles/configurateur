@@ -1665,7 +1665,58 @@ function dtRenderS4() {
         })() +
       '</div>') +
     '</div>' +
+    v2RecapBlock() +
     '';
+}
+
+// Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
+function v2RecapBlock() {
+  if (typeof v2Parcours === 'undefined') return '';
+
+  if (v2Parcours === 'standard') {
+    return ''; // rien à afficher — le parcours standard est déjà couvert par Dimensions
+  }
+
+  if (v2Parcours === 'standard_evo') {
+    const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
+    const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+    let lines = '';
+    if (checkedOpts.length === 0) {
+      lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
+    } else {
+      lines = '<div style="font-size:13px;color:#f2f2f2;line-height:2;display:flex;flex-direction:column;gap:2px;">' +
+        checkedOpts.map(o => {
+          const label = o.id === 'evo_gravure' && evoGravureText
+            ? o.label + ' : « ' + evoGravureText + ' »'
+            : o.label;
+          return '<div style="display:flex;justify-content:space-between;"><span>' + label + '</span></div>';
+        }).join('') +
+      '</div>';
+    }
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Options Évolution</div>' +
+      lines +
+      (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' € <span style="font-size:11px;color:#555;font-weight:400;">(mise en plan incluse)</span></div>' : '') +
+    '</div>';
+  }
+
+  if (v2Parcours === 'sur_mesure') {
+    const msg = window._v2Message || '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+    '</div>';
+  }
+
+  if (v2Parcours === 'hors_gamme') {
+    const msg = window._v2Message || '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+    '</div>';
+  }
+
+  return '';
 }
 
 // ── Récap droit ──
@@ -1842,30 +1893,38 @@ const EVO_OPTIONS = [
 ];
 
 let evoChecked = {};
+let evoOrder = []; // ordre de sélection — le premier élément paie le fixe
 let evoGravureText = '';
 
 function evoUpdateGravureText(val) {
-  evoGravureText = val;
-  // Re-render juste la partie erreur/compteur sans perdre le focus
+  const upperVal = val.toUpperCase();
+  evoGravureText = upperVal;
   const input = document.getElementById('evo-gravure-input');
+  // Préserver la position du curseur lors de la conversion en majuscules
+  const cursorPos = input ? input.selectionStart : null;
+  if (input && input.value !== upperVal) {
+    input.value = upperVal;
+    if (cursorPos !== null) input.setSelectionRange(cursorPos, cursorPos);
+  }
   const errorSpan = input ? input.parentElement.querySelector('span') : null;
-  const isError = val.length > 20;
+  const isError = upperVal.length > 20;
   if (input) input.style.borderColor = isError ? '#e05555' : '#333';
   if (errorSpan) {
     errorSpan.style.color = isError ? '#e05555' : '#555';
-    errorSpan.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (val.length + ' / 20 caractères');
+    errorSpan.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (upperVal.length + ' / 20 caractères');
   }
 }
 let v2Parcours = 'standard'; // 'standard' | 'standard_evo' | 'sur_mesure' | 'hors_gamme'
 
 // Calcul du prix affiché pour UNE option
-// Si rien de coché : fixe + xx (pour toutes les options)
-// Dès qu'au moins 1 option est cochée : xx seul pour TOUTES les options (cochée ou non)
+// Rien de coché : toutes affichent fixe + xx
+// Au moins 1 coché : SEULE la première option cochée (evoOrder[0]) affiche fixe + xx
+//                    toutes les autres (cochées ou non) affichent xx seul
 function evoOptionPrice(optId) {
   const opt = EVO_OPTIONS.find(o => o.id === optId);
   if (!opt) return 0;
-  const anyChecked = Object.values(evoChecked).some(v => v);
-  return anyChecked ? opt.price : EVO_FIXE + opt.price;
+  if (evoOrder.length === 0) return EVO_FIXE + opt.price;
+  return optId === evoOrder[0] ? EVO_FIXE + opt.price : opt.price;
 }
 
 // Total global = fixe (1 seul) + somme des xx cochés
@@ -1884,7 +1943,7 @@ function evoRender() {
 
   container.innerHTML = opts.map(opt => {
     const checked = evoChecked[opt.id] || false;
-    const priceLabel = (anyChecked ? opt.price : EVO_FIXE + opt.price) + ' €';
+    const priceLabel = evoOptionPrice(opt.id) + ' €';
     const isGravure = opt.id === 'evo_gravure';
     const gravureText = evoGravureText || '';
     const gravureError = gravureText.length > 20;
@@ -1897,14 +1956,14 @@ function evoRender() {
         <div style="flex:1;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
-            <span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : anyChecked ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>
+            <span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>
           </div>
           ${opt.note ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
       </div>
       ${isGravure && checked ? `
       <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
-        <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="Texte à graver (20 caractères max)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);">
+        <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);text-transform:uppercase;letter-spacing:.03em;">
         <div style="display:flex;justify-content:space-between;margin-top:4px;">
           <span style="font-size:11px;color:${gravureError ? '#e05555' : '#555'};">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</span>
         </div>
@@ -1917,6 +1976,11 @@ function evoRender() {
 
 function evoToggle(id) {
   evoChecked[id] = !evoChecked[id];
+  if (evoChecked[id]) {
+    if (!evoOrder.includes(id)) evoOrder.push(id);
+  } else {
+    evoOrder = evoOrder.filter(x => x !== id);
+  }
   evoRender();
 }
 
