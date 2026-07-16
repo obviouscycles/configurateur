@@ -1132,8 +1132,8 @@ function dtRender() {
   if (next1) next1.disabled = !selModel;
 
   // Bouton next step 3
-  const next3lbl = el('dt-next-3-lbl');
-  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer sans taille';
+  const next3lbl = el('dt-next-taille-lbl');
+  v2SetTailleLabel(window.sizeValidated);
 
   // Bouton "changer de vélo" dans le récap — visible après reset
 
@@ -1569,8 +1569,7 @@ function dtCheckSizeResult() {
   if (!validated && window.sizeValidated) validated = true;
 
   if (validated) {
-    const lbl = document.getElementById('dt-next-3-lbl');
-    if (lbl) lbl.textContent = 'Ma configuration';
+    v2SetTailleLabel(true);
   }
 }
 
@@ -1589,7 +1588,7 @@ function dtToggleSizeMode(mode) {
   // Reset résultat pour permettre un nouveau calcul
   const dtResult = document.getElementById('dt-s3-result');
   if (dtResult) { dtResult.style.display = 'none'; dtResult.innerHTML = ''; }
-  const lbl = document.getElementById('dt-next-3-lbl');
+  const lbl = document.getElementById('dt-next-taille-lbl');
   if (lbl) lbl.textContent = 'Continuer sans taille';
 
   // Reset résultats proto12 pour guide
@@ -1889,7 +1888,7 @@ function evoRender() {
       ? EVO_FIXE + opt.price + ' €'
       : anyChecked
         ? opt.price + ' €'
-        : 'à partir de ' + (EVO_FIXE + opt.price) + ' €';
+        : (EVO_FIXE + opt.price) + ' €';
 
     return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;cursor:pointer;transition:border-color .15s;" onclick="evoToggle('${opt.id}')" id="evo-card-${opt.id}">
       <div style="display:flex;align-items:flex-start;gap:.75rem;">
@@ -1931,6 +1930,18 @@ function evoUpdateTotal() {
 
 // ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
 
+
+// Helper centralisé : définit le bon texte du bouton "Continuer" après la taille
+function v2SetTailleLabel(validated) {
+  const lbl = document.getElementById('dt-next-taille-lbl');
+  if (!lbl) return;
+  if (validated) {
+    lbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+  } else {
+    lbl.textContent = 'Continuer sans taille';
+  }
+}
+
 function v2ChooseParcours(parcours) {
   v2Parcours = parcours;
 
@@ -1951,7 +1962,13 @@ function v2ChooseParcours(parcours) {
       setTimeout(() => dtToggleSizeMode('guide'), 50);
       // Update next button label
       const lbl = document.getElementById('dt-next-taille-lbl');
-      if (lbl) lbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer sans taille';
+      if (lbl) {
+        if (window.sizeValidated) {
+          lbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+        } else {
+          lbl.textContent = 'Continuer sans taille';
+        }
+      }
     } else if (parcours === 'sur_mesure') {
       dtStep = 4;
       document.getElementById('dt-s4mesure')?.classList.add('active');
@@ -2856,8 +2873,7 @@ function validateDims() {
   // Mettre à jour le bouton mobile ET desktop
   const _lbl = document.getElementById('p11-next-label');
   if (_lbl) _lbl.textContent = 'Ma configuration';
-  const _lbl2 = document.getElementById('dt-next-3-lbl');
-  if (_lbl2) _lbl2.textContent = 'Ma configuration';
+  v2SetTailleLabel(true);
 }
 
 // ─── DRAWER AIDE-CONTACT (mobile) ─────────────────────────────────────────────
