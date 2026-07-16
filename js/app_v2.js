@@ -1186,8 +1186,8 @@ function dtPresetBar(modelId) {
   const infoPopupId = 'dt-preset-info-' + modelId;
   return '<div class="preset-bar" onclick="event.stopPropagation()">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
-      '<div class="preset-label" style="margin-bottom:0;">3 suggestions pour démarrer</div>' +
-      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<div class="preset-label" style="margin-bottom:0;color:#F5C400;">3 suggestions pour démarrer</div>' +
+      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="' + infoPopupId + '" style="display:none;font-size:12px;color:#aaa;background:#111;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS_DT).map(([k,v]) =>
@@ -1309,7 +1309,7 @@ function dtShowSaved() {
   loadSaved(); // sync localStorage → savedConfigs
   dtStep = 4;
   document.body.classList.add('dt-step-4');
-  const inner = document.getElementById('dt-s4-inner');
+  const inner = document.getElementById('dt-s6devis-inner');
   if (!inner) return;
   
   const configs = savedConfigs || [];
@@ -1603,7 +1603,7 @@ function dtToggleSizeMode(mode) {
 
 // ── Étape 4 : récap plein écran ──
 function dtRenderS4() {
-  const inner = document.getElementById('dt-s4-inner');
+  const inner = document.getElementById('dt-s6devis-inner');
   if (!inner || !selModel) return;
   const model = MODELS.find(m => m.id === selModel);
   const { price } = computeTotals(selModel, selOpts);
