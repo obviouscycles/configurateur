@@ -1170,8 +1170,8 @@ function dtPresetBar(modelId) {
   const infoPopupId = 'dt-preset-info-' + modelId;
   return '<div class="preset-bar" onclick="event.stopPropagation()">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
-      '<div class="preset-label" style="margin-bottom:0;">3 suggestions pour démarrer</div>' +
-      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<div class="preset-label" style="margin-bottom:0;color:#F5C400;">3 suggestions pour démarrer</div>' +
+      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="' + infoPopupId + '" style="display:none;font-size:12px;color:#aaa;background:#111;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS_DT).map(([k,v]) =>
@@ -1410,7 +1410,7 @@ function dtRenderPosts() {
       const isDef = isPresetDefault(p.id, o.id);
       const rec2 = isRecommended(o, selModel);
       const d = o.price - curPrice;
-      const diff = isDef ? 'inclus' : sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+      const diff = sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
       if (hasPhotos) {
         const imgHtml = (o.image && o.image !== 'assets/no_option.png')
           ? '<img src="' + o.image + '" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;display:block;">'
@@ -2885,7 +2885,7 @@ function p11RenderPosts() {
             pc = curPrice!==0?'neg':'incl';
           } else {
             const d = o.price - curPrice;
-            diff = isDefault ? 'inclus' : sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
             pc = d<0?'neg':d>0?'pos':'zero';
           }
           const imgHTML = o.image && o.image !== 'assets/no_option.png'
@@ -2895,10 +2895,10 @@ function p11RenderPosts() {
             '<div class="opc-check"><i class="ti ti-check"></i></div>' +
             '<div class="opc-img-wrap">' + imgHTML + '</div>' +
             '<div class="opc-body">' +
-              (rec ? '<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span></div>' : '') +
+              ((rec||isDefault) ? '<div class="opc-badges">' + (isDefault ? '<span class="opc-badge-incl">inclus</span>' : '') + (rec ? '<span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span>' : '') + '</div>' : '') +
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
-              (isDefault ? '<span class="incl-preset">inclus</span>' : (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '')) +
+              (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
         }).join('') + '</div>'
@@ -2912,16 +2912,16 @@ function p11RenderPosts() {
             diffNeg = false;
           } else {
             const d = o.price - curPrice;
-            diff = isDefault ? 'inclus' : sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
             diffNeg = d < 0;
           }
           return '<div class="opt-item' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
             '<div class="opt-radio"><div class="radio-dot"></div></div>' +
             '<div class="oi-info">' +
-              '<div class="oi-name">' + o.name + '</div>' +
+              '<div class="oi-name">' + o.name + (isDefault ? '<span class="incl-badge">inclus</span>' : '') + '</div>' +
               (o.desc ? '<div class="oi-desc">' + o.desc + '</div>' : '') +
             '</div>' +
-            '<div class="oi-meta">' + (isDefault ? '<span class="incl-preset">inclus</span>' : '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div>') + '</div>' +
+            '<div class="oi-meta"><div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
         }).join('') + '</div>';
 
