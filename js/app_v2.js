@@ -1877,18 +1877,6 @@ const EVO_OPTIONS = [
     ]
   },
   {
-    "id": "evo_sloping",
-    "label": "Modification sloping",
-    "price": 10,
-    "note": "Changement de l'inclinaison du tube supérieur, sans changement de géométrie, dans la limite fixée par Obvious.",
-    "modeles": [
-      "route",
-      "gravel_racing",
-      "gravel_bikepacking",
-      "vtt_enduro"
-    ]
-  },
-  {
     "id": "evo_gravure",
     "label": "Gravure sur tube supérieur",
     "price": 10,
@@ -2098,7 +2086,7 @@ function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel) {
       </div>`;
     }).join('') +
     `<div style="display:flex;justify-content:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
-      <span style="font-size:12px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#555'};">${anyInsertChecked ? priceLabel : 'Sélectionnez au moins un insert'}</span>
+      <span style="font-size:12px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#666'};">${priceLabel}</span>
     </div>
   </div>`;
 }
