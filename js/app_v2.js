@@ -1681,22 +1681,32 @@ function v2RecapBlock() {
     const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
     const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
     let lines = '';
-    if (checkedOpts.length === 0) {
+    if (checkedOpts.length === 0 && !evoCustomText) {
       lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
     } else {
-      lines = '<div style="font-size:13px;color:#f2f2f2;line-height:2;display:flex;flex-direction:column;gap:2px;">' +
+      lines = '<div style="font-size:13px;color:#f2f2f2;line-height:1.8;display:flex;flex-direction:column;gap:2px;">' +
         checkedOpts.map(o => {
-          const label = o.id === 'evo_gravure' && evoGravureText
-            ? o.label + ' : « ' + evoGravureText + ' »'
-            : o.label;
-          return '<div style="display:flex;justify-content:space-between;"><span>' + label + '</span></div>';
+          if (o.id === 'evo_gravure') {
+            return '<div>' + o.label + (evoGravureText ? ' : « ' + evoGravureText + ' »' : '') + '</div>';
+          }
+          if (o.id === 'evo_inserts') {
+            const selectedInserts = (typeof EVO_INSERTS !== 'undefined')
+              ? EVO_INSERTS.filter(i => evoInsertsChecked[i.id]).map(i => i.label)
+              : [];
+            return '<div>' + o.label + (selectedInserts.length ? ' : ' + selectedInserts.join(', ') : '') + '</div>';
+          }
+          return '<div>' + o.label + '</div>';
         }).join('') +
       '</div>';
     }
+    const customBlock = evoCustomText
+      ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #2a2a2a;"><div style="font-size:11px;color:#666;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#f2f2f2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
+      : '';
     return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Options Évolution</div>' +
       lines +
-      (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' € <span style="font-size:11px;color:#555;font-weight:400;">(mise en plan incluse)</span></div>' : '') +
+      customBlock +
+      (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
     '</div>';
   }
 
@@ -1892,6 +1902,89 @@ const EVO_OPTIONS = [
   }
 ];
 
+const EVO_INSERTS = [
+  {
+    "id": "ins_pb1",
+    "label": "Porte-bidon 1",
+    "note": "Tube diagonal",
+    "avail": {
+      "route": 1,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 1
+    }
+  },
+  {
+    "id": "ins_pb2",
+    "label": "Porte-bidon 2",
+    "note": "Tube de selle",
+    "avail": {
+      "route": 1,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": "x"
+    }
+  },
+  {
+    "id": "ins_pb3",
+    "label": "Porte-bidon 3",
+    "note": "Sous tube diagonal",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 1
+    }
+  },
+  {
+    "id": "ins_sacoche",
+    "label": "Sacoche de tube supérieur",
+    "note": "Tube supérieur",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 0,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 1
+    }
+  },
+  {
+    "id": "ins_pbag4",
+    "label": "Porte-bagages arrière 4 points",
+    "note": "Pour porte-bagages classique",
+    "avail": {
+      "route": "x",
+      "gravel_racing": 0,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 1
+    }
+  },
+  {
+    "id": "ins_pbag2",
+    "label": "Porte-bagages arrière 2 points",
+    "note": "2 points en bas des haubans pour soutenir porte-bagages fixé sur tige de selle",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 0,
+      "gravel_bikepacking": "x",
+      "vtt_enduro": 0
+    }
+  },
+  {
+    "id": "ins_gardeboue",
+    "label": "Garde-boue",
+    "note": "",
+    "avail": {
+      "route": "x",
+      "gravel_racing": "x",
+      "gravel_bikepacking": 1,
+      "vtt_enduro": "x"
+    }
+  }
+];
+
+let evoInsertsChecked = {}; // état des inserts individuels
+let evoCustomText = ''; // demande texte libre
+
 let evoChecked = {};
 let evoOrder = []; // ordre de sélection — le premier élément paie le fixe
 let evoGravureText = '';
@@ -1945,22 +2038,24 @@ function evoRender() {
     const checked = evoChecked[opt.id] || false;
     const priceLabel = evoOptionPrice(opt.id) + ' €';
     const isGravure = opt.id === 'evo_gravure';
+    const isInserts = opt.id === 'evo_inserts';
     const gravureText = evoGravureText || '';
     const gravureError = gravureText.length > 20;
 
     return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;transition:border-color .15s;">
-      <div style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;" onclick="evoToggle('${opt.id}')">
-        <div style="width:18px;height:18px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+      <div style="display:flex;align-items:flex-start;gap:.75rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="evoToggle('${opt.id}')"`}>
+        ${isInserts ? '' : `<div style="width:18px;height:18px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
-        </div>
+        </div>`}
         <div style="flex:1;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
-            <span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>
+            ${isInserts ? '' : `<span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
           </div>
-          ${opt.note ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+          ${opt.note && !isInserts ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
       </div>
+      ${isInserts ? evoRenderInsertsSubList(checked, priceLabel) : ''}
       ${isGravure && checked ? `
       <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
         <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);text-transform:uppercase;letter-spacing:.03em;">
@@ -1971,7 +2066,64 @@ function evoRender() {
     </div>`;
   }).join('');
 
+  // Bloc demande libre — toujours affiché en bas
+  container.innerHTML += evoRenderCustomText();
+
   evoUpdateTotal();
+}
+
+// Sous-liste des inserts filtrée par modèle
+function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel) {
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] !== 'x');
+  if (items.length === 0) return '';
+
+  const anyInsertChecked = items.some(i => i.avail[selModel] === 0 && evoInsertsChecked[i.id]);
+
+  return `<div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;display:flex;flex-direction:column;gap:6px;">` +
+    items.map(item => {
+      const isIncluded = item.avail[selModel] === 1;
+      const isChecked = evoInsertsChecked[item.id] || false;
+      if (isIncluded) {
+        return `<div style="display:flex;align-items:center;gap:8px;opacity:.5;">
+          <div style="width:14px;height:14px;border:0.5px solid #444;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="ti ti-check" style="font-size:9px;color:#666;"></i></div>
+          <span style="font-size:12px;color:#888;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+          <span style="font-size:10px;color:#555;margin-left:auto;">sur cadre standard</span>
+        </div>`;
+      }
+      return `<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();evoToggleInsert('${item.id}')">
+        <div style="width:14px;height:14px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${isChecked ? '<i class="ti ti-check" style="font-size:9px;color:#1a1a00;"></i>' : ''}
+        </div>
+        <span style="font-size:12px;color:#f2f2f2;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+      </div>`;
+    }).join('') +
+    `<div style="display:flex;justify-content:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
+      <span style="font-size:12px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#555'};">${anyInsertChecked ? priceLabel : 'Sélectionnez au moins un insert'}</span>
+    </div>
+  </div>`;
+}
+
+// Champ texte libre pour demande spécifique
+function evoRenderCustomText() {
+  return `<div style="margin-top:.5rem;padding:1rem;background:#0d0d0d;border:0.5px dashed #333;">
+    <div style="font-size:12px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
+    <textarea id="evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.5;">${evoCustomText}</textarea>
+    <div style="font-size:11px;color:#555;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+  </div>`;
+}
+
+function evoToggleInsert(id) {
+  evoInsertsChecked[id] = !evoInsertsChecked[id];
+  // Synchronise evo_inserts checked/order selon si au moins un insert cochable est sélectionné
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
+  const anyChecked = items.some(i => evoInsertsChecked[i.id]);
+  evoChecked['evo_inserts'] = anyChecked;
+  if (anyChecked) {
+    if (!evoOrder.includes('evo_inserts')) evoOrder.push('evo_inserts');
+  } else {
+    evoOrder = evoOrder.filter(x => x !== 'evo_inserts');
+  }
+  evoRender();
 }
 
 function evoToggle(id) {
@@ -1991,7 +2143,7 @@ function evoUpdateTotal() {
   if (total === null) {
     totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Sélectionnez les options souhaitées</span>';
   } else {
-    totalEl.innerHTML = 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong><span style="font-size:11px;color:#555;"> (mise en plan incluse)</span>';
+    totalEl.innerHTML = 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong>';
   }
 }
 
