@@ -1921,7 +1921,7 @@ const EVO_INSERTS = [
       "route": 0,
       "gravel_racing": 1,
       "gravel_bikepacking": 1,
-      "vtt_enduro": 1
+      "vtt_enduro": 0
     }
   },
   {
@@ -1932,7 +1932,7 @@ const EVO_INSERTS = [
       "route": 0,
       "gravel_racing": 0,
       "gravel_bikepacking": 1,
-      "vtt_enduro": 1
+      "vtt_enduro": 0
     }
   },
   {
@@ -1943,7 +1943,7 @@ const EVO_INSERTS = [
       "route": "x",
       "gravel_racing": 0,
       "gravel_bikepacking": 1,
-      "vtt_enduro": 1
+      "vtt_enduro": 0
     }
   },
   {
