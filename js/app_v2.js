@@ -872,14 +872,16 @@ function closeOrderModal() {
   document.getElementById('order-modal').classList.remove('open');
 }
 async function sendOrder() {
-  const name  = document.getElementById('order-name').value.trim();
-  const email = document.getElementById('order-email').value.trim();
-  const phone = document.getElementById('order-phone').value.trim();
-  const msg   = document.getElementById('order-msg').value.trim();
-  const config = document.getElementById('order-config-display').value;
+  const name    = document.getElementById('order-name').value.trim();
+  const email   = document.getElementById('order-email').value.trim();
+  const phone   = document.getElementById('order-phone').value.trim();
+  const address = document.getElementById('order-address').value.trim();
+  const msg     = document.getElementById('order-msg').value.trim();
+  const config  = document.getElementById('order-config-display').value;
 
   if (!name) { alert('Merci de renseigner votre nom et prénom.'); return; }
   if (!email) { alert('Merci de renseigner votre adresse email.'); return; }
+  if (!address) { alert('Merci de renseigner votre adresse postale — elle est nécessaire pour établir votre devis.'); return; }
 
   const btnSend = document.querySelector('.btn-send');
   btnSend.textContent = 'Envoi en cours...';
@@ -902,6 +904,7 @@ async function sendOrder() {
       prix: price,
       nom_client: name,
       email_client: email,
+      adresse_postale: address,
     };
 
     // 3. Sauvegarder dans Supabase
@@ -927,6 +930,7 @@ async function sendOrder() {
         nom: name,
         email: email,
         telephone: phone || '—',
+        adresse_postale: address,
         configuration: config,
         dimensions: buildSizeText(),
         message: msg || '—',
@@ -939,7 +943,7 @@ async function sendOrder() {
 
     if (response.ok) {
       closeOrderModal();
-      ['order-name','order-email','order-phone','order-msg'].forEach(id => {
+      ['order-name','order-email','order-phone','order-address','order-msg'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       // Afficher l'ID et l'URL au visiteur
