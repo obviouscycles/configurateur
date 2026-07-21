@@ -817,16 +817,31 @@ function renderSaved() {
 // ─── MODAL COMMANDE ───────────────────────────────────────────────────────────
 function buildSizeText() {
   const lines = [];
-  if (selSize.taille)        lines.push('Taille cadre : ' + selSize.taille);
-  if (selSize.manivelle)     lines.push('Manivelle : ' + selSize.manivelle + ' mm');
-  if (selSize.plateaux)      lines.push('Plateau(x) : ' + selSize.plateaux);
-  if (selSize.cassette)      lines.push('Cassette : ' + selSize.cassette);
-  if (selSize.cintre)        lines.push('Cintre : ' + selSize.cintre + ' mm');
-  if (selSize.potence)       lines.push('Potence : ' + selSize.potence + ' mm');
-  if (selSize.section)       lines.push('Section pneu : ' + selSize.section);
-  if (selSize.debattement)   lines.push('Débattement fourche : ' + selSize.debattement + ' mm');
-  if (selSize.largeur_selle) lines.push('Largeur selle : ' + selSize.largeur_selle + ' mm');
-  return lines.length ? lines.join('\n') : '—';
+
+  // Données morphologiques saisies par le visiteur (mode guidé)
+  lines.push('--- Données morphologiques ---');
+  lines.push('Stature : ' + (morphoData.stature ? morphoData.stature + ' cm' : 'N/A'));
+  lines.push('Entrejambe : ' + (morphoData.entrejambe ? morphoData.entrejambe + ' mm' : 'N/A'));
+  lines.push('Largeur épaules : ' + (morphoData.epaules ? morphoData.epaules + ' cm' : 'N/A'));
+  lines.push('');
+  lines.push('--- Dimensions retenues ---');
+
+  const srcLabel = (key) => selSizeSource[key] === 'user' ? '(sélectionné)' : selSizeSource[key] === 'default' ? '(valeur par défaut)' : '';
+
+  if (selSize.taille)        lines.push('Taille cadre : ' + selSize.taille + ' ' + srcLabel('taille'));
+  if (selSize.manivelle)     lines.push('Manivelle : ' + selSize.manivelle + ' mm ' + srcLabel('manivelle'));
+  if (selSize.plateaux)      lines.push('Plateau(x) : ' + selSize.plateaux + ' ' + srcLabel('plateaux'));
+  if (selSize.cassette)      lines.push('Cassette : ' + selSize.cassette + ' ' + srcLabel('cassette'));
+  if (selSize.cintre)        lines.push('Cintre : ' + selSize.cintre + ' mm ' + srcLabel('cintre'));
+  if (selSize.potence)       lines.push('Potence : ' + selSize.potence + ' mm ' + srcLabel('potence'));
+  if (selSize.section)       lines.push('Section pneu : ' + selSize.section + ' ' + srcLabel('section'));
+  if (selSize.debattement)   lines.push('Débattement fourche : ' + selSize.debattement + ' mm ' + srcLabel('debattement'));
+  if (selSize.largeur_selle) lines.push('Largeur selle : ' + selSize.largeur_selle + ' mm ' + srcLabel('largeur_selle'));
+
+  const hasAnyDim = ['taille','manivelle','plateaux','cassette','cintre','potence','section','debattement','largeur_selle'].some(k => selSize[k]);
+  if (!hasAnyDim) lines.push('—');
+
+  return lines.join('\n');
 }
 
 // ─── OUVERTURE MODAL DEPUIS ONGLET TAILLE ────────────────────────────────────
@@ -866,14 +881,16 @@ function closeOrderModal() {
   document.getElementById('order-modal').classList.remove('open');
 }
 async function sendOrder() {
-  const name  = document.getElementById('order-name').value.trim();
-  const email = document.getElementById('order-email').value.trim();
-  const phone = document.getElementById('order-phone').value.trim();
-  const msg   = document.getElementById('order-msg').value.trim();
-  const config = document.getElementById('order-config-display').value;
+  const name    = document.getElementById('order-name').value.trim();
+  const email   = document.getElementById('order-email').value.trim();
+  const phone   = document.getElementById('order-phone').value.trim();
+  const address = document.getElementById('order-address').value.trim();
+  const msg     = document.getElementById('order-msg').value.trim();
+  const config  = document.getElementById('order-config-display').value;
 
   if (!name) { alert('Merci de renseigner votre nom et prénom.'); return; }
   if (!email) { alert('Merci de renseigner votre adresse email.'); return; }
+  if (!address) { alert('Merci de renseigner votre adresse postale — elle est nécessaire pour établir votre devis.'); return; }
 
   const btnSend = document.querySelector('.btn-send');
   btnSend.textContent = 'Envoi en cours...';
@@ -893,9 +910,16 @@ async function sendOrder() {
       preset: window._activePreset || null,
       composants: selOpts,
       dimensions: selSize || {},
+      dimensions_source: selSizeSource || {}, // 'user' = sélectionné par le visiteur, 'default' = valeur par défaut appliquée automatiquement
+      morphologie: {
+        stature: morphoData.stature || null,
+        entrejambe: morphoData.entrejambe || null,
+        epaules: morphoData.epaules || null,
+      },
       prix: price,
       nom_client: name,
       email_client: email,
+      adresse_postale: address,
     };
 
     // 3. Sauvegarder dans Supabase
@@ -921,6 +945,7 @@ async function sendOrder() {
         nom: name,
         email: email,
         telephone: phone || '—',
+        adresse_postale: address,
         configuration: config,
         dimensions: buildSizeText(),
         message: msg || '—',
@@ -933,7 +958,7 @@ async function sendOrder() {
 
     if (response.ok) {
       closeOrderModal();
-      ['order-name','order-email','order-phone','order-msg'].forEach(id => {
+      ['order-name','order-email','order-phone','order-address','order-msg'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       // Afficher l'ID et l'URL au visiteur
@@ -1742,7 +1767,7 @@ function dtReset() {
   if (mz) mz._init = false;
   // Garder le modèle ET _singleModel — réinitialiser uniquement les options
   const keptModel = selModel;
-  selOpts = {}; selSize = {}; window.sizeValidated = false; openPost = null;
+  selOpts = {}; selSize = {}; selSizeSource = {}; morphoData = { stature: null, entrejambe: null, epaules: null }; window.sizeValidated = false; openPost = null;
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
@@ -2061,11 +2086,21 @@ function toggleSizeMode(mode) {
 }
 
 // ─── CALCUL TAILLE GUIDÉE ─────────────────────────────────────────────────────
+// Données morphologiques saisies (mode guidé) — pour compte-rendu devis
+let morphoData = { stature: null, entrejambe: null, epaules: null };
+// Source de chaque valeur de dimension : 'user' (choisie) ou 'default' (valeur par défaut appliquée automatiquement)
+let selSizeSource = {};
+
 function calcSize() {
   const stature = parseInt(document.getElementById('guide-stature').value);
   const selle   = parseInt(document.getElementById('guide-selle').value) || null;
   const acroRaw = parseFloat(document.getElementById('guide-acro').value) || null;
   const acro    = acroRaw ? Math.round(acroRaw * 10) : null; // cm → mm
+
+  // Mémoriser les données morphologiques saisies (pour le compte-rendu devis / admin)
+  morphoData.stature    = stature || null;
+  morphoData.entrejambe = selle || null;
+  morphoData.epaules    = acroRaw || null;
   const result  = document.getElementById('guide-result');
   const main    = document.getElementById('guide-result-main');
   const sub     = document.getElementById('guide-result-sub');
@@ -2118,7 +2153,11 @@ function calcSize() {
     selSize.taille = t.taille;
     // Pré-remplir avec les valeurs par défaut de cette taille
     const defs = DEFAULTS_BY_TAILLE[selModel] ? DEFAULTS_BY_TAILLE[selModel][t.taille] : {};
-    if (defs) Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v]) => [k, String(v)])));
+    if (defs) {
+      Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v]) => [k, String(v)])));
+      Object.keys(defs).forEach(k => { selSizeSource[k] = 'default'; });
+    }
+    selSizeSource.taille = 'user'; // taille = résultat direct de la saisie stature/entrejambe (mode guidé)
     // Calculer cintre depuis inter-acromions
     if (acro) calcCintreFromAcro(acro);
     main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
@@ -2445,9 +2484,10 @@ function buildDimsGrid() {
               });
             }
             selSize[f.key] = String(best);
+            selSizeSource[f.key] = 'default';
           } else {
             // Options non numériques : cherche la correspondance exacte ou skip
-            if (f.options.includes(String(defVal))) selSize[f.key] = String(defVal);
+            if (f.options.includes(String(defVal))) { selSize[f.key] = String(defVal); selSizeSource[f.key] = 'default'; }
           }
         }
       }
@@ -2464,13 +2504,13 @@ function buildDimsGrid() {
       `<option value="${o}" ${selSize[f.key]==o?'selected':''}>${o}${f.key==='manivelle'||f.key==='potence'?' mm':''}</option>`
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; buildDimsGrid();`
-      : `selSize['${f.key}']=this.value`;
+      ? `selSizeSource['${f.key}']='user'; selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; delete selSizeSource.manivelle; delete selSizeSource.cintre; delete selSizeSource.potence; delete selSizeSource.debattement; buildDimsGrid();`
+      : `selSizeSource['${f.key}']='user'; selSize['${f.key}']=this.value`;
     const jnspOption = f.options.length >= 2
       ? `<option value="">Je ne sais pas encore</option>`
       : '';
     // Valeur unique : pré-sélectionner silencieusement
-    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
+    if (f.options.length === 1) { selSize[f.key] = String(f.options[0]); selSizeSource[f.key] = 'default'; }
     return `<div class="dim-field">
       <label>${f.label}</label>
       <select class="size-select" id="${f.id}" onchange="${onchangeFn}" ${f.options.length === 1 ? 'disabled style="opacity:0.6;"' : ''}>
@@ -3180,8 +3220,9 @@ function p11BuildDimsGrid() {
               best = nums.reduce((a,b) => Math.abs(a-defVal)<=Math.abs(b-defVal)?a:b);
             }
             selSize[f.key] = String(best);
+            selSizeSource[f.key] = 'default';
           } else {
-            if (f.options.includes(String(defVal))) selSize[f.key] = String(defVal);
+            if (f.options.includes(String(defVal))) { selSize[f.key] = String(defVal); selSizeSource[f.key] = 'default'; }
           }
         }
       }
@@ -3193,14 +3234,14 @@ function p11BuildDimsGrid() {
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
   function p11RenderField(f) {
-    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
+    if (f.options.length === 1) { selSize[f.key] = String(f.options[0]); selSizeSource[f.key] = 'default'; }
     const optHTML = f.options.map(o =>
       '<option value="' + o + '"' + (selSize[f.key]==o?' selected':'') + '>' + o +
       (['manivelle','potence'].includes(f.key) ? ' mm' : '') + '</option>'
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; p11BuildDimsGrid();"
-      : "selSize['" + f.key + "']=this.value";
+      ? "selSizeSource['" + f.key + "']='user'; selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; delete selSizeSource.manivelle; delete selSizeSource.cintre; delete selSizeSource.potence; delete selSizeSource.debattement; p11BuildDimsGrid();"
+      : "selSizeSource['" + f.key + "']='user'; selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '"' +
       (f.options.length === 1 ? ' disabled style="opacity:0.6;"' : '') + '>' +
@@ -3383,7 +3424,7 @@ function p11QuickSave() {
 
 function p11Reset() {
   // Tout remettre à zéro — y compris le modèle
-  selModel = null; selOpts = {}; selSize = {}; window.sizeValidated = false;
+  selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; morphoData = { stature: null, entrejambe: null, epaules: null }; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
   window._activePreset = null;
   // Vider les champs taille
