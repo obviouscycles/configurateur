@@ -2234,7 +2234,7 @@
       </p>
       <!-- dt-s3-result supprimé : double récap retiré -->
       <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="dtGo(3)"><i class="ti ti-chevron-left"></i> Retour</button>
+        <button class="dt-btn-back" onclick="v2BackFromTaille()"><i class="ti ti-chevron-left"></i> Retour</button>
         <button class="dt-btn-next" id="dt-next-taille" onclick="v2NextFromTaille()">
           <span id="dt-next-taille-lbl">Continuer sans taille</span> <i class="ti ti-arrow-right"></i>
         </button>
@@ -2264,7 +2264,7 @@
           <div id="v2-mesure-evo-options" style="display:flex;flex-direction:column;gap:.75rem;"></div>
         </div>
         <div style="display:flex;gap:1rem;margin-top:1.5rem;">
-          <button onclick="dtGo(3)" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
+          <button onclick="v2BackFromMesureOrHorsGamme()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
           <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Ma configuration →</button>
         </div>
       </div>
@@ -2277,13 +2277,16 @@
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Parlez-nous de votre vélo</div>
         <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Votre projet ne correspond à aucun modèle Obvious ? Décrivez-le — nous étudierons sa faisabilité avec vous.</div>
         <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.25rem;">
-          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Titanium — 720 €</div>
+          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Titanium — à partir de 720 €</div>
           <div style="font-size:12px;color:#555;line-height:1.5;">Personnalisation avancée. Tubes spécifiques, intégrations atypiques, géométrie entièrement sur mesure.</div>
         </div>
-        <textarea id="v2-horsgamme-message" rows="6" placeholder="Décrivez votre projet : type de vélo, usage, inspirations, contraintes techniques particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:.75rem;"></textarea>
-        <div style="font-size:12px;color:#555;margin-bottom:1.5rem;">Vous pourrez joindre tout document utile lors de votre échange avec notre équipe.</div>
+        <textarea id="v2-horsgamme-message" rows="5" placeholder="Décrivez votre projet : type de vélo, usage, inspirations, contraintes techniques particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:.75rem;"></textarea>
+        <div class="field" style="margin-bottom:1.5rem;">
+          <label style="font-size:12px;color:#888;display:block;margin-bottom:6px;">Joignez un croquis, une photo ou tout document utile (optionnel)</label>
+          <input type="file" id="v2-horsgamme-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#aaa;padding:8px 10px;font-size:12px;font-family:var(--font);">
+        </div>
         <div style="display:flex;gap:1rem;">
-          <button onclick="dtGo(3)" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
+          <button onclick="v2BackFromMesureOrHorsGamme()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);">← Retour</button>
           <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Ma configuration →</button>
         </div>
       </div>
@@ -2311,7 +2314,7 @@
         <!-- Rempli par dtRenderS4() -->
       </div>
       <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="dtGo(3)"><i class="ti ti-chevron-left"></i> Retour</button>
+        <button class="dt-btn-back" onclick="v2BackFromDevis()"><i class="ti ti-chevron-left"></i> Retour</button>
       </div>
     </div>
 
