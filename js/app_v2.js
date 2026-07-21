@@ -1674,6 +1674,39 @@ function dtRenderS4() {
 }
 
 // Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
+function v2EvoRecapBlockHtml(title) {
+  const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
+  const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+  let lines = '';
+  if (checkedOpts.length === 0 && !evoCustomText) {
+    lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
+  } else {
+    lines = '<div style="font-size:13px;color:#f2f2f2;line-height:1.8;display:flex;flex-direction:column;gap:2px;">' +
+      checkedOpts.map(o => {
+        if (o.id === 'evo_gravure') {
+          return '<div>' + o.label + (evoGravureText ? ' : « ' + evoGravureText + ' »' : '') + '</div>';
+        }
+        if (o.id === 'evo_inserts') {
+          const selectedInserts = (typeof EVO_INSERTS !== 'undefined')
+            ? EVO_INSERTS.filter(i => evoInsertsChecked[i.id]).map(i => i.label)
+            : [];
+          return '<div>' + o.label + (selectedInserts.length ? ' : ' + selectedInserts.join(', ') : '') + '</div>';
+        }
+        return '<div>' + o.label + '</div>';
+      }).join('') +
+    '</div>';
+  }
+  const customBlock = evoCustomText
+    ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #2a2a2a;"><div style="font-size:11px;color:#666;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#f2f2f2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
+    : '';
+  return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+    '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">' + title + '</div>' +
+    lines +
+    customBlock +
+    (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
+  '</div>';
+}
+
 function v2RecapBlock() {
   if (typeof v2Parcours === 'undefined') return '';
 
@@ -1682,44 +1715,18 @@ function v2RecapBlock() {
   }
 
   if (v2Parcours === 'standard_evo') {
-    const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
-    const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
-    let lines = '';
-    if (checkedOpts.length === 0 && !evoCustomText) {
-      lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
-    } else {
-      lines = '<div style="font-size:13px;color:#f2f2f2;line-height:1.8;display:flex;flex-direction:column;gap:2px;">' +
-        checkedOpts.map(o => {
-          if (o.id === 'evo_gravure') {
-            return '<div>' + o.label + (evoGravureText ? ' : « ' + evoGravureText + ' »' : '') + '</div>';
-          }
-          if (o.id === 'evo_inserts') {
-            const selectedInserts = (typeof EVO_INSERTS !== 'undefined')
-              ? EVO_INSERTS.filter(i => evoInsertsChecked[i.id]).map(i => i.label)
-              : [];
-            return '<div>' + o.label + (selectedInserts.length ? ' : ' + selectedInserts.join(', ') : '') + '</div>';
-          }
-          return '<div>' + o.label + '</div>';
-        }).join('') +
-      '</div>';
-    }
-    const customBlock = evoCustomText
-      ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #2a2a2a;"><div style="font-size:11px;color:#666;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#f2f2f2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
-      : '';
-    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
-      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Options Évolution</div>' +
-      lines +
-      customBlock +
-      (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
-    '</div>';
+    return v2EvoRecapBlockHtml('Options Évolution');
   }
 
   if (v2Parcours === 'sur_mesure') {
     const msg = window._v2Message || '';
+    const fileInput = document.getElementById('v2-mesure-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
     return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
       (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
-    '</div>';
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses');
   }
 
   if (v2Parcours === 'hors_gamme') {
@@ -2020,8 +2027,10 @@ function evoTotalPrice() {
 }
 
 // Rendu des options Évolution
+let evoActiveContainer = 'v2-evo-options';
+
 function evoRender() {
-  const container = document.getElementById('v2-evo-options');
+  const container = document.getElementById(evoActiveContainer);
   if (!container) return;
   const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
   const firstId = evoOrder[0];
@@ -2129,7 +2138,8 @@ function evoToggle(id) {
 }
 
 function evoUpdateTotal() {
-  const totalEl = document.getElementById('v2-evo-total');
+  const totalId = evoActiveContainer === 'v2-mesure-evo-options' ? 'v2-mesure-evo-total' : 'v2-evo-total';
+  const totalEl = document.getElementById(totalId);
   if (!totalEl) return;
   const total = evoTotalPrice();
   if (total === null) {
@@ -2202,6 +2212,8 @@ function v2ChooseParcours(parcours) {
     } else if (parcours === 'sur_mesure') {
       dtStep = 4;
       document.getElementById('dt-s4mesure')?.classList.add('active');
+      evoActiveContainer = 'v2-mesure-evo-options';
+      evoRender();
     } else if (parcours === 'hors_gamme') {
       dtStep = 4;
       document.getElementById('dt-s4horsgamme')?.classList.add('active');
@@ -2242,6 +2254,7 @@ function v2GoEvo() {
   dtStep = 5;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s5evo')?.classList.add('active');
+  evoActiveContainer = 'v2-evo-options';
   v2UpdateStepper();
   evoRender();
   const main = document.getElementById('dt-main');
