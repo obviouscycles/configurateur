@@ -1609,7 +1609,23 @@ function dtRenderS4() {
   const inner = document.getElementById('dt-s6devis-inner');
   if (!inner || !selModel) return;
   const model = MODELS.find(m => m.id === selModel);
-  const { price } = computeTotals(selModel, selOpts);
+  const { price: bikePrice } = computeTotals(selModel, selOpts);
+
+  // Surcoût selon le parcours Obvious On Demand
+  let oodSurcharge = 0;
+  let priceIsMin = false; // "à partir de" pour Titanium
+  if (typeof v2Parcours !== 'undefined') {
+    if (v2Parcours === 'standard_evo') {
+      const evoT = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+      oodSurcharge = evoT || 0;
+    } else if (v2Parcours === 'sur_mesure') {
+      oodSurcharge = 300;
+    } else if (v2Parcours === 'hors_gamme') {
+      oodSurcharge = 720;
+      priceIsMin = true;
+    }
+  }
+  const price = bikePrice + oodSurcharge;
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   const mc = dtModifCount();
@@ -1622,7 +1638,8 @@ function dtRenderS4() {
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
-        '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.5rem;">'+price.toLocaleString('fr-FR')+' €</div>' +
+        '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
+        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Options Évolution':v2Parcours==='sur_mesure'?'Niveau Performance':'Niveau Titanium')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -1674,7 +1691,7 @@ function dtRenderS4() {
 }
 
 // Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
-function v2EvoRecapBlockHtml(title) {
+function v2EvoRecapBlockHtml(title, showTotal) {
   const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
   const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
   let lines = '';
@@ -1703,7 +1720,7 @@ function v2EvoRecapBlockHtml(title) {
     '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">' + title + '</div>' +
     lines +
     customBlock +
-    (total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
+    (showTotal && total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
   '</div>';
 }
 
@@ -1715,7 +1732,7 @@ function v2RecapBlock() {
   }
 
   if (v2Parcours === 'standard_evo') {
-    return v2EvoRecapBlockHtml('Options Évolution');
+    return v2EvoRecapBlockHtml('Options Évolution', true);
   }
 
   if (v2Parcours === 'sur_mesure') {
@@ -1726,7 +1743,7 @@ function v2RecapBlock() {
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
       (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
       (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
-    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses');
+    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses', false);
   }
 
   if (v2Parcours === 'hors_gamme') {
