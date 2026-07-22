@@ -2192,22 +2192,6 @@ function v2SetTailleLabel(validated) {
   }
 }
 
-// Passe de l'écran bifurcation (2 cartes) à l'écran des 3 niveaux OOD
-function v2ShowOodLevels() {
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3ood')?.classList.add('active');
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
-}
-
-// Retour de l'écran des 3 niveaux OOD vers l'écran bifurcation (2 cartes)
-function v2BackToBif() {
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3bif')?.classList.add('active');
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
-}
-
 function v2ChooseParcours(parcours) {
   v2Parcours = parcours;
 
@@ -2328,11 +2312,7 @@ function v2UpdateStepper() {
 
 function v2BackFromTaille() {
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  if (v2Parcours === 'standard_evo') {
-    document.getElementById('dt-s3ood')?.classList.add('active');
-  } else {
-    document.getElementById('dt-s3bif')?.classList.add('active');
-  }
+  document.getElementById('dt-s3bif')?.classList.add('active');
   dtStep = 3;
   v2UpdateStepper();
   const main = document.getElementById('dt-main');
@@ -2341,7 +2321,7 @@ function v2BackFromTaille() {
 
 function v2BackFromMesureOrHorsGamme() {
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3ood')?.classList.add('active');
+  document.getElementById('dt-s3bif')?.classList.add('active');
   dtStep = 3;
   v2UpdateStepper();
   const main = document.getElementById('dt-main');
