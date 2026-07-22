@@ -2156,68 +2156,52 @@
       <div class="dt-step-body">
         <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 3 sur 6</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Votre cadre</div>
-        <div style="font-size:13px;color:#888;margin-bottom:2rem;line-height:1.6;">Cadre standard ou personnalisé ? Choisissez votre parcours.</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.6;">Cadre standard ou personnalisé ? Choisissez votre parcours.</div>
+        <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:1rem;align-items:stretch;">
 
-          <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard')this.style.borderColor='#333'">
+          <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard')this.style.borderColor='#333'">
             <div style="position:absolute;top:-1px;right:12px;background:#333;color:#999;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">ESSENTIEL</div>
             <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Cadre standard</div>
             <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard — inclus</div>
             <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Le vélo tel qu'il est configuré, sans surcoût ni délai supplémentaire.</div>
-            <div style="font-size:11px;color:#F5C400;">Choisir mon cadre →</div>
+            <div style="font-size:11px;color:#F5C400;margin-top:auto;">Choisir mon cadre →</div>
           </div>
 
-          <div id="v2-card-ood" onclick="v2ShowOodLevels()" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="this.style.borderColor='#333'">
-            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">OBVIOUS ON DEMAND</div>
-            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Personnaliser mon cadre</div>
-            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">À partir de 60 €</div>
-            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Géométrie sur mesure, nouvelles fonctionnalités, vélo totalement nouveau.</div>
-            <div style="font-size:11px;color:#F5C400;">Voir les options →</div>
+          <div style="display:flex;flex-direction:column;gap:.6rem;">
+
+            <div id="v2-card-standard_evo" onclick="v2ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:.85rem 1rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard_evo')this.style.borderColor='#333'">
+              <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:8px;font-weight:700;padding:1px 7px;letter-spacing:.05em;">ÉVOLUTION</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.35rem;">
+                <div style="font-size:14px;font-weight:500;color:#f2f2f2;">Personnalisation</div>
+                <div style="font-size:11px;color:#F5C400;font-weight:500;white-space:nowrap;">à partir de 60 €</div>
+              </div>
+              <div style="font-size:11px;color:#666;line-height:1.5;margin-top:.25rem;">À partir d'une taille standard, ajoutez les modifications qui rendront votre vélo unique.</div>
+            </div>
+
+            <div id="v2-card-sur_mesure" onclick="v2ChooseParcours('sur_mesure')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:.85rem 1rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='sur_mesure')this.style.borderColor='#333'">
+              <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:8px;font-weight:700;padding:1px 7px;letter-spacing:.05em;">PERFORMANCE</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.35rem;">
+                <div style="font-size:14px;font-weight:500;color:#f2f2f2;">Cadre sur mesure</div>
+                <div style="font-size:11px;color:#F5C400;font-weight:500;white-space:nowrap;">300 €</div>
+              </div>
+              <div style="font-size:11px;color:#666;line-height:1.5;margin-top:.25rem;">Géométrie sur mesure adaptée à votre morphologie et à votre pratique.</div>
+            </div>
+
+            <div id="v2-card-hors_gamme" onclick="v2ChooseParcours('hors_gamme')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:.85rem 1rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='hors_gamme')this.style.borderColor='#333'">
+              <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:8px;font-weight:700;padding:1px 7px;letter-spacing:.05em;">TITANIUM</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.35rem;">
+                <div style="font-size:14px;font-weight:500;color:#f2f2f2;">Projet spécifique</div>
+                <div style="font-size:11px;color:#F5C400;font-weight:500;white-space:nowrap;">à partir de 720 €</div>
+              </div>
+              <div style="font-size:11px;color:#666;line-height:1.5;margin-top:.25rem;">Un vélo qui ne figure pas dans notre gamme actuelle.</div>
+            </div>
+
           </div>
 
         </div>
       </div>
       <div class="dt-step-footer">
         <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
-      </div>
-    </div>
-
-    <!-- ÉTAPE 3 bis : niveaux OBVIOUS ON DEMAND -->
-    <div class="dt-step-content" id="dt-s3ood">
-      <div class="dt-step-body">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 3 sur 6 — Obvious On Demand</div>
-        <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Personnaliser mon cadre</div>
-        <div style="font-size:13px;color:#888;margin-bottom:2rem;line-height:1.6;">Trois niveaux de personnalisation, du plus simple au plus poussé.</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
-
-          <div id="v2-card-standard_evo" onclick="v2ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard_evo')this.style.borderColor='#333'">
-            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">ÉVOLUTION</div>
-            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Personnalisation</div>
-            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard — à partir de 60 €</div>
-            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">À partir d'une taille standard, apporter les modifications qui feront de votre vélo un modèle unique.</div>
-            <div style="font-size:11px;color:#F5C400;">Personnaliser mon cadre →</div>
-          </div>
-
-          <div id="v2-card-sur_mesure" onclick="v2ChooseParcours('sur_mesure')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='sur_mesure')this.style.borderColor='#333'">
-            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">PERFORMANCE</div>
-            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Cadre sur mesure</div>
-            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Votre géométrie — 300 €</div>
-            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Géométrie sur mesure adaptée à votre morphologie et à votre pratique.</div>
-            <div style="font-size:11px;color:#F5C400;">Décrire mon projet →</div>
-          </div>
-
-          <div id="v2-card-hors_gamme" onclick="v2ChooseParcours('hors_gamme')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='hors_gamme')this.style.borderColor='#333'">
-            <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">TITANIUM</div>
-            <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Projet spécifique</div>
-            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Vélo unique — à partir de 720 €</div>
-            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Un vélo qui ne figure pas dans notre gamme actuelle.</div>
-            <div style="font-size:11px;color:#F5C400;">Parler de mon projet →</div>
-          </div>
-
-        </div>
-      </div>
-      <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="v2BackToBif()"><i class="ti ti-chevron-left"></i> Retour</button>
       </div>
     </div>
 
