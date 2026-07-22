@@ -2160,7 +2160,7 @@
         <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:1.5rem;align-items:stretch;">
 
           <div>
-            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">Cadre standard</div>
+            <div style="font-size:13px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.85rem;">Cadre standard</div>
           <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard')this.style.borderColor='#333'">
             <div style="position:absolute;top:-1px;right:12px;background:#333;color:#999;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">ESSENTIEL</div>
             <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Cadre standard</div>
@@ -2171,7 +2171,7 @@
           </div>
 
           <div style="border-left:0.5px solid #333;padding-left:1.5rem;">
-            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">Sur mesure — Obvious On Demand</div>
+            <div style="font-size:13px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.85rem;">Sur mesure — Obvious On Demand</div>
             <div style="display:flex;flex-direction:column;gap:.75rem;">
 
             <div id="v2-card-standard_evo" onclick="v2ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.1rem 1.2rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard_evo')this.style.borderColor='#333'">
@@ -2235,12 +2235,12 @@
     <!-- ÉTAPE 4 (sur_mesure) : Description -->
     <div class="dt-step-content" id="dt-s4mesure">
       <div class="dt-step-body">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 4 — Cadre sur mesure</div>
+        <div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-ruler-2" style="font-size:13px;"></i> Étape 4 — Cadre sur mesure</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Décrivez votre projet</div>
         <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Morphologie, géométrie de votre vélo actuel, changement d'usage, contraintes physiques... Partagez ce qui nous permettra de définir votre géométrie idéale.</div>
-        <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.25rem;">
-          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Performance — 300 €</div>
-          <div style="font-size:12px;color:#555;line-height:1.5;">Géométrie sur mesure adaptée à votre morphologie et votre pratique. Inclut les niveaux Essentiel et Évolution.</div>
+        <div style="background:#1a1a1a;border-left:2px solid #F5C400;padding:1rem 1.1rem;margin-bottom:1.25rem;">
+          <div style="font-size:11px;color:#F5C400;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-diamond" style="font-size:13px;"></i> Niveau Performance — 300 €</div>
+          <div style="font-size:13px;color:#999;line-height:1.55;">Géométrie sur mesure adaptée à votre morphologie et votre pratique. Inclut les niveaux Essentiel et Évolution.</div>
         </div>
         <textarea id="v2-mesure-message" rows="5" placeholder="Décrivez votre projet : morphologie, géométrie de votre vélo actuel, usage, contraintes physiques, envies particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:.75rem;"></textarea>
         <div class="field" style="margin-bottom:1.25rem;">
@@ -2248,8 +2248,8 @@
           <input type="file" id="v2-mesure-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#aaa;padding:8px 10px;font-size:12px;font-family:var(--font);">
         </div>
         <div style="border-top:0.5px solid #222;margin:1.5rem 0 1.25rem;padding-top:1.25rem;">
-          <div style="font-size:13px;color:#f2f2f2;margin-bottom:.25rem;">Options complémentaires</div>
-          <div style="font-size:12px;color:#666;margin-bottom:1rem;line-height:1.5;">Le niveau Performance inclut le niveau Évolution — ajoutez ici vos options si besoin.</div>
+          <div style="font-size:14px;color:#f2f2f2;font-weight:500;margin-bottom:.3rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-list-check" style="font-size:14px;color:#F5C400;"></i> Options complémentaires</div>
+          <div style="font-size:13px;color:#888;margin-bottom:1.1rem;line-height:1.55;">Le niveau Performance inclut le niveau Évolution — ajoutez ici vos options si besoin.</div>
           <div id="v2-mesure-evo-total" style="font-size:13px;color:#666;margin-bottom:1rem;padding:.75rem;background:#111;border:0.5px solid #222;">Sélectionnez les options souhaitées</div>
           <div id="v2-mesure-evo-options" style="display:flex;flex-direction:column;gap:.75rem;"></div>
         </div>
@@ -2263,12 +2263,12 @@
     <!-- ÉTAPE 4 (hors_gamme) : Description -->
     <div class="dt-step-content" id="dt-s4horsgamme">
       <div class="dt-step-body">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 4 — Projet spécifique</div>
+        <div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-bulb" style="font-size:13px;"></i> Étape 4 — Projet spécifique</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Parlez-nous de votre vélo</div>
         <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Votre projet ne correspond à aucun modèle Obvious ? Décrivez-le — nous étudierons sa faisabilité avec vous.</div>
-        <div style="background:#111;border:0.5px solid #222;padding:1rem;margin-bottom:1.25rem;">
-          <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;">Niveau Titanium — à partir de 720 €</div>
-          <div style="font-size:12px;color:#555;line-height:1.5;">Personnalisation avancée. Tubes spécifiques, intégrations atypiques, géométrie entièrement sur mesure.</div>
+        <div style="background:#1a1a1a;border-left:2px solid #F5C400;padding:1rem 1.1rem;margin-bottom:1.25rem;">
+          <div style="font-size:11px;color:#F5C400;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-sparkles" style="font-size:13px;"></i> Niveau Titanium — à partir de 720 €</div>
+          <div style="font-size:13px;color:#999;line-height:1.55;">Personnalisation avancée. Tubes spécifiques, intégrations atypiques, géométrie entièrement sur mesure.</div>
         </div>
         <textarea id="v2-horsgamme-message" rows="5" placeholder="Décrivez votre projet : type de vélo, usage, inspirations, contraintes techniques particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;margin-bottom:.75rem;"></textarea>
         <div class="field" style="margin-bottom:1.5rem;">
@@ -2285,7 +2285,7 @@
     <!-- ÉTAPE 5 (standard_evo) : Options Évolution -->
     <div class="dt-step-content" id="dt-s5evo">
       <div class="dt-step-body">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 5 — Évolution</div>
+        <div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;display:flex;align-items:center;gap:6px;"><i class="ti ti-settings" style="font-size:13px;"></i> Étape 5 — Évolution</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.5rem;">Ajoutez des options à votre cadre</div>
         <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:1rem;">Sélectionnez les adaptations souhaitées. La mise en plan est mutualisée — vous ne la payez qu'une fois.</div>
         <div id="v2-evo-total" style="font-size:13px;color:#666;margin-bottom:1.5rem;padding:.75rem;background:#111;border:0.5px solid #222;">Sélectionnez les options souhaitées</div>
