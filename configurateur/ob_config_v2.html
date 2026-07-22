@@ -2157,17 +2157,22 @@
         <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;">Étape 3 sur 6</div>
         <div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:.25rem;">Votre cadre</div>
         <div style="font-size:13px;color:#888;margin-bottom:1.5rem;line-height:1.6;">Cadre standard ou personnalisé ? Choisissez votre parcours.</div>
-        <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:1rem;align-items:stretch;">
+        <div style="display:grid;grid-template-columns:1fr 1.15fr;gap:1.5rem;align-items:stretch;">
 
+          <div>
+            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">Cadre standard</div>
           <div id="v2-card-standard" onclick="v2ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.25rem;cursor:pointer;transition:border-color .2s;position:relative;display:flex;flex-direction:column;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard')this.style.borderColor='#333'">
             <div style="position:absolute;top:-1px;right:12px;background:#333;color:#999;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">ESSENTIEL</div>
             <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Cadre standard</div>
-            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard — inclus</div>
-            <div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:1.25rem;">Le vélo tel qu'il est configuré, sans surcoût ni délai supplémentaire.</div>
+            <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard</div>
+            <div style="font-size:13px;color:#888;line-height:1.55;margin-bottom:1.25rem;">Le vélo tel qu'il est configuré, sans surcoût ni délai supplémentaire.</div>
             <div style="font-size:11px;color:#F5C400;margin-top:auto;">Choisir mon cadre →</div>
           </div>
+          </div>
 
-          <div style="display:flex;flex-direction:column;gap:.75rem;">
+          <div style="border-left:0.5px solid #333;padding-left:1.5rem;">
+            <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">Sur mesure — Obvious On Demand</div>
+            <div style="display:flex;flex-direction:column;gap:.75rem;">
 
             <div id="v2-card-standard_evo" onclick="v2ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.1rem 1.2rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='standard_evo')this.style.borderColor='#333'">
               <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:2px 8px;letter-spacing:.05em;">ÉVOLUTION</div>
@@ -2196,6 +2201,7 @@
               <div style="font-size:13px;color:#888;line-height:1.55;margin-top:.4rem;">Un vélo qui ne figure pas dans notre gamme actuelle.</div>
             </div>
 
+            </div>
           </div>
 
         </div>
