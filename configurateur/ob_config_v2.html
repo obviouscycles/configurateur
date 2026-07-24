@@ -1738,8 +1738,8 @@
         <p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Votre configuration</p>
         <div id="p11-final-recap"></div>
         <div class="p11-final-btns">
-          <button class="btn primary" onclick="openOrderModal()" style="width:100%;"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
-          <button class="btn success" onclick="p11ToggleSaveFinal()" style="width:100%;"><i class="ti ti-bookmark"></i> Sauvegarder cette configuration</button>
+          <button id="p11-btn-devis-final" class="btn primary" onclick="openOrderModal()" style="width:100%;"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
+          <button id="p11-btn-save-final" class="btn success" onclick="p11ToggleSaveFinal()" style="width:100%;"><i class="ti ti-bookmark"></i> Sauvegarder cette configuration</button>
           <div class="save-form" id="p11-save-form-final">
             <div class="save-label">Donnez un nom :</div>
             <div class="save-input-row">
@@ -1762,7 +1762,7 @@
           <div id="p11-s4-modif" style="font-size:10px;color:#555;display:none;"></div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <button onclick="p11QuickSave()" title="Sauvegarder" style="background:none;border:0.5px solid #444;color:#888;padding:7px 10px;cursor:pointer;font-size:13px;line-height:1;"><i class="ti ti-bookmark"></i></button>
+          <button id="p11-bar-save-btn" onclick="p11QuickSave()" title="Sauvegarder" style="background:none;border:0.5px solid #444;color:#888;padding:7px 10px;cursor:pointer;font-size:13px;line-height:1;"><i class="ti ti-bookmark"></i></button>
           <button onclick="p11GoTo(1);p11Reset();" title="Nouvelle config" style="background:none;border:0.5px solid #444;color:#888;padding:7px 10px;cursor:pointer;font-size:13px;line-height:1;"><i class="ti ti-refresh"></i></button>
 
         </div>
