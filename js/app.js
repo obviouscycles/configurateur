@@ -3047,8 +3047,9 @@ function p11CalcSize() {
     const t = matches[0];
     window.sizeValidated = true;
     selSize.taille = t.taille;
-    const defs = DEFAULTS_BY_TAILLE[selModel]?.[t.taille] || {};
-    Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
+    // Tous les autres champs sont calculés par p11BuildDimsGrid(), qui valide chaque valeur
+    // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
     if (acro) calcCintreFromAcro(acro);
     main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
     let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
@@ -3075,8 +3076,9 @@ function p11ChooseUsage(usage) {
   selSize.taille = chosen.taille;
   const _cLbl = document.getElementById('p11-next-label');
   if (_cLbl) _cLbl.textContent = 'Ma configuration';
-  const defs = DEFAULTS_BY_TAILLE[selModel]?.[chosen.taille] || {};
-  Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
+  // Tous les autres champs sont calculés par p11BuildDimsGrid(), qui valide chaque valeur
+  // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+  if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
   const acroRaw = parseFloat(document.getElementById('p11-guide-acro').value) || null;
   if (acroRaw) calcCintreFromAcro(Math.round(acroRaw*10));
   document.getElementById('p11-result-main').innerHTML =

@@ -8,6 +8,14 @@ function exitSharedMode() {
   });
   const bloc = document.getElementById('shared-mode-bloc');
   if (bloc) bloc.remove();
+
+  // Mobile
+  ['p11-btn-devis-final','p11-btn-save-final','p11-bar-save-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  const p11Bloc = document.getElementById('p11-shared-mode-bloc');
+  if (p11Bloc) p11Bloc.remove();
 }
 
 
@@ -39,7 +47,7 @@ async function loadConfigFromUrl() {
     if (window.innerWidth >= 768) {
       dtStep = 4; dtRender();
     } else {
-      renderModels(); switchTab(4);
+      renderModels(); p11UpdateStep(4);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
@@ -48,17 +56,17 @@ async function loadConfigFromUrl() {
     if (typeof dtRenderS4 === 'function') dtRenderS4();
     if (typeof dtRenderS4 === 'function') dtRenderS4();
 
-    // Masquer les boutons inutiles dans le récap droit
+    // Masquer les boutons inutiles — desktop (récap droit) et mobile (étape 4)
     setTimeout(() => {
+      // Desktop
       const btnDevis = document.getElementById('dtr-btn-devis');
       const btnSave  = document.getElementById('dtr-btn-save');
       const btnReset = document.getElementById('dtr-btn-reset');
       if (btnDevis) btnDevis.style.display = 'none';
       if (btnSave)  btnSave.style.display  = 'none';
 
-      // Injecter le bloc "en cours de traitement" dans le récap
       const actions = document.querySelector('.dtr-actions');
-      if (actions && btnReset) {
+      if (actions && btnReset && !document.getElementById('shared-mode-bloc')) {
         const bloc = document.createElement('div');
         bloc.id = 'shared-mode-bloc';
         bloc.style.cssText = 'background:#1a1a1a;border:0.5px solid #333;padding:1rem;margin-bottom:.75rem;';
@@ -68,6 +76,27 @@ async function loadConfigFromUrl() {
           '<button onclick="openContactDrawer()" style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:.5rem;"><i class="ti ti-message"></i> Poser une question</button>' +
           '<button onclick="exitSharedMode()" style="width:100%;background:none;border:0.5px solid #555;color:#888;padding:9px;font-size:12px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit"></i> Modifier ma configuration</button>';
         actions.insertBefore(bloc, btnReset);
+      }
+
+      // Mobile — étape 4 (boutons finaux)
+      const p11BtnDevis = document.getElementById('p11-btn-devis-final');
+      const p11BtnSave  = document.getElementById('p11-btn-save-final');
+      const p11BarSave  = document.getElementById('p11-bar-save-btn');
+      if (p11BtnDevis) p11BtnDevis.style.display = 'none';
+      if (p11BtnSave)  p11BtnSave.style.display  = 'none';
+      if (p11BarSave)  p11BarSave.style.display  = 'none';
+
+      const p11FinalBtns = document.querySelector('.p11-final-btns');
+      if (p11FinalBtns && !document.getElementById('p11-shared-mode-bloc')) {
+        const p11Bloc = document.createElement('div');
+        p11Bloc.id = 'p11-shared-mode-bloc';
+        p11Bloc.style.cssText = 'background:#1a1a1a;border:0.5px solid #333;padding:1rem;margin-bottom:.75rem;';
+        p11Bloc.innerHTML =
+          '<div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Votre demande est en cours</div>' +
+          '<p style="font-size:12px;color:#aaa;line-height:1.5;margin-bottom:.75rem;">Nous vous contacterons sous 48h pour finaliser votre projet.</p>' +
+          '<button onclick="openContactDrawer()" style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:.5rem;"><i class="ti ti-message"></i> Poser une question</button>' +
+          '<button onclick="exitSharedMode()" style="width:100%;background:none;border:0.5px solid #555;color:#888;padding:9px;font-size:12px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit"></i> Modifier ma configuration</button>';
+        p11FinalBtns.insertBefore(p11Bloc, p11FinalBtns.firstChild);
       }
     }, 300);
 
@@ -2717,8 +2746,9 @@ function calcSize() {
     showSizeActionBtns();
     selSize.taille = t.taille;
     // Pré-remplir avec les valeurs par défaut de cette taille
-    const defs = DEFAULTS_BY_TAILLE[selModel] ? DEFAULTS_BY_TAILLE[selModel][t.taille] : {};
-    if (defs) Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v]) => [k, String(v)])));
+    // Tous les autres champs sont calculés par buildDimsGrid(), qui valide chaque valeur
+    // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+    if (typeof buildDimsGrid === 'function') buildDimsGrid();
     // Calculer cintre depuis inter-acromions
     if (acro) calcCintreFromAcro(acro);
     main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
@@ -2746,8 +2776,9 @@ function chooseUsage(usage) {
   selSize.taille = chosen.taille;
   showSizeActionBtns();
   selSize.taille = chosen.taille;
-  const defsC = DEFAULTS_BY_TAILLE[selModel] ? DEFAULTS_BY_TAILLE[selModel][chosen.taille] : {};
-  if (defsC) Object.assign(selSize, Object.fromEntries(Object.entries(defsC).map(([k,v]) => [k, String(v)])));
+  // Tous les autres champs sont calculés par buildDimsGrid(), qui valide chaque valeur
+  // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+  if (typeof buildDimsGrid === 'function') buildDimsGrid();
   const acroRawU = parseFloat(document.getElementById('guide-acro').value) || null;
   const acroU = acroRawU ? Math.round(acroRawU * 10) : null;
   if (acroU) calcCintreFromAcro(acroU);
@@ -2763,186 +2794,102 @@ function chooseUsage(usage) {
 const DEFAULTS_BY_TAILLE = {
   "route": {
     "XXS": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 165,
       "cintre": 380,
-      "potence": 80,
-      "largeur_selle": 145
+      "potence": 80
     },
     "XS": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 165,
       "cintre": 400,
-      "potence": 90,
-      "largeur_selle": 145
+      "potence": 90
     },
     "S": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 170,
       "cintre": 400,
-      "potence": 90,
-      "largeur_selle": 145
+      "potence": 90
     },
     "M": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100,
-      "largeur_selle": 145
+      "potence": 100
     },
     "L": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 172.5,
       "cintre": 420,
-      "potence": 110,
-      "largeur_selle": 145
+      "potence": 110
     },
     "XL": {
-      "section": 28,
-      "cassette": "11x34",
-      "plateaux": "52x36",
       "manivelle": 175,
       "cintre": 440,
-      "potence": 120,
-      "largeur_selle": 145
+      "potence": 120
     }
   },
   "gravel_racing": {
     "XS": {
-      "section": 45,
-      "cassette": "10x45",
-      "plateaux": "40",
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80,
-      "largeur_selle": 145
+      "potence": 80
     },
     "S": {
-      "section": 45,
-      "cassette": "10x45",
-      "plateaux": "40",
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90,
-      "largeur_selle": 145
+      "potence": 90
     },
     "M": {
-      "section": 45,
-      "cassette": "10x45",
-      "plateaux": "40",
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100,
-      "largeur_selle": 145
+      "potence": 100
     },
     "L": {
-      "section": 45,
-      "cassette": "10x45",
-      "plateaux": "40",
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110,
-      "largeur_selle": 145
+      "potence": 110
     },
     "XL": {
-      "section": 45,
-      "cassette": "10x45",
-      "plateaux": "40",
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120,
-      "largeur_selle": 145
+      "potence": 120
     }
   },
   "gravel_bikepacking": {
     "XS": {
-      "section": 40,
-      "cassette": "10x51",
-      "plateaux": "40",
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80,
-      "largeur_selle": 145
+      "potence": 80
     },
     "S": {
-      "section": 40,
-      "cassette": "10x52",
-      "plateaux": "40",
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90,
-      "largeur_selle": 145
+      "potence": 90
     },
     "M": {
-      "section": 40,
-      "cassette": "10x53",
-      "plateaux": "40",
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100,
-      "largeur_selle": 145
+      "potence": 100
     },
     "L": {
-      "section": 40,
-      "cassette": "10x54",
-      "plateaux": "40",
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110,
-      "largeur_selle": 145
+      "potence": 110
     },
     "XL": {
-      "section": 40,
-      "cassette": "10x55",
-      "plateaux": "40",
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120,
-      "largeur_selle": 145
+      "potence": 120
     }
   },
   "vtt_enduro": {
     "S": {
-      "debattement": 150,
-      "section": "2.4\"",
-      "cassette": "10x52",
-      "plateaux": "32",
-      "manivelle": 165,
-      "largeur_selle": 145
+      "manivelle": 165
     },
     "M": {
-      "debattement": 150,
-      "section": "2.4\"",
-      "cassette": "10x52",
-      "plateaux": "32",
-      "manivelle": 170,
-      "largeur_selle": 145
+      "manivelle": 170
     },
     "L": {
-      "debattement": 150,
-      "section": "2.4\"",
-      "cassette": "10x52",
-      "plateaux": "32",
-      "manivelle": 170,
-      "largeur_selle": 145
+      "manivelle": 170
     },
     "XL": {
-      "debattement": 150,
-      "section": "2.4\"",
-      "cassette": "10x52",
-      "plateaux": "32",
-      "manivelle": 172.5,
-      "largeur_selle": 145
+      "manivelle": 172.5
     }
   }
 }
@@ -3073,7 +3020,7 @@ function buildDimsGrid() {
     if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
     return `<div class="dim-field">
       <label>${f.label}</label>
-      <select class="size-select" id="${f.id}" onchange="${onchangeFn}" ${f.options.length === 1 ? 'disabled style="opacity:0.6;"' : ''}>
+      <select class="size-select" id="${f.id}" onchange="${onchangeFn}">
         <option value="">— choisir —</option>
         ${optHTML}
         ${jnspOption}
@@ -3662,8 +3609,9 @@ function p11CalcSize() {
     const t = matches[0];
     window.sizeValidated = true;
     selSize.taille = t.taille;
-    const defs = DEFAULTS_BY_TAILLE[selModel]?.[t.taille] || {};
-    Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
+    // Tous les autres champs sont calculés par p11BuildDimsGrid(), qui valide chaque valeur
+    // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
     if (acro) calcCintreFromAcro(acro);
     main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
     let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
@@ -3690,8 +3638,9 @@ function p11ChooseUsage(usage) {
   selSize.taille = chosen.taille;
   const _cLbl = document.getElementById('p11-next-label');
   if (_cLbl) _cLbl.textContent = 'Ma configuration';
-  const defs = DEFAULTS_BY_TAILLE[selModel]?.[chosen.taille] || {};
-  Object.assign(selSize, Object.fromEntries(Object.entries(defs).map(([k,v])=>[k,String(v)])));
+  // Tous les autres champs sont calculés par p11BuildDimsGrid(), qui valide chaque valeur
+  // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
+  if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
   const acroRaw = parseFloat(document.getElementById('p11-guide-acro').value) || null;
   if (acroRaw) calcCintreFromAcro(Math.round(acroRaw*10));
   document.getElementById('p11-result-main').innerHTML =
@@ -3801,8 +3750,7 @@ function p11BuildDimsGrid() {
       ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; p11BuildDimsGrid();"
       : "selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
-      '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '"' +
-      (f.options.length === 1 ? ' disabled style="opacity:0.6;"' : '') + '>' +
+      '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
       '<option value="">— choisir —</option>' + optHTML +
       (f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : '') +
       '</select>' +
