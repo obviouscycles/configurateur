@@ -1632,9 +1632,9 @@
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:0 28px;text-align:center;max-width:316px;margin:0 auto;width:100%;">
         <span id="p11-sl-1" style="font-size:9px;color:#F5C400;letter-spacing:.05em;text-transform:uppercase;">Modèle</span>
-        <span id="p11-sl-2" style="font-size:9px;color:#444;letter-spacing:.05em;text-transform:uppercase;">Composants</span>
-        <span id="p11-sl-3" style="font-size:9px;color:#444;letter-spacing:.05em;text-transform:uppercase;">Taille</span>
-        <span id="p11-sl-4" style="font-size:9px;color:#444;letter-spacing:.05em;text-transform:uppercase;">Récap</span>
+        <span id="p11-sl-2" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Composants</span>
+        <span id="p11-sl-3" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Taille</span>
+        <span id="p11-sl-4" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Récap</span>
       </div>
     </div>
 
@@ -1759,7 +1759,7 @@
         <div>
           <div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;">Prix total</div>
           <div id="p11-s4-price" style="font-size:16px;font-weight:700;color:#F5C400;letter-spacing:-.02em;">—</div>
-          <div id="p11-s4-modif" style="font-size:10px;color:#555;display:none;"></div>
+          <div id="p11-s4-modif" style="font-size:11px;color:#999;display:none;"></div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           <button id="p11-bar-save-btn" onclick="p11QuickSave()" title="Sauvegarder" style="background:none;border:0.5px solid #444;color:#888;padding:7px 10px;cursor:pointer;font-size:13px;line-height:1;"><i class="ti ti-bookmark"></i></button>
@@ -1774,7 +1774,7 @@
       <div id="p11-price-strip" style="display:none;background:#1a1a1a;border-top:0.5px solid #333;padding:6px 1rem;display:flex;justify-content:space-between;align-items:center;gap:10px;">
         <div style="display:flex;flex-direction:column;gap:1px;">
           <span style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;">Prix total</span>
-          <span id="p11-strip-modif" style="font-size:10px;color:#555;display:none;"></span>
+          <span id="p11-strip-modif" style="font-size:11px;color:#999;display:none;"></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span id="p11-strip-price" style="font-size:16px;font-weight:700;color:#F5C400;letter-spacing:-.02em;">—</span>
@@ -2165,7 +2165,7 @@
             <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-bottom:.35rem;margin-top:.5rem;">Cadre standard</div>
             <div style="font-size:12px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard</div>
             <div style="font-size:13px;color:#888;line-height:1.55;margin-bottom:1.25rem;">Le vélo tel qu'il est configuré, sans surcoût ni délai supplémentaire.</div>
-            <div style="font-size:11px;color:#F5C400;margin-top:auto;">Choisir mon cadre →</div>
+            <div style="font-size:11px;color:#F5C400;margin-top:auto;">Choisir ma taille →</div>
           </div>
           </div>
 
@@ -2243,12 +2243,6 @@
             <div style="font-size:18px;color:#f2f2f2;font-weight:500;">Cadre sur mesure</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:1.5rem;">
-          <div style="flex:1;height:3px;border-radius:2px;background:#F5C400;"></div>
-          <div style="flex:1;height:3px;border-radius:2px;background:#333;"></div>
-          <div style="flex:1;height:3px;border-radius:2px;background:#333;"></div>
-        </div>
-
         <div style="margin-bottom:1.5rem;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
             <span style="width:20px;height:20px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
@@ -2267,7 +2261,7 @@
           <div id="v2-mesure-dropzone" onclick="document.getElementById('v2-mesure-file').click()" ondragover="v2DropzoneDragOver(event,this)" ondragleave="v2DropzoneDragLeave(event,this)" ondrop="v2DropzoneDrop(event,this,'v2-mesure-file')" style="border:1.5px dashed #3a3a3a;border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;">
             <i class="ti ti-cloud-upload" style="font-size:24px;color:#666;"></i>
             <div class="v2-dz-text" style="font-size:13px;color:#aaa;margin-top:8px;">Glissez un fichier ou <span style="color:#F5C400;">parcourez</span></div>
-            <div class="v2-dz-hint" style="font-size:11px;color:#555;margin-top:2px;">Étude morphologique, géométrie souhaitée</div>
+            <div class="v2-dz-hint" style="font-size:11px;color:#888;margin-top:2px;">Étude morphologique, géométrie souhaitée</div>
           </div>
         </div>
 
@@ -2300,11 +2294,6 @@
             <div style="font-size:18px;color:#f2f2f2;font-weight:500;">Projet spécifique</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:1.5rem;">
-          <div style="flex:1;height:3px;border-radius:2px;background:#F5C400;"></div>
-          <div style="flex:1;height:3px;border-radius:2px;background:#333;"></div>
-        </div>
-
         <div style="margin-bottom:1.5rem;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
             <span style="width:20px;height:20px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
@@ -2324,7 +2313,7 @@
           <div id="v2-horsgamme-dropzone" onclick="document.getElementById('v2-horsgamme-file').click()" ondragover="v2DropzoneDragOver(event,this)" ondragleave="v2DropzoneDragLeave(event,this)" ondrop="v2DropzoneDrop(event,this,'v2-horsgamme-file')" style="border:1.5px dashed #3a3a3a;border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;">
             <i class="ti ti-cloud-upload" style="font-size:24px;color:#666;"></i>
             <div class="v2-dz-text" style="font-size:13px;color:#aaa;margin-top:8px;">Glissez un fichier ou <span style="color:#F5C400;">parcourez</span></div>
-            <div class="v2-dz-hint" style="font-size:11px;color:#555;margin-top:2px;">Croquis, photo, document utile</div>
+            <div class="v2-dz-hint" style="font-size:11px;color:#888;margin-top:2px;">Croquis, photo, document utile</div>
           </div>
         </div>
 
@@ -2542,7 +2531,7 @@
           <button class="contact-btn contact-btn-send" onclick="sendCallbackDrawer()"><i class="ti ti-send"></i> Envoyer</button>
           <div id="cf-toast-d" class="cf-toast" style="display:none"><i class="ti ti-check"></i> Message envoyé !</div>
           <div id="cf-error-d" class="cf-error" style="display:none">Merci de renseigner au moins un contact.</div>
-          <p style="font-size:10px;color:#555;line-height:1.4;margin-top:.75rem;">Vos données sont utilisées uniquement pour votre demande. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:#666;">Politique de confidentialité →</a></p>
+          <p style="font-size:11px;color:#888;line-height:1.5;margin-top:.75rem;">Vos données sont utilisées uniquement pour votre demande. <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:#aaa;">Politique de confidentialité →</a></p>
         </div>
       </div>
 
