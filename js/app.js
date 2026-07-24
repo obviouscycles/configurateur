@@ -39,7 +39,7 @@ async function loadConfigFromUrl() {
     if (window.innerWidth >= 768) {
       dtStep = 4; dtRender();
     } else {
-      renderModels(); switchTab(4);
+      renderModels(); p11UpdateStep(4);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
