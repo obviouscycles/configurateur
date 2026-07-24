@@ -2078,6 +2078,14 @@ function evoTotalPrice() {
 // Rendu des options Évolution
 let evoActiveContainer = 'v2-evo-options';
 
+const EVO_ICONS = {
+  evo_inserts: 'ti-bottle', evo_iscg: 'ti-settings', evo_integ: 'ti-cable',
+  evo_gravure: 'ti-typography',
+  ins_pb1: 'ti-bottle', ins_pb2: 'ti-bottle', ins_pb3: 'ti-bottle',
+  ins_sacoche: 'ti-briefcase', ins_pbag4: 'ti-package', ins_pbag2: 'ti-package',
+  ins_gardeboue: 'ti-umbrella'
+};
+
 function evoRender() {
   const container = document.getElementById(evoActiveContainer);
   if (!container) return;
@@ -2093,11 +2101,10 @@ function evoRender() {
     const gravureText = evoGravureText || '';
     const gravureError = gravureText.length > 20;
 
-    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:1rem;border-radius:2px;transition:border-color .15s;">
-      <div style="display:flex;align-items:flex-start;gap:.75rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="evoToggle('${opt.id}')"`}>
-        ${isInserts ? '' : `<div style="width:18px;height:18px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
-          ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
-        </div>`}
+    const iconName = EVO_ICONS[opt.id] || 'ti-adjustments';
+    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:.9rem 1rem;border-radius:8px;transition:border-color .15s;">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="evoToggle('${opt.id}')"`}>
+        <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#F5C400' : '#666'};flex-shrink:0;margin-top:1px;"></i>
         <div style="flex:1;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
@@ -2105,6 +2112,9 @@ function evoRender() {
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
+        ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+          ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
+        </div>`}
       </div>
       ${isInserts ? evoRenderInsertsSubList(checked, priceLabel, showPrices) : ''}
       ${isGravure && checked ? `
@@ -2134,18 +2144,20 @@ function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel, showPrice
     items.map(item => {
       const isIncluded = item.avail[selModel] === 1;
       const isChecked = evoInsertsChecked[item.id] || false;
+      const iName = EVO_ICONS[item.id] || 'ti-plug';
       if (isIncluded) {
         return `<div style="display:flex;align-items:center;gap:8px;opacity:.5;">
-          <div style="width:14px;height:14px;border:0.5px solid #444;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="ti ti-check" style="font-size:9px;color:#666;"></i></div>
+          <i class="ti ${iName}" style="font-size:13px;color:#666;flex-shrink:0;"></i>
           <span style="font-size:12px;color:#888;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
           <span style="font-size:10px;color:#555;margin-left:auto;">sur cadre standard</span>
         </div>`;
       }
       return `<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();evoToggleInsert('${item.id}')">
-        <div style="width:14px;height:14px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        <i class="ti ${iName}" style="font-size:13px;color:${isChecked ? '#F5C400' : '#666'};flex-shrink:0;"></i>
+        <span style="font-size:12px;color:#f2f2f2;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+        <div style="width:14px;height:14px;border-radius:4px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
           ${isChecked ? '<i class="ti ti-check" style="font-size:9px;color:#1a1a00;"></i>' : ''}
         </div>
-        <span style="font-size:12px;color:#f2f2f2;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
       </div>`;
     }).join('') +
     (showPrices ? `<div style="display:flex;justify-content:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
@@ -2175,6 +2187,44 @@ function evoToggleInsert(id) {
     evoOrder = evoOrder.filter(x => x !== 'evo_inserts');
   }
   evoRender();
+}
+
+// ─── DROPZONE FICHIER (drag & drop) ────────────────────────────────────────────
+function v2DropzoneDragOver(e, el) {
+  e.preventDefault();
+  el.style.borderColor = '#F5C400';
+  el.style.background = 'rgba(245,196,0,0.04)';
+}
+function v2DropzoneDragLeave(e, el) {
+  e.preventDefault();
+  el.style.borderColor = '#3a3a3a';
+  el.style.background = 'transparent';
+}
+function v2DropzoneDrop(e, el, inputId) {
+  e.preventDefault();
+  el.style.borderColor = '#3a3a3a';
+  el.style.background = 'transparent';
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    const input = document.getElementById(inputId);
+    input.files = files;
+    v2DropzoneFileChange(inputId, el.id);
+  }
+}
+function v2DropzoneFileChange(inputId, dropzoneId) {
+  const input = document.getElementById(inputId);
+  const dz = document.getElementById(dropzoneId);
+  if (!input || !dz || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const icon = dz.querySelector('i');
+  const text = dz.querySelector('.v2-dz-text');
+  const hint = dz.querySelector('.v2-dz-hint');
+  dz.style.borderStyle = 'solid';
+  dz.style.borderColor = '#F5C400';
+  if (icon) { icon.className = 'ti ti-file-check'; icon.style.color = '#F5C400'; }
+  if (text) text.innerHTML = file.name;
+  if (text) text.style.color = '#f2f2f2';
+  if (hint) hint.textContent = (file.size / 1024).toFixed(0) + ' Ko — cliquez pour changer';
 }
 
 function evoToggle(id) {
