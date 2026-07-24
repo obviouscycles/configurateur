@@ -8,6 +8,14 @@ function exitSharedMode() {
   });
   const bloc = document.getElementById('shared-mode-bloc');
   if (bloc) bloc.remove();
+
+  // Mobile
+  ['p11-btn-devis-final','p11-btn-save-final','p11-bar-save-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  const p11Bloc = document.getElementById('p11-shared-mode-bloc');
+  if (p11Bloc) p11Bloc.remove();
 }
 
 
@@ -48,17 +56,17 @@ async function loadConfigFromUrl() {
     if (typeof dtRenderS4 === 'function') dtRenderS4();
     if (typeof dtRenderS4 === 'function') dtRenderS4();
 
-    // Masquer les boutons inutiles dans le récap droit
+    // Masquer les boutons inutiles — desktop (récap droit) et mobile (étape 4)
     setTimeout(() => {
+      // Desktop
       const btnDevis = document.getElementById('dtr-btn-devis');
       const btnSave  = document.getElementById('dtr-btn-save');
       const btnReset = document.getElementById('dtr-btn-reset');
       if (btnDevis) btnDevis.style.display = 'none';
       if (btnSave)  btnSave.style.display  = 'none';
 
-      // Injecter le bloc "en cours de traitement" dans le récap
       const actions = document.querySelector('.dtr-actions');
-      if (actions && btnReset) {
+      if (actions && btnReset && !document.getElementById('shared-mode-bloc')) {
         const bloc = document.createElement('div');
         bloc.id = 'shared-mode-bloc';
         bloc.style.cssText = 'background:#1a1a1a;border:0.5px solid #333;padding:1rem;margin-bottom:.75rem;';
@@ -68,6 +76,27 @@ async function loadConfigFromUrl() {
           '<button onclick="openContactDrawer()" style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:.5rem;"><i class="ti ti-message"></i> Poser une question</button>' +
           '<button onclick="exitSharedMode()" style="width:100%;background:none;border:0.5px solid #555;color:#888;padding:9px;font-size:12px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit"></i> Modifier ma configuration</button>';
         actions.insertBefore(bloc, btnReset);
+      }
+
+      // Mobile — étape 4 (boutons finaux)
+      const p11BtnDevis = document.getElementById('p11-btn-devis-final');
+      const p11BtnSave  = document.getElementById('p11-btn-save-final');
+      const p11BarSave  = document.getElementById('p11-bar-save-btn');
+      if (p11BtnDevis) p11BtnDevis.style.display = 'none';
+      if (p11BtnSave)  p11BtnSave.style.display  = 'none';
+      if (p11BarSave)  p11BarSave.style.display  = 'none';
+
+      const p11FinalBtns = document.querySelector('.p11-final-btns');
+      if (p11FinalBtns && !document.getElementById('p11-shared-mode-bloc')) {
+        const p11Bloc = document.createElement('div');
+        p11Bloc.id = 'p11-shared-mode-bloc';
+        p11Bloc.style.cssText = 'background:#1a1a1a;border:0.5px solid #333;padding:1rem;margin-bottom:.75rem;';
+        p11Bloc.innerHTML =
+          '<div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;">Votre demande est en cours</div>' +
+          '<p style="font-size:12px;color:#aaa;line-height:1.5;margin-bottom:.75rem;">Nous vous contacterons sous 48h pour finaliser votre projet.</p>' +
+          '<button onclick="openContactDrawer()" style="width:100%;background:none;border:0.5px solid #F5C400;color:#F5C400;padding:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:.5rem;"><i class="ti ti-message"></i> Poser une question</button>' +
+          '<button onclick="exitSharedMode()" style="width:100%;background:none;border:0.5px solid #555;color:#888;padding:9px;font-size:12px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit"></i> Modifier ma configuration</button>';
+        p11FinalBtns.insertBefore(p11Bloc, p11FinalBtns.firstChild);
       }
     }, 300);
 
