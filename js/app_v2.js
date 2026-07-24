@@ -1226,7 +1226,7 @@ function dtPresetBar(modelId) {
       Object.entries(PRESET_DESCS_DT).map(([k,v]) =>
         '<div><span style="color:#F5C400;font-weight:600;">' + k + '</span> — ' + v + '</div>'
       ).join('') +
-      '<div style="font-size:11px;color:#555;margin-top:4px;">Tout reste modifiable.</div>' +
+      '<div style="font-size:11px;color:#999;margin-top:4px;">Tout reste modifiable.</div>' +
     '</div>' +
     '<div class="preset-btns">' +
     ['Signature','Ti1','Ti2'].map(decl =>
@@ -1347,7 +1347,7 @@ function dtShowSaved() {
   
   const configs = savedConfigs || [];
   if (configs.length === 0) {
-    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Mes configurations</p><p style="color:#666;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#444;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
+    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Mes configurations</p><p style="color:#666;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#999;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
   } else {
     inner.innerHTML = '<p class="section-title" style="color:#f2f2f2;margin-bottom:1.5rem;">Mes configurations (' + configs.length + ')</p>' +
       configs.map((c, idx) => {
@@ -2110,7 +2110,7 @@ function evoRender() {
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
             ${(isInserts || !showPrices) ? '' : `<span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
           </div>
-          ${opt.note && !isInserts ? `<div style="font-size:12px;color:#555;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+          ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
         ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
@@ -2146,10 +2146,10 @@ function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel, showPrice
       const isChecked = evoInsertsChecked[item.id] || false;
       const iName = EVO_ICONS[item.id] || 'ti-plug';
       if (isIncluded) {
-        return `<div style="display:flex;align-items:center;gap:8px;opacity:.5;">
+        return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
           <i class="ti ${iName}" style="font-size:13px;color:#666;flex-shrink:0;"></i>
           <span style="font-size:12px;color:#888;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
-          <span style="font-size:10px;color:#555;margin-left:auto;">sur cadre standard</span>
+          <span style="font-size:11px;color:#999;margin-left:auto;">sur cadre standard</span>
         </div>`;
       }
       return `<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();evoToggleInsert('${item.id}')">
@@ -2171,7 +2171,7 @@ function evoRenderCustomText() {
   return `<div style="margin-top:.5rem;padding:1rem;background:#0d0d0d;border:0.5px dashed #333;">
     <div style="font-size:12px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
     <textarea id="evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.5;">${evoCustomText}</textarea>
-    <div style="font-size:11px;color:#555;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+    <div style="font-size:11px;color:#999;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
   </div>`;
 }
 
