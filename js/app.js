@@ -1225,7 +1225,7 @@ function dtRender() {
   // Rendu spécifique
   if (n === 1) dtRenderS1();
   if (n === 2) dtRenderS2();
-  if (n === 3) { dtRenderS3(); setTimeout(() => dtToggleSizeMode('guide'), 50); }
+  if (n === 3) { dtRenderS3(); }
   if (n === 4) dtRenderS4();
 
   // Récap droit (pas à l'étape 4)
