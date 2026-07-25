@@ -3300,6 +3300,24 @@ function p11StepDivId(n) {
   return 'p11-s1';
 }
 
+// ─── HISTORIQUE NAVIGATEUR MOBILE (bouton/geste retour matériel) ──────────────
+let p11HistoryReady = false;
+let p11SkipHistoryPush = false;
+
+function p11InitHistory() {
+  if (p11HistoryReady) return;
+  p11HistoryReady = true;
+  // Marquer l'entrée courante comme étape 1 (référence pour le tout premier "retour")
+  history.replaceState({ p11step: 1 }, '', location.href);
+  window.addEventListener('popstate', function(e) {
+    if (e.state && typeof e.state.p11step === 'number') {
+      p11SkipHistoryPush = true;
+      p11UpdateStep(e.state.p11step);
+      p11SkipHistoryPush = false;
+    }
+  });
+}
+
 function p11Init() {
   if (window.innerWidth >= 768) return;
   // Cacher l'interface desktop, afficher le parcours mobile
@@ -3311,12 +3329,17 @@ function p11Init() {
   // Masquer FAB drawer (le drawer reste accessible si besoin)
   p11RenderModels();
   v2Parcours = 'standard';
+  p11InitHistory();
   p11UpdateStep(1);
   p11InitSwipe();
 }
 
 function p11UpdateStep(n) {
   p11CurrentStep = n;
+  // Historique : chaque changement d'étape pousse une entrée, sauf si on répond à un popstate
+  if (p11HistoryReady && !p11SkipHistoryPush) {
+    history.pushState({ p11step: n }, '', location.href);
+  }
   // Dots + labels (6 étapes)
   for (let i=1; i<=6; i++) {
     const dot = document.getElementById('p11-dot-' + i);
