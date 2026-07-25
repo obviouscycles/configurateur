@@ -47,7 +47,7 @@ async function loadConfigFromUrl() {
     if (window.innerWidth >= 768) {
       dtStep = 4; dtRender();
     } else {
-      renderModels(); p11UpdateStep(4);
+      renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
@@ -3283,8 +3283,22 @@ let p11CurrentStep = 1;
 let p11SizeMode = null;
 let p11OverlapTailles = null;
 
-const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre taille', 'Votre configuration'];
-const P11_NEXT_LABELS = ['Configurer vos composants', 'Choisir votre taille', 'Voir votre configuration', null];
+const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre cadre', 'Votre taille', 'Personnalisation', 'Votre configuration'];
+
+// Retourne l'ID de la div à afficher pour un numéro d'étape donné, selon le parcours choisi
+function p11StepDivId(n) {
+  if (n === 1) return 'p11-s1';
+  if (n === 2) return 'p11-s2';
+  if (n === 3) return 'p11-s3bif';
+  if (n === 4) {
+    if (v2Parcours === 'sur_mesure') return 'p11-s4mesure';
+    if (v2Parcours === 'hors_gamme') return 'p11-s4horsgamme';
+    return 'p11-s4std';
+  }
+  if (n === 5) return 'p11-s5evo';
+  if (n === 6) return 'p11-s6devis';
+  return 'p11-s1';
+}
 
 function p11Init() {
   if (window.innerWidth >= 768) return;
@@ -3296,71 +3310,271 @@ function p11Init() {
   document.getElementById('p11-container').style.display = 'block';
   // Masquer FAB drawer (le drawer reste accessible si besoin)
   p11RenderModels();
+  v2Parcours = 'standard';
   p11UpdateStep(1);
   p11InitSwipe();
 }
 
 function p11UpdateStep(n) {
   p11CurrentStep = n;
-  // Dots + flèches nav + labels
-  for (let i=1; i<=4; i++) {
+  // Dots + labels (6 étapes)
+  for (let i=1; i<=6; i++) {
     const dot = document.getElementById('p11-dot-' + i);
     if (!dot) continue;
     dot.className = 'p11-step-dot' + (i === n ? ' active' : i < n ? ' done' : '');
     const sl = document.getElementById('p11-sl-' + i);
-    if (sl) sl.style.color = i === n ? '#F5C400' : i < n ? '#666' : '#333';
+    if (sl) sl.style.color = i === n ? '#F5C400' : i < n ? '#666' : '#888';
   }
   const backBtn = document.getElementById('p11-back-btn');
   const fwdBtn  = document.getElementById('p11-fwd-btn');
   if (backBtn) backBtn.style.color = n > 1 ? '#F5C400' : '#333';
-  if (fwdBtn)  fwdBtn.style.color  = n < 4 ? '#F5C400' : '#333';
+  if (fwdBtn)  fwdBtn.style.color  = (n < 6 && n !== 3) ? '#F5C400' : '#333';
   // Steps
   document.querySelectorAll('.p11-step').forEach(s => { s.classList.remove('active'); s.classList.remove('p11-active'); s.style.display = 'none'; });
-  const step = document.getElementById('p11-s' + n);
+  const stepId = p11StepDivId(n);
+  const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
-  // Bouton next
+  // Bouton next / bandeau bas — masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
-  if (n === 4) {
+  const hasInlineNav = (n === 3) || (n === 4 && (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme')) || (n === 5) || (n === 6);
+  if (hasInlineNav) {
     if (bar) bar.style.display = 'none';
-    // Bandeau onglet 4 : affiché via IntersectionObserver
-    p11InitStep4Bar();
+    if (n === 6) p11InitStep4Bar();
   } else {
     if (bar) bar.style.display = 'block';
     if (nextLbl) {
-      if (n === 3 && !window.sizeValidated) {
-        nextLbl.textContent = 'Continuer sans taille';
+      if (n === 4 && !window.sizeValidated) {
+        nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
+      } else if (n === 4 && v2Parcours === 'standard_evo') {
+        nextLbl.textContent = 'Mes personnalisations';
+      } else if (n === 4) {
+        nextLbl.textContent = 'Ma configuration';
       } else {
-        nextLbl.textContent = P11_NEXT_LABELS[n-1] || '';
+        nextLbl.textContent = P11_LABELS[n] || '';
       }
     }
   }
-  // Afficher le prix uniquement sur étape 2 et 3 (config + taille)
-  if (priceStrip) priceStrip.style.display = (selModel) ? 'flex' : 'none';
+  // Afficher le prix uniquement en dehors du step 1
+  if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
-  if (stripSave) stripSave.style.display = (n >= 2 && selModel) ? 'flex' : 'none';
+  if (stripSave) stripSave.style.display = (n >= 2 && n !== 6 && selModel) ? 'flex' : 'none';
   // Step 1 : désactiver next si pas de modèle
-  if (n === 1) btn.style.opacity = selModel ? '1' : '.4';
+  if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
   if (n === 2) { p11RenderPosts(); p11UpdateTotal(); }
-  // Step 3 : rebuilder dims si mode connu
-  if (n === 3 && p11SizeMode) p11BuildDimsGrid();
-  // Step 4 : construire le récap final
-  if (n === 4) p11RenderFinalRecap();
-  // FAB : 20px si étape 4 (pas de bandeau), 76px sinon (au-dessus du bandeau)
-  const fab = document.getElementById('fab-contact');
-  // FAB now hidden on mobile (replaced by header button)
+  // Step 4std (taille) : rebuilder dims si mode connu
+  if (n === 4 && v2Parcours !== 'sur_mesure' && v2Parcours !== 'hors_gamme' && p11SizeMode) p11BuildDimsGrid();
+  // Step 4 sur_mesure : rendre les options Évolution incluses (sans prix)
+  if (n === 4 && v2Parcours === 'sur_mesure') { p11EvoActiveContainer = 'p11-mesure-evo-options'; p11EvoRender(); }
+  // Step 5 : rendre les options Évolution (avec prix)
+  if (n === 5) { p11EvoActiveContainer = 'p11-evo-options'; p11EvoRender(); }
+  // Step 6 : construire le récap final
+  if (n === 6) p11RenderFinalRecap();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function p11Next() {
   if (p11CurrentStep === 1 && !selModel) return;
-  if (p11CurrentStep < 4) p11UpdateStep(p11CurrentStep + 1);
+  if (p11CurrentStep === 2) { p11UpdateStep(3); return; }
+  if (p11CurrentStep === 3) return; // navigation par tap sur une carte uniquement
+  if (p11CurrentStep === 4) {
+    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
+    p11UpdateStep(6); return;
+  }
+  if (p11CurrentStep === 5) { p11UpdateStep(6); return; }
+}
+
+function p11Back() {
+  if (p11CurrentStep === 1) return;
+  if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
+  if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
+  if (p11CurrentStep === 4) { p11UpdateStep(3); return; }
+  if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
+  if (p11CurrentStep === 6) {
+    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
+    p11UpdateStep(4); return;
+  }
 }
 
 function p11GoTo(n) { p11UpdateStep(n); }
+
+// ─── BIFURCATION MOBILE (Étape 3) ──────────────────────────────────────────────
+function p11ChooseParcours(parcours) {
+  v2Parcours = parcours;
+  ['standard','standard_evo','sur_mesure','hors_gamme'].forEach(p => {
+    const card = document.getElementById('p11-card-' + p);
+    if (card) card.style.borderColor = p === parcours ? '#F5C400' : '#333';
+  });
+  setTimeout(() => { p11UpdateStep(4); }, 150);
+}
+
+// Depuis Évolution / Sur mesure / Hors gamme -> Récap (étape 6)
+function p11GoDevisFromOOD() {
+  if (v2Parcours === 'sur_mesure') {
+    window._v2Message = document.getElementById('p11-mesure-message')?.value || '';
+  } else if (v2Parcours === 'hors_gamme') {
+    window._v2Message = document.getElementById('p11-horsgamme-message')?.value || '';
+  }
+  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+    const input = document.getElementById('p11-evo-gravure-input') || document.getElementById('evo-gravure-input');
+    if (input) { input.style.borderColor = '#e05555'; input.focus(); }
+    return;
+  }
+  p11UpdateStep(6);
+}
+
+// ─── DROPZONE FICHIER MOBILE (tap pour choisir, pas de drag&drop) ──────────────
+function p11FileChange(inputId, dropzoneId) {
+  const input = document.getElementById(inputId);
+  const dz = document.getElementById(dropzoneId);
+  if (!input || !dz || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const icon = dz.querySelector('i');
+  const text = dz.querySelector('.p11-dz-text');
+  const hint = dz.querySelector('.p11-dz-hint');
+  dz.style.borderStyle = 'solid';
+  dz.style.borderColor = '#F5C400';
+  if (icon) { icon.className = 'ti ti-file-check'; icon.style.color = '#F5C400'; }
+  if (text) { text.textContent = file.name; text.style.color = '#f2f2f2'; }
+  if (hint) hint.textContent = (file.size / 1024).toFixed(0) + ' Ko — toucher pour changer';
+}
+
+// ─── OPTIONS ÉVOLUTION MOBILE (réutilise EVO_OPTIONS / EVO_INSERTS / evoChecked / evoOrder déjà définis) ──
+let p11EvoActiveContainer = 'p11-evo-options';
+
+function p11EvoRender() {
+  const container = document.getElementById(p11EvoActiveContainer);
+  if (!container) return;
+  const showPrices = p11EvoActiveContainer !== 'p11-mesure-evo-options';
+  const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
+  const firstId = evoOrder[0];
+
+  container.innerHTML = opts.map(opt => {
+    const checked = evoChecked[opt.id] || false;
+    const priceLabel = evoOptionPrice(opt.id) + ' €';
+    const isGravure = opt.id === 'evo_gravure';
+    const isInserts = opt.id === 'evo_inserts';
+    const iconName = EVO_ICONS[opt.id] || 'ti-adjustments';
+    const gravureText = evoGravureText || '';
+    const gravureError = gravureText.length > 20;
+
+    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:.9rem 1rem;border-radius:8px;">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="p11EvoToggle('${opt.id}')"`}>
+        <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#F5C400' : '#666'};flex-shrink:0;margin-top:1px;"></i>
+        <div style="flex:1;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
+            <span style="font-size:14px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
+            ${(isInserts || !showPrices) ? '' : `<span style="font-size:13px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
+          </div>
+          ${opt.note && !isInserts ? `<div style="font-size:13px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+        </div>
+        ${isInserts ? '' : `<div style="width:18px;height:18px;border-radius:5px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+          ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
+        </div>`}
+      </div>
+      ${isInserts ? p11EvoRenderInsertsSubList(priceLabel, showPrices) : ''}
+      ${isGravure && checked ? `
+      <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
+        <input type="text" id="p11-evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="p11EvoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:10px;font-size:14px;font-family:inherit;text-transform:uppercase;letter-spacing:.03em;border-radius:6px;">
+        <div style="font-size:11px;color:${gravureError ? '#e05555' : '#888'};margin-top:4px;">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML += p11EvoRenderCustomText();
+  p11EvoUpdateTotal();
+}
+
+function p11EvoRenderInsertsSubList(priceLabel, showPrices) {
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] !== 'x');
+  if (items.length === 0) return '';
+  const anyInsertChecked = items.some(i => i.avail[selModel] === 0 && evoInsertsChecked[i.id]);
+  return `<div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;display:flex;flex-direction:column;gap:8px;">` +
+    items.map(item => {
+      const isIncluded = item.avail[selModel] === 1;
+      const isChecked = evoInsertsChecked[item.id] || false;
+      const iName = EVO_ICONS[item.id] || 'ti-plug';
+      if (isIncluded) {
+        return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
+          <i class="ti ${iName}" style="font-size:14px;color:#666;flex-shrink:0;"></i>
+          <span style="font-size:13px;color:#999;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+          <span style="font-size:11px;color:#999;">sur cadre standard</span>
+        </div>`;
+      }
+      return `<div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation();p11EvoToggleInsert('${item.id}')">
+        <i class="ti ${iName}" style="font-size:14px;color:${isChecked ? '#F5C400' : '#666'};flex-shrink:0;"></i>
+        <span style="font-size:13px;color:#f2f2f2;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+        <div style="width:16px;height:16px;border-radius:5px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${isChecked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    (showPrices ? `<div style="display:flex;justify-content:flex-end;margin-top:2px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
+      <span style="font-size:13px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#666'};">${priceLabel}</span>
+    </div>` : '') +
+  '</div>';
+}
+
+function p11EvoRenderCustomText() {
+  return `<div style="margin-top:.5rem;padding:1rem;background:#0d0d0d;border:0.5px dashed #333;border-radius:8px;">
+    <div style="font-size:13px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
+    <textarea id="p11-evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:10px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5;border-radius:6px;">${evoCustomText}</textarea>
+    <div style="font-size:11px;color:#666;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+  </div>`;
+}
+
+function p11EvoToggleInsert(id) {
+  evoInsertsChecked[id] = !evoInsertsChecked[id];
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
+  const anyChecked = items.some(i => evoInsertsChecked[i.id]);
+  evoChecked['evo_inserts'] = anyChecked;
+  if (anyChecked) { if (!evoOrder.includes('evo_inserts')) evoOrder.push('evo_inserts'); }
+  else { evoOrder = evoOrder.filter(x => x !== 'evo_inserts'); }
+  p11EvoRender();
+}
+
+function p11EvoToggle(id) {
+  evoChecked[id] = !evoChecked[id];
+  if (evoChecked[id]) { if (!evoOrder.includes(id)) evoOrder.push(id); }
+  else { evoOrder = evoOrder.filter(x => x !== id); }
+  p11EvoRender();
+}
+
+function p11EvoUpdateGravureText(val) {
+  const upperVal = val.toUpperCase();
+  evoGravureText = upperVal;
+  const input = document.getElementById('p11-evo-gravure-input');
+  const cursorPos = input ? input.selectionStart : null;
+  if (input && input.value !== upperVal) {
+    input.value = upperVal;
+    if (cursorPos !== null) input.setSelectionRange(cursorPos, cursorPos);
+  }
+  const errDiv = input ? input.parentElement.querySelector('div') : null;
+  const isError = upperVal.length > 20;
+  if (input) input.style.borderColor = isError ? '#e05555' : '#333';
+  if (errDiv) {
+    errDiv.style.color = isError ? '#e05555' : '#888';
+    errDiv.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (upperVal.length + ' / 20 caractères');
+  }
+}
+
+function p11EvoUpdateTotal() {
+  const isMesure = p11EvoActiveContainer === 'p11-mesure-evo-options';
+  const totalId = isMesure ? 'p11-mesure-evo-total' : 'p11-evo-total';
+  const totalEl = document.getElementById(totalId);
+  if (!totalEl) return;
+  if (isMesure) {
+    totalEl.textContent = 'Ces options sont incluses dans le forfait Performance — 300 €';
+    return;
+  }
+  const total = evoTotalPrice();
+  totalEl.innerHTML = total === null
+    ? '<span style="color:#666;">Sélectionnez les options souhaitées</span>'
+    : 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong>';
+}
 
 // Rendu modèles mobile
 function p11RenderModels() {
@@ -3697,7 +3911,7 @@ function p11ChooseUsage(usage) {
     'Taille recommandée : <span style="color:#F5C400">' + chosen.taille + '</span> <span style="font-size:12px;color:#888">(' + (usage==='sport'?'sportif':'confort') + ')</span>';
   // Mettre à jour le bouton "Continuer sans taille" → "Voir votre configuration"
   const _nextLbl = document.getElementById('p11-next-label');
-  if (_nextLbl && p11CurrentStep === 3) _nextLbl.textContent = 'Voir votre configuration';
+  if (_nextLbl && p11CurrentStep === 4) _nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
 }
 
 function p11BuildDimsGrid() {
@@ -3868,7 +4082,7 @@ function p11ValidateDims() {
       p11Summary.innerHTML = '✅ <strong>Dimensions enregistrées :</strong><br>' + lines.join(' · ');
       // Mettre à jour le bouton next
       const nextLbl = document.getElementById('p11-next-label');
-      if (nextLbl && p11CurrentStep === 3) nextLbl.textContent = 'Voir votre configuration';
+      if (nextLbl && p11CurrentStep === 4) nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
     }
     p11Summary.classList.add('show');
   }
@@ -3880,14 +4094,20 @@ function p11RenderFinalRecap() {
   if (!el || !selModel) return;
   const model = MODELS.find(m=>m.id===selModel);
   if (!model) return;
-  const {price, weight} = computeTotals(selModel, selOpts);
+  const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
+  let oodSurcharge = 0, priceIsMin = false;
+  if (v2Parcours === 'standard_evo') { oodSurcharge = evoTotalPrice() || 0; }
+  else if (v2Parcours === 'sur_mesure') { oodSurcharge = 300; }
+  else if (v2Parcours === 'hors_gamme') { oodSurcharge = 720; priceIsMin = true; }
+  const price = bikePrice + oodSurcharge;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
     (model.photo ? '<img src="' + model.photo + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
-      '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + price.toLocaleString('fr-FR') + ' €</div>' +
+      '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
+      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Évolution':v2Parcours==='sur_mesure'?'Performance':'Titanium')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
   POST_META.forEach(p => {
@@ -3910,9 +4130,43 @@ function p11RenderFinalRecap() {
       '<div style="font-size:12px;color:#aaa;line-height:1.8;">' + sizeText.replace(/\n/g,'<br>') + '</div>' +
     '</div>';
   }
+  html += p11RecapBlock();
   el.innerHTML = html;
   // Pré-remplir le modal devis
   syncSelSize();
+}
+
+// Bloc détail du parcours OOD pour le récap mobile — miroir de v2RecapBlock() desktop
+function p11RecapBlock() {
+  if (v2Parcours === 'standard') return '';
+
+  if (v2Parcours === 'standard_evo') {
+    return v2EvoRecapBlockHtml('Options Évolution', true);
+  }
+
+  if (v2Parcours === 'sur_mesure') {
+    const msg = window._v2Message || '';
+    const fileInput = document.getElementById('p11-mesure-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#888;font-style:italic;">Aucune description fournie.</div>') +
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses', false);
+  }
+
+  if (v2Parcours === 'hors_gamme') {
+    const msg = window._v2Message || '';
+    const fileInput = document.getElementById('p11-horsgamme-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#888;font-style:italic;">Aucune description fournie.</div>') +
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>';
+  }
+
+  return '';
 }
 
 
@@ -3926,9 +4180,14 @@ function p11InitStep4Bar() {
   if (!barS4) return;
   // Mettre à jour le prix dans le bandeau
   if (selModel) {
-    const {price} = computeTotals(selModel, selOpts);
+    const {price: bikePriceBar} = computeTotals(selModel, selOpts);
+    let oodSurchargeBar = 0;
+    if (v2Parcours === 'standard_evo') oodSurchargeBar = evoTotalPrice() || 0;
+    else if (v2Parcours === 'sur_mesure') oodSurchargeBar = 300;
+    else if (v2Parcours === 'hors_gamme') oodSurchargeBar = 720;
+    const price = bikePriceBar + oodSurchargeBar;
     const s4price = document.getElementById('p11-s4-price');
-    if (s4price) s4price.textContent = price.toLocaleString('fr-FR') + ' €';
+    if (s4price) s4price.textContent = (v2Parcours === 'hors_gamme' ? 'Dès ' : '') + price.toLocaleString('fr-FR') + ' €';
     if (window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset]) {
       const preset = PRESETS[selModel][window._activePreset];
       let count = 0;
@@ -3983,6 +4242,8 @@ function p11Reset() {
   selModel = null; selOpts = {}; selSize = {}; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
   window._activePreset = null;
+  v2Parcours = 'standard'; evoChecked = {}; evoInsertsChecked = {}; evoOrder = [];
+  evoGravureText = ''; evoCustomText = ''; window._v2Message = '';
   // Vider les champs taille
   ['p11-guide-stature','p11-guide-ej','p11-guide-acro'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -4022,8 +4283,8 @@ function p11InitSwipe() {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = Math.abs(e.changedTouches[0].clientY - startY);
     if (Math.abs(dx) < 70 || dy > Math.abs(dx) / 2) return;
-    if (dx < 0 && p11CurrentStep < 4) p11UpdateStep(p11CurrentStep + 1);
-    else if (dx > 0 && p11CurrentStep > 1) p11UpdateStep(p11CurrentStep - 1);
+    if (dx < 0) p11Next();
+    else if (dx > 0) p11Back();
   }, { passive: true });
 }
 
