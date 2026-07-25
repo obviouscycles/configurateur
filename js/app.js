@@ -1138,6 +1138,43 @@ function dtGo(n) {
   dtStep = n;
   document.body.classList.toggle('dt-step-4', n === 4);
   dtRender();
+  dtPushHistory();
+}
+
+// ─── HISTORIQUE NAVIGATEUR DESKTOP (flèche retour du navigateur) ───────────────
+let dtHistoryReady = false;
+let dtSkipPush = false;
+let dtHistDepth = 0;
+let dtLastPushedStep = 1;
+
+function dtInitHistory() {
+  if (dtHistoryReady) return;
+  dtHistoryReady = true;
+  dtHistDepth = 0;
+  dtLastPushedStep = dtStep;
+  history.replaceState({ dtHist: true, depth: 0 }, '', location.href);
+  window.addEventListener('popstate', function(e) {
+    if (window.innerWidth < 768) return;
+    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
+    if (newDepth >= dtHistDepth) {
+      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
+      history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
+      return;
+    }
+    dtSkipPush = true;
+    if (dtStep > 1) dtGo(dtStep - 1);
+    dtLastPushedStep = dtStep;
+    dtHistDepth = newDepth;
+    dtSkipPush = false;
+  });
+}
+
+function dtPushHistory() {
+  if (window.innerWidth < 768 || !dtHistoryReady || dtSkipPush) return;
+  if (dtStep === dtLastPushedStep) return;
+  dtLastPushedStep = dtStep;
+  dtHistDepth++;
+  history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
 }
 
 function dtRender() {
@@ -2674,6 +2711,37 @@ let p11OverlapTailles = null;
 const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre taille', 'Votre configuration'];
 const P11_NEXT_LABELS = ['Configurer vos composants', 'Choisir votre taille', 'Voir votre configuration', null];
 
+// ─── HISTORIQUE NAVIGATEUR MOBILE (bouton/geste retour matériel) ──────────────
+let p11HistoryReady = false;
+let p11SkipHistoryPush = false;
+let p11HistDepth = 0;
+
+function p11InitHistory() {
+  if (p11HistoryReady) return;
+  p11HistoryReady = true;
+  p11HistDepth = 0;
+  history.replaceState({ p11Hist: true, depth: 0 }, '', location.href);
+  window.addEventListener('popstate', function(e) {
+    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
+    if (!e.state || typeof e.state.depth !== 'number') return; // pas un état de ce configurateur
+    if (newDepth >= p11HistDepth) {
+      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
+      history.pushState({ p11Hist: true, depth: p11HistDepth }, '', location.href);
+      return;
+    }
+    p11SkipHistoryPush = true;
+    if (p11CurrentStep > 1) p11UpdateStep(p11CurrentStep - 1);
+    p11HistDepth = newDepth;
+    p11SkipHistoryPush = false;
+  });
+}
+
+function p11PushHistory() {
+  if (!p11HistoryReady || p11SkipHistoryPush) return;
+  p11HistDepth++;
+  history.pushState({ p11Hist: true, depth: p11HistDepth }, '', location.href);
+}
+
 function p11Init() {
   if (window.innerWidth >= 768) return;
   // Cacher l'interface desktop, afficher le parcours mobile
@@ -2684,12 +2752,15 @@ function p11Init() {
   document.getElementById('p11-container').style.display = 'block';
   // Masquer FAB drawer (le drawer reste accessible si besoin)
   p11RenderModels();
+  p11InitHistory();
   p11UpdateStep(1);
   p11InitSwipe();
 }
 
 function p11UpdateStep(n) {
+  const _prevStep = p11CurrentStep;
   p11CurrentStep = n;
+  if (n !== _prevStep) p11PushHistory();
   // Dots + flèches nav + labels
   for (let i=1; i<=4; i++) {
     const dot = document.getElementById('p11-dot-' + i);
@@ -3432,6 +3503,7 @@ function p11TryInit() {
       p11Initialized = false;
       document.getElementById('p11-container').style.display = 'none';
     }
+    dtInitHistory();
   }
 }
 
