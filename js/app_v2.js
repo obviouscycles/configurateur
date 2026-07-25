@@ -4327,7 +4327,69 @@ function p11TryInit() {
       p11Initialized = false;
       document.getElementById('p11-container').style.display = 'none';
     }
+    dtInitHistory();
   }
+}
+
+// ─── HISTORIQUE NAVIGATEUR DESKTOP (bouton/flèche retour du navigateur) ────────
+let dtHistoryReady = false;
+let dtSkipPush = false;
+let dtLastPushedStep = 1;
+
+function dtInitHistory() {
+  if (dtHistoryReady) return;
+  dtHistoryReady = true;
+  dtLastPushedStep = dtStep;
+  history.replaceState({ dtHist: true }, '', location.href);
+  window.addEventListener('popstate', function() {
+    if (window.innerWidth < 768) return;
+    dtSkipPush = true;
+    dtSmartBack();
+    dtLastPushedStep = dtStep;
+    dtSkipPush = false;
+  });
+}
+
+function dtPushHistory() {
+  if (window.innerWidth < 768 || !dtHistoryReady || dtSkipPush) return;
+  if (dtStep === dtLastPushedStep) return;
+  dtLastPushedStep = dtStep;
+  history.pushState({ dtHist: true }, '', location.href);
+}
+
+// Reproduit exactement l'action du bouton "Retour" déjà affiché à l'écran pour l'étape courante
+function dtSmartBack() {
+  if (dtStep === 1) return;
+  if (dtStep === 2) { dtGo(1); return; }
+  if (dtStep === 3) { dtGo(2); return; }
+  if (dtStep === 4) {
+    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') v2BackFromMesureOrHorsGamme();
+    else v2BackFromTaille();
+    return;
+  }
+  if (dtStep === 5) { v2GoBackToTailleEvo(); return; }
+  if (dtStep === 6) { v2BackFromDevis(); return; }
+}
+
+// Enveloppe les fonctions de navigation existantes pour pousser une entrée d'historique
+// après chaque transition réussie, sans jamais modifier leur comportement d'origine.
+['dtGo','v2NextFromTaille','v2GoDevis','v2BackFromTaille','v2BackFromMesureOrHorsGamme','v2BackFromDevis','v2GoBackToTailleEvo'].forEach(function(fnName) {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  window[fnName] = function() {
+    const result = orig.apply(this, arguments);
+    dtPushHistory();
+    return result;
+  };
+});
+// v2ChooseParcours change dtStep de façon asynchrone (setTimeout 150ms) — on attend un peu plus
+const _origChooseParcours = window.v2ChooseParcours;
+if (typeof _origChooseParcours === 'function') {
+  window.v2ChooseParcours = function() {
+    const result = _origChooseParcours.apply(this, arguments);
+    setTimeout(dtPushHistory, 200);
+    return result;
+  };
 }
 
 // Appel immédiat ET sur DOMContentLoaded pour être sûr
