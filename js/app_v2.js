@@ -3377,7 +3377,7 @@ function p11UpdateStep(n) {
 }
 
 function p11Next() {
-  if (p11CurrentStep === 1 && !selModel) return;
+  if (p11CurrentStep === 1) { if (!selModel) return; p11UpdateStep(2); return; }
   if (p11CurrentStep === 2) { p11UpdateStep(3); return; }
   if (p11CurrentStep === 3) return; // navigation par tap sur une carte uniquement
   if (p11CurrentStep === 4) {
