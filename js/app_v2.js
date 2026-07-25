@@ -4336,16 +4336,26 @@ let dtHistoryReady = false;
 let dtSkipPush = false;
 let dtLastPushedStep = 1;
 
+let dtHistDepth = 0;
+
 function dtInitHistory() {
   if (dtHistoryReady) return;
   dtHistoryReady = true;
   dtLastPushedStep = dtStep;
-  history.replaceState({ dtHist: true }, '', location.href);
-  window.addEventListener('popstate', function() {
+  dtHistDepth = 0;
+  history.replaceState({ dtHist: true, depth: 0 }, '', location.href);
+  window.addEventListener('popstate', function(e) {
     if (window.innerWidth < 768) return;
+    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
+    if (newDepth >= dtHistDepth) {
+      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
+      history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
+      return;
+    }
     dtSkipPush = true;
     dtSmartBack();
     dtLastPushedStep = dtStep;
+    dtHistDepth = newDepth;
     dtSkipPush = false;
   });
 }
@@ -4354,7 +4364,8 @@ function dtPushHistory() {
   if (window.innerWidth < 768 || !dtHistoryReady || dtSkipPush) return;
   if (dtStep === dtLastPushedStep) return;
   dtLastPushedStep = dtStep;
-  history.pushState({ dtHist: true }, '', location.href);
+  dtHistDepth++;
+  history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
 }
 
 // Reproduit exactement l'action du bouton "Retour" déjà affiché à l'écran pour l'étape courante
