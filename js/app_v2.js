@@ -1179,7 +1179,7 @@ function dtRender() {
     document.getElementById('dt-s3bif')?.classList.add('active');
   }
   if (n === 4) {
-    if (v2Parcours === 'standard') { dtRenderS3(); setTimeout(() => dtToggleSizeMode('guide'), 50); }
+    if (v2Parcours === 'standard') { dtRenderS3(); }
     else { evoRender(); }
   }
   if (n === 5) {
@@ -2301,7 +2301,6 @@ function v2ChooseParcours(parcours) {
       document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
       document.getElementById('dt-s3')?.classList.add('active');
       dtRenderS3();
-      setTimeout(() => dtToggleSizeMode('guide'), 50);
       // Update next button label
       const lbl = document.getElementById('dt-next-taille-lbl');
       if (lbl) {
@@ -2328,7 +2327,6 @@ function v2ChooseParcours(parcours) {
 
 function v2RenderTaille() {
   dtRenderS3 && dtRenderS3();
-  setTimeout(() => dtToggleSizeMode && dtToggleSizeMode('guide'), 50);
   v2UpdateStepper();
 }
 // Bouton "Suivant" depuis la taille — selon le parcours
