@@ -1918,6 +1918,19 @@ if (isEmbed) {
   style.textContent = `
     /* Embed mode — masquer tout le header */
     header { display: none !important; }
+
+    /* Embed mode — désactiver le défilement interne, laisser la page grandir
+       naturellement afin que la hauteur envoyée au parent Wordpress soit exacte */
+    html, body { height: auto !important; overflow: visible !important; }
+    .main { min-height: 0 !important; height: auto !important; }
+    #dt-stepper, #dt-main, #dt-recap {
+      position: static !important;
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    .dt-step-body { overflow: visible !important; }
+    .dtr-rows { overflow: visible !important; }
   `;
   document.head.appendChild(style);
 
