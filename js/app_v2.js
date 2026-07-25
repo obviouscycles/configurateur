@@ -1186,8 +1186,8 @@ function dtRender() {
     if (v2Parcours === 'standard') { document.body.classList.add('dt-step-4'); dtRenderS4(); }
   }
 
-  // Récap droit (pas aux étapes 4evo/5std/5perf)
-  if (n !== 5) dtRenderRecap();
+  // Récap droit (pas à l'étape devis, qui a son propre affichage détaillé)
+  if (n !== 6) dtRenderRecap();
 
   // Scroll haut
   const main = el('dt-main');
@@ -1790,6 +1790,15 @@ function v2RecapBlock() {
 }
 
 // ── Récap droit ──
+// Calcule le surcoût lié au niveau Obvious On Demand choisi (partagé desktop/mobile)
+function computeOodSurcharge() {
+  let surcharge = 0, isMin = false;
+  if (v2Parcours === 'standard_evo') surcharge = evoTotalPrice() || 0;
+  else if (v2Parcours === 'sur_mesure') surcharge = 300;
+  else if (v2Parcours === 'hors_gamme') { surcharge = 720; isMin = true; }
+  return { surcharge, isMin };
+}
+
 function dtRenderRecap() {
   if (window.innerWidth < 768) return;
   const model = MODELS.find(m => m.id === selModel);
@@ -1802,8 +1811,10 @@ function dtRenderRecap() {
   if (get('dtr-thumb')) { get('dtr-thumb').src = model.photo||''; get('dtr-thumb').style.display = model.photo?'block':'none'; }
   if (get('dtr-model')) { get('dtr-model').textContent = model.name; get('dtr-model').style.display = 'block'; }
   if (get('dtr-preset')) get('dtr-preset').textContent = window._activePreset || '';
-  const {price} = computeTotals(selModel, selOpts);
-  if (get('dtr-price')) { get('dtr-price').textContent = price.toLocaleString('fr-FR')+' €'; get('dtr-price').style.display = 'block'; }
+  const {price: bikePriceR} = computeTotals(selModel, selOpts);
+  const { surcharge: oodR, isMin: oodRMin } = computeOodSurcharge();
+  const priceR = bikePriceR + oodR;
+  if (get('dtr-price')) { get('dtr-price').textContent = (oodRMin?'Dès ':'') + priceR.toLocaleString('fr-FR')+' €'; get('dtr-price').style.display = 'block'; }
   if (get('dtr-sep')) get('dtr-sep').style.display = 'block';
 
   const mc = dtModifCount();
@@ -2187,6 +2198,7 @@ function evoToggleInsert(id) {
     evoOrder = evoOrder.filter(x => x !== 'evo_inserts');
   }
   evoRender();
+  dtRenderRecap();
 }
 
 // ─── DROPZONE FICHIER (drag & drop) ────────────────────────────────────────────
@@ -2235,6 +2247,7 @@ function evoToggle(id) {
     evoOrder = evoOrder.filter(x => x !== id);
   }
   evoRender();
+  dtRenderRecap();
 }
 
 function evoUpdateTotal() {
@@ -2308,6 +2321,7 @@ function v2ChooseParcours(parcours) {
       document.getElementById('dt-s4horsgamme')?.classList.add('active');
     }
     v2UpdateStepper();
+    dtRenderRecap();
     if (main) main.scrollTop = 0;
   }, 150);
 }
@@ -3357,33 +3371,32 @@ function p11UpdateStep(n) {
   const stepId = p11StepDivId(n);
   const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
-  // Bouton next / bandeau bas — masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
+  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape 6, récap déjà détaillé)
+  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
   const hasInlineNav = (n === 3) || (n === 4 && (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme')) || (n === 5) || (n === 6);
-  if (hasInlineNav) {
-    if (bar) bar.style.display = 'none';
-    if (n === 6) p11InitStep4Bar();
-  } else {
-    if (bar) bar.style.display = 'block';
-    if (nextLbl) {
-      if (n === 4 && !window.sizeValidated) {
-        nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
-      } else if (n === 4 && v2Parcours === 'standard_evo') {
-        nextLbl.textContent = 'Mes personnalisations';
-      } else if (n === 4) {
-        nextLbl.textContent = 'Ma configuration';
-      } else {
-        nextLbl.textContent = P11_LABELS[n] || '';
-      }
+  if (bar) bar.style.display = (selModel && n !== 6) ? 'block' : 'none';
+  if (btn) btn.style.display = hasInlineNav ? 'none' : 'flex';
+  if (n === 6) p11InitStep4Bar();
+  if (!hasInlineNav && nextLbl) {
+    if (n === 4 && !window.sizeValidated) {
+      nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
+    } else if (n === 4 && v2Parcours === 'standard_evo') {
+      nextLbl.textContent = 'Mes personnalisations';
+    } else if (n === 4) {
+      nextLbl.textContent = 'Ma configuration';
+    } else {
+      nextLbl.textContent = P11_LABELS[n] || '';
     }
   }
-  // Afficher le prix uniquement en dehors du step 1
+  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape 6, récap déjà détaillé)
   if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
   if (stripSave) stripSave.style.display = (n >= 2 && n !== 6 && selModel) ? 'flex' : 'none';
+  if (selModel) p11UpdateTotal();
   // Step 1 : désactiver next si pas de modèle
   if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
@@ -3557,6 +3570,7 @@ function p11EvoToggleInsert(id) {
   if (anyChecked) { if (!evoOrder.includes('evo_inserts')) evoOrder.push('evo_inserts'); }
   else { evoOrder = evoOrder.filter(x => x !== 'evo_inserts'); }
   p11EvoRender();
+  p11UpdateTotal();
 }
 
 function p11EvoToggle(id) {
@@ -3564,6 +3578,7 @@ function p11EvoToggle(id) {
   if (evoChecked[id]) { if (!evoOrder.includes(id)) evoOrder.push(id); }
   else { evoOrder = evoOrder.filter(x => x !== id); }
   p11EvoRender();
+  p11UpdateTotal();
 }
 
 function p11EvoUpdateGravureText(val) {
@@ -3830,8 +3845,10 @@ function p11TogglePost(id) {
 
 function p11UpdateTotal() {
   if (!selModel) return;
-  const {price} = computeTotals(selModel, selOpts);
-  const formatted = price.toLocaleString('fr-FR') + ' €';
+  const {price: bikePriceT} = computeTotals(selModel, selOpts);
+  const { surcharge: oodT, isMin: oodTMin } = computeOodSurcharge();
+  const price = bikePriceT + oodT;
+  const formatted = (oodTMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €';
   const el = document.getElementById('p11-total-val');
   if (el) el.textContent = formatted;
   const strip = document.getElementById('p11-strip-price');
