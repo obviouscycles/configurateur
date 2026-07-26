@@ -1619,8 +1619,8 @@
 
     <div class="p11-stepper" style="flex-direction:column;padding:8px 1rem 6px;gap:4px;">
       <div style="display:flex;align-items:center;justify-content:center;gap:0;width:100%;">
-        <button id="p11-back-btn" onclick="if(p11CurrentStep>1)p11UpdateStep(p11CurrentStep-1)" style="background:none;border:none;color:#333;font-size:18px;padding:0 10px 0 0;cursor:pointer;line-height:1;flex-shrink:0;"><i class="ti ti-chevron-left"></i></button>
-        <div style="display:flex;align-items:center;justify-content:center;flex:1;max-width:260px;margin:0 auto;">
+        <button id="p11-back-btn" onclick="p11Back()" style="background:none;border:none;color:#333;font-size:18px;padding:0 10px 0 0;cursor:pointer;line-height:1;flex-shrink:0;"><i class="ti ti-chevron-left"></i></button>
+        <div style="display:flex;align-items:center;justify-content:center;flex:1;max-width:280px;margin:0 auto;">
           <div class="p11-step-dot active" id="p11-dot-1"></div>
           <div class="p11-step-line" style="flex:1;"></div>
           <div class="p11-step-dot" id="p11-dot-2"></div>
@@ -1628,14 +1628,20 @@
           <div class="p11-step-dot" id="p11-dot-3"></div>
           <div class="p11-step-line" style="flex:1;"></div>
           <div class="p11-step-dot" id="p11-dot-4"></div>
+          <div class="p11-step-line" style="flex:1;"></div>
+          <div class="p11-step-dot" id="p11-dot-5"></div>
+          <div class="p11-step-line" style="flex:1;"></div>
+          <div class="p11-step-dot" id="p11-dot-6"></div>
         </div>
         <button id="p11-fwd-btn" onclick="p11Next()" style="background:none;border:none;color:#333;font-size:18px;padding:0 0 0 10px;cursor:pointer;line-height:1;flex-shrink:0;"><i class="ti ti-chevron-right"></i></button>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:0 28px;text-align:center;max-width:316px;margin:0 auto;width:100%;">
-        <span id="p11-sl-1" style="font-size:9px;color:#F5C400;letter-spacing:.05em;text-transform:uppercase;">Modèle</span>
-        <span id="p11-sl-2" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Composants</span>
-        <span id="p11-sl-3" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Taille</span>
-        <span id="p11-sl-4" style="font-size:10px;color:#888;letter-spacing:.05em;text-transform:uppercase;">Récap</span>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);padding:0 12px;text-align:center;max-width:340px;margin:0 auto;width:100%;">
+        <span id="p11-sl-1" style="font-size:8px;color:#F5C400;letter-spacing:.03em;text-transform:uppercase;">Modèle</span>
+        <span id="p11-sl-2" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Compos.</span>
+        <span id="p11-sl-3" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Cadre</span>
+        <span id="p11-sl-4" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Taille</span>
+        <span id="p11-sl-5" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Perso</span>
+        <span id="p11-sl-6" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Devis</span>
       </div>
     </div>
 
@@ -1674,8 +1680,59 @@
       </div>
     </div>
 
-    <!-- Étape 3 -->
-    <div class="p11-step" id="p11-s3" style="background:#111;">
+    <!-- Étape 3 : Cadre (bifurcation) -->
+    <div class="p11-step" id="p11-s3bif" style="background:#111;padding-bottom:80px;">
+      <div style="padding:1.5rem 1rem 0;">
+        <p class="section-title" style="color:#f2f2f2;margin-bottom:.4rem;">Votre cadre</p>
+        <p style="font-size:13px;color:#888;line-height:1.5;margin-bottom:1.25rem;">Cadre standard ou personnalisé ? Choisissez votre parcours.</p>
+
+        <div style="border-top:1px solid #444;margin-bottom:1.25rem;"></div>
+
+        <div style="font-size:13px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;">Cadre standard</div>
+
+        <div id="p11-card-standard" onclick="p11ChooseParcours('standard')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:10px;padding:1.1rem;margin-bottom:.85rem;position:relative;">
+          <div style="position:absolute;top:-1px;right:12px;background:#333;color:#ccc;font-size:10px;font-weight:700;padding:2px 8px;border-radius:0 0 6px 6px;">ESSENTIEL</div>
+          <div style="font-size:16px;font-weight:500;color:#f2f2f2;margin-top:.5rem;margin-bottom:.35rem;">Cadre standard</div>
+          <div style="font-size:13px;color:#F5C400;font-weight:500;margin-bottom:.6rem;">Tailles standard</div>
+          <div style="font-size:13px;color:#999;line-height:1.5;margin-bottom:.9rem;">Le vélo tel qu'il est configuré, sans surcoût ni délai.</div>
+          <div style="font-size:12px;color:#F5C400;font-weight:500;">Choisir ma taille →</div>
+        </div>
+
+        <div style="border-top:1px solid #444;margin:1.5rem 0;"></div>
+
+        <div style="font-size:13px;color:#ccc;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;">Sur mesure — Obvious On Demand</div>
+
+        <div id="p11-card-standard_evo" onclick="p11ChooseParcours('standard_evo')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:10px;padding:1rem 1.1rem;margin-bottom:.7rem;position:relative;">
+          <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:0 0 6px 6px;">ÉVOLUTION</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.4rem;">
+            <div style="font-size:15px;font-weight:500;color:#f2f2f2;">Personnalisation</div>
+            <div style="font-size:13px;color:#F5C400;font-weight:500;white-space:nowrap;">dès 60 €</div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.5;margin-top:.35rem;">Ajoutez des modifications qui rendront votre vélo unique.</div>
+        </div>
+
+        <div id="p11-card-sur_mesure" onclick="p11ChooseParcours('sur_mesure')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:10px;padding:1rem 1.1rem;margin-bottom:.7rem;position:relative;">
+          <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:0 0 6px 6px;">PERFORMANCE</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.4rem;">
+            <div style="font-size:15px;font-weight:500;color:#f2f2f2;">Cadre sur mesure</div>
+            <div style="font-size:13px;color:#F5C400;font-weight:500;white-space:nowrap;">300 €</div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.5;margin-top:.35rem;">Géométrie adaptée à votre pratique — inclut les personnalisations Évolution.</div>
+        </div>
+
+        <div id="p11-card-hors_gamme" onclick="p11ChooseParcours('hors_gamme')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:10px;padding:1rem 1.1rem;margin-bottom:1.5rem;position:relative;">
+          <div style="position:absolute;top:-1px;right:12px;background:#F5C400;color:#1a1a00;font-size:10px;font-weight:700;padding:2px 8px;border-radius:0 0 6px 6px;">TITANIUM</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-top:.4rem;">
+            <div style="font-size:15px;font-weight:500;color:#f2f2f2;">Projet spécifique</div>
+            <div style="font-size:13px;color:#F5C400;font-weight:500;white-space:nowrap;">dès 720 €</div>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.5;margin-top:.35rem;">Un vélo qui ne figure pas dans notre gamme actuelle.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 4 (standard / standard_evo) : Taille -->
+    <div class="p11-step" id="p11-s4std" style="background:#111;">
       <div style="padding:1.5rem 1rem 0;">
         <p class="section-title" style="color:#f2f2f2;margin-bottom:1.5rem;">Votre taille</p>
         <div class="size-choices" style="margin-bottom:1.5rem;">
@@ -1732,8 +1789,113 @@
       </div>
     </div>
 
-    <!-- Étape 4 -->
-    <div class="p11-step" id="p11-s4" style="background:#111;padding-bottom:80px;">
+    <!-- Étape 4 (sur_mesure) : Cadre sur mesure -->
+    <div class="p11-step" id="p11-s4mesure" style="background:#111;padding-bottom:80px;">
+      <div style="padding:1.5rem 1rem 0;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
+          <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-ruler-2" style="font-size:18px;color:#F5C400;"></i>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Niveau Performance — 300 €</div>
+            <div style="font-size:16px;color:#f2f2f2;font-weight:500;">Cadre sur mesure</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+          <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Décrivez votre projet</span>
+        </div>
+        <textarea id="p11-mesure-message" rows="4" placeholder="Morphologie, géométrie de votre vélo actuel, usage, contraintes physiques..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;border-radius:8px;color:#f2f2f2;padding:12px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.6;margin-bottom:1.25rem;"></textarea>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
+          <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Joignez un document</span>
+          <span style="font-size:11px;color:#666;">optionnel</span>
+        </div>
+        <input type="file" id="p11-mesure-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;" onchange="p11FileChange('p11-mesure-file','p11-mesure-dropzone')">
+        <div id="p11-mesure-dropzone" onclick="document.getElementById('p11-mesure-file').click()" style="border:1.5px dashed #3a3a3a;border-radius:10px;padding:1.25rem;text-align:center;margin-bottom:1.5rem;">
+          <i class="ti ti-cloud-upload" style="font-size:22px;color:#666;"></i>
+          <div class="p11-dz-text" style="font-size:13px;color:#aaa;margin-top:6px;">Toucher pour choisir un fichier</div>
+          <div class="p11-dz-hint" style="font-size:11px;color:#888;margin-top:2px;">Étude morphologique, géométrie souhaitée</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">
+          <span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span>
+          <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Options complémentaires</span>
+          <span style="font-size:11px;color:#666;">incluses</span>
+        </div>
+        <div id="p11-mesure-evo-total" style="font-size:12px;color:#888;margin-bottom:.85rem;">Le niveau Performance inclut le niveau Évolution.</div>
+        <div id="p11-mesure-evo-options" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.5rem;"></div>
+        <div style="display:flex;gap:.75rem;padding-bottom:1.5rem;">
+          <button onclick="p11Back()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
+          <button onclick="p11GoDevisFromOOD()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Ma configuration →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 4 (hors_gamme) : Projet spécifique -->
+    <div class="p11-step" id="p11-s4horsgamme" style="background:#111;padding-bottom:80px;">
+      <div style="padding:1.5rem 1rem 0;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
+          <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-bulb" style="font-size:18px;color:#F5C400;"></i>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Niveau Titanium — dès 720 €</div>
+            <div style="font-size:16px;color:#f2f2f2;font-weight:500;">Projet spécifique</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span>
+          <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Parlez-nous de votre vélo</span>
+        </div>
+        <div style="font-size:12px;color:#888;margin-bottom:.6rem;line-height:1.5;">Votre projet ne correspond à aucun modèle Obvious ? Décrivez-le.</div>
+        <textarea id="p11-horsgamme-message" rows="4" placeholder="Type de vélo, usage, inspirations, contraintes techniques..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;border-radius:8px;color:#f2f2f2;padding:12px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.6;margin-bottom:1.25rem;"></textarea>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="width:18px;height:18px;border-radius:50%;background:#1a1a1a;color:#F5C400;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span>
+          <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Joignez un document</span>
+          <span style="font-size:11px;color:#666;">optionnel</span>
+        </div>
+        <input type="file" id="p11-horsgamme-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none;" onchange="p11FileChange('p11-horsgamme-file','p11-horsgamme-dropzone')">
+        <div id="p11-horsgamme-dropzone" onclick="document.getElementById('p11-horsgamme-file').click()" style="border:1.5px dashed #3a3a3a;border-radius:10px;padding:1.25rem;text-align:center;margin-bottom:1.5rem;">
+          <i class="ti ti-cloud-upload" style="font-size:22px;color:#666;"></i>
+          <div class="p11-dz-text" style="font-size:13px;color:#aaa;margin-top:6px;">Toucher pour choisir un fichier</div>
+          <div class="p11-dz-hint" style="font-size:11px;color:#888;margin-top:2px;">Croquis, photo, document utile</div>
+        </div>
+        <div style="display:flex;gap:.75rem;padding-bottom:1.5rem;">
+          <button onclick="p11Back()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
+          <button onclick="p11GoDevisFromOOD()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Ma configuration →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 5 (standard_evo) : Options Évolution -->
+    <div class="p11-step" id="p11-s5evo" style="background:#111;padding-bottom:80px;">
+      <div style="padding:1.5rem 1rem 0;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.1rem;">
+          <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-settings" style="font-size:18px;color:#F5C400;"></i>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Niveau Évolution</div>
+            <div style="font-size:16px;color:#f2f2f2;font-weight:500;">Ajoutez des options</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#888;margin-bottom:1.1rem;line-height:1.5;">La mise en plan est mutualisée — vous ne la payez qu'une fois.</div>
+        <div id="p11-evo-total" style="font-size:12px;color:#888;margin-bottom:1.1rem;padding:.7rem;background:#111;border:0.5px solid #222;border-radius:8px;">Sélectionnez les options souhaitées</div>
+        <div id="p11-evo-options" style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.5rem;"></div>
+        <div style="display:flex;gap:.75rem;padding-bottom:1.5rem;">
+          <button onclick="p11Back()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
+          <button onclick="p11GoDevisFromOOD()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Ma configuration →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Étape 6 : Récap & Devis -->
+    <div class="p11-step" id="p11-s6devis" style="background:#111;padding-bottom:80px;">
       <div style="padding:1.5rem 1rem 0;">
         <div id="p11-s4-sentinel"></div>
         <p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Votre configuration</p>
@@ -2189,7 +2351,7 @@
                 <div style="font-size:16px;font-weight:500;color:#f2f2f2;">Cadre sur mesure</div>
                 <div style="font-size:13px;color:#F5C400;font-weight:500;white-space:nowrap;">300 €</div>
               </div>
-              <div style="font-size:13px;color:#888;line-height:1.55;margin-top:.4rem;">Géométrie sur mesure adaptée à votre morphologie et à votre pratique.</div>
+              <div style="font-size:13px;color:#888;line-height:1.55;margin-top:.4rem;">Géométrie adaptée à votre pratique — inclut les personnalisations Évolution.</div>
             </div>
 
             <div id="v2-card-hors_gamme" onclick="v2ChooseParcours('hors_gamme')" style="background:#1a1a1a;border:0.5px solid #333;border-radius:4px;padding:1.1rem 1.2rem;cursor:pointer;transition:border-color .2s;position:relative;flex:1;" onmouseover="this.style.borderColor='#555'" onmouseout="if(v2Parcours!=='hors_gamme')this.style.borderColor='#333'">
