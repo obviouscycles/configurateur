@@ -526,11 +526,30 @@ function openDetail(configId) {
   let html = '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">' + c.config_id + '</h2>';
 
   // Client
+  const adresse = c.config_json?.adresse_postale || '';
+  const morpho = c.config_json?.morphologie || {};
+  const hasMorpho = morpho.stature || morpho.entrejambe || morpho.epaules;
   html += '<div class="detail-section"><h3>Client</h3>';
   html += '<div class="detail-row"><span>Nom</span><span>' + (c.nom_client||'—') + '</span></div>';
   html += '<div class="detail-row"><span>Email</span><span>' + (c.email_client ? c.email_client : '—') + '</span></div>';
+  if (adresse) html += '<div class="detail-row" style="align-items:flex-start;"><span>Adresse</span><span style="white-space:pre-wrap;text-align:right;">' + adresse.replace(/</g,'&lt;') + '</span></div>';
   html += '<div class="detail-row"><span>Date</span><span>' + new Date(c.created_at).toLocaleString('fr-FR') + '</span></div>';
   html += '<div class="detail-row"><span>Vues config</span><span>' + (c.nb_consultations||0) + '</span></div></div>';
+
+  // Message du visiteur
+  const visitorMsg = c.config_json?.message;
+  if (visitorMsg) {
+    html += '<div class="detail-section"><h3>Message du visiteur</h3>';
+    html += '<div style="font-size:13px;color:var(--text1);line-height:1.6;white-space:pre-wrap;background:var(--bg2);padding:.75rem;border-radius:6px;border:0.5px solid var(--border2);">' + visitorMsg.replace(/</g,'&lt;') + '</div></div>';
+  }
+
+  // Données morphologiques
+  if (hasMorpho) {
+    html += '<div class="detail-section"><h3>Morphologie (saisie visiteur)</h3>';
+    html += '<div class="detail-row"><span>Stature</span><span>' + (morpho.stature ? morpho.stature + ' cm' : 'N/A') + '</span></div>';
+    html += '<div class="detail-row"><span>Entrejambe</span><span>' + (morpho.entrejambe ? morpho.entrejambe + ' mm' : 'N/A') + '</span></div>';
+    html += '<div class="detail-row"><span>Largeur épaules</span><span>' + (morpho.epaules ? morpho.epaules + ' cm' : 'N/A') + '</span></div></div>';
+  }
 
   // Config
   html += '<div class="detail-section"><h3>Configuration</h3>';
@@ -547,10 +566,15 @@ function openDetail(configId) {
   }
 
   // Dimensions
+  const dimSource = c.config_json?.dimensions_source || {};
   const dimEntries = Object.entries(dims).filter(([k,v]) => v);
   if (dimEntries.length) {
     html += '<div class="detail-section"><h3>Dimensions</h3>';
-    dimEntries.forEach(([k,v]) => { html += '<div class="detail-row"><span>' + k + '</span><span>' + v + '</span></div>'; });
+    dimEntries.forEach(([k,v]) => {
+      const src = dimSource[k];
+      const badge = src === 'user' ? ' <span style="font-size:10px;color:var(--yellow);">(sélectionné)</span>' : src === 'default' ? ' <span style="font-size:10px;color:var(--text3);">(défaut)</span>' : '';
+      html += '<div class="detail-row"><span>' + k + '</span><span>' + v + badge + '</span></div>';
+    });
     html += '</div>';
   }
 
