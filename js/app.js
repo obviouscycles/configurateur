@@ -949,6 +949,7 @@ async function sendOrder() {
       nom_client: name,
       email_client: email,
       adresse_postale: address,
+      message: msg || null,
     };
 
     // 3. Sauvegarder dans Supabase
