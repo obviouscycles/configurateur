@@ -1540,12 +1540,93 @@ function renderComponentDimField(key, label, options, refreshFn) {
   </div>`;
 }
 
+// ─── DESTINATION DEPUIS L'ÉTAPE 2 SELON LE CHOIX CADRE ─────────────────────────
+function dtUpdateStep2Footer() {
+  const zone = document.getElementById('dt-s2-footer-actions');
+  if (!zone) return;
+  if (v2Parcours === 'sur_mesure') {
+    zone.innerHTML = '<button class="dt-btn-next" onclick="v3GoSurMesureFromS2()">Continuer <i class="ti ti-arrow-right"></i></button>';
+  } else if (!selSize.taille) {
+    zone.innerHTML = '<button class="dt-btn-next" onclick="v3GoDeterminerTaille()">Déterminer ma taille <i class="ti ti-arrow-right"></i></button>';
+  } else {
+    zone.innerHTML =
+      '<button onclick="v3GoDeterminerTaille()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
+      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoDevisFast()">Taille — Personnalisation <i class="ti ti-arrow-right"></i></button>';
+  }
+}
+
+function v3GoSurMesureFromS2() {
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4mesure')?.classList.add('active');
+  evoActiveContainer = 'v2-mesure-evo-options'; evoRender();
+  v2UpdateStepper(); dtRenderRecap();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+}
+
+function v3GoDeterminerTaille() {
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s3')?.classList.add('active');
+  dtRenderS3();
+  setTimeout(() => dtToggleSizeMode('guide'), 50);
+  v2UpdateStepper(); dtRenderRecap();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+}
+
+function v3GoDevisFast() {
+  v2GoRecap();
+}
+
+// ─── CARTE "CADRE" — nouvelle en tête de l'étape Composants ──────────────────
+function renderCadreCard() {
+  if (!selModel || !TAILLES_CADRE[selModel]) return '';
+  const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
+  const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '');
+  const summary = v2Parcours === 'sur_mesure' ? 'Sur-mesure (+300 €)'
+    : selSize.taille ? 'Taille ' + selSize.taille
+    : 'À déterminer';
+  return '<div class="post-block" data-post-id="cadre">' +
+    '<div class="post-hdr" style="cursor:default;">' +
+      '<i class="ti ti-frame ph-icon"></i>' +
+      '<span class="ph-name">Cadre</span>' +
+      '<span class="ph-sel">' + summary + '</span>' +
+    '</div>' +
+    '<div class="post-opts open">' +
+      '<div class="dim-field" style="max-width:320px;">' +
+        '<label for="cadre-taille-select" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
+        '<select class="size-select" id="cadre-taille-select" onchange="selectCadreTaille(this.value)">' +
+          '<option value="">Je ne sais pas encore</option>' +
+          tailles.map(t => '<option value="' + t + '"' + (current === t ? ' selected' : '') + '>' + t + '</option>').join('') +
+          '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function selectCadreTaille(value) {
+  if (value === '__sur_mesure__') {
+    v2Parcours = 'sur_mesure';
+    delete selSize.taille; delete selSizeSource.taille;
+  } else if (value) {
+    v2Parcours = 'standard';
+    selSize.taille = value; selSizeSource.taille = 'user';
+  } else {
+    v2Parcours = 'standard';
+    delete selSize.taille; delete selSizeSource.taille;
+  }
+  dtRenderPosts();
+  dtRenderRecap();
+  dtUpdateStep2Footer();
+}
+
 function dtRenderPosts() {
   const container = document.getElementById('dt-posts-list');
   if (!container || !selModel) return;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
 
-  container.innerHTML = POST_META.map(p => {
+  container.innerHTML = renderCadreCard() + POST_META.map(p => {
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -1620,6 +1701,7 @@ function dtRenderPosts() {
   };
 
   dtRenderRecap();
+  dtUpdateStep2Footer();
 }
 
 function dtSelectOpt(postId, optId) {
@@ -1655,6 +1737,9 @@ function dtTogglePost(postId) {
 function dtRenderS3() {
   const cardsZone = document.getElementById('dt-s3-cards');
   if (!cardsZone) return;
+
+  evoActiveContainer = 'v2-evo-options';
+  evoRender();
 
   // Mettre les cartes dans la zone
   const cardGuide  = document.getElementById('card-guide');
@@ -1907,9 +1992,9 @@ function v2RecapBlock() {
 // Calcule le surcoût lié au niveau Obvious On Demand choisi (partagé desktop/mobile)
 function computeOodSurcharge() {
   let surcharge = 0, isMin = false;
-  if (v2Parcours === 'standard_evo') surcharge = evoTotalPrice() || 0;
-  else if (v2Parcours === 'sur_mesure') surcharge = 300;
+  if (v2Parcours === 'sur_mesure') surcharge = 300;
   else if (v2Parcours === 'hors_gamme') { surcharge = 720; isMin = true; }
+  else surcharge = evoTotalPrice() || 0; // standard : les options Évolution (page Taille) s'ajoutent si cochées
   return { surcharge, isMin };
 }
 
@@ -1942,7 +2027,13 @@ function dtRenderRecap() {
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   const rows = get('dtr-rows');
   if (!rows) return;
-  rows.innerHTML = POST_META.map(p => {
+  const cadreSurMesure = v2Parcours === 'sur_mesure';
+  const cadreVal = cadreSurMesure ? 'Sur-mesure (+300 €)' : (selSize.taille ? 'Taille ' + selSize.taille : 'À déterminer');
+  const cadreRowHtml = '<div class="dtr-row"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '>' +
+    '<span class="dtr-lbl"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '><i class="ti ti-frame" style="font-size:8px;margin-right:3px;"></i>Cadre</span>' +
+    '<span class="dtr-val"' + (cadreSurMesure ? ' style="color:#F5C400;font-weight:600;"' : '') + '>' + cadreVal + '</span>' +
+  '</div>';
+  rows.innerHTML = cadreRowHtml + POST_META.map(p => {
     const opts = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id] : [];
     const opt = opts.find(o => o.id === selOpts[p.id]);
     if (!opt) return '';
@@ -2445,11 +2536,7 @@ function v2RenderTaille() {
 }
 // Bouton "Suivant" depuis la taille — selon le parcours
 function v2NextFromTaille() {
-  if (v2Parcours === 'standard') {
-    v2GoRecap();
-  } else if (v2Parcours === 'standard_evo') {
-    v2GoEvo();
-  }
+  v2GoRecap();
 }
 
 // Aller au récap avant devis
