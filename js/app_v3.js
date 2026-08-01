@@ -1206,6 +1206,25 @@ document.addEventListener('click', () => {
 let dtStep = 1;
 
 // Bandeau Titanium en page 1 — nécessite un modèle sélectionné (comme le bouton Composants)
+// Bandeau Titanium flottant — apparaît au scroll vers le bas, disparaît si on remonte (étape 1 seulement)
+let _titaniumLastScroll = 0;
+function v3InitTitaniumSticky() {
+  const scrollEl = document.getElementById('dt-main');
+  const sticky = document.getElementById('titanium-sticky');
+  if (!scrollEl || !sticky || scrollEl._titaniumBound) return;
+  scrollEl._titaniumBound = true;
+  scrollEl.addEventListener('scroll', () => {
+    if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
+    const top = scrollEl.scrollTop;
+    if (top > _titaniumLastScroll && top > 40) {
+      sticky.style.transform = 'translateY(0)';
+    } else if (top < _titaniumLastScroll) {
+      sticky.style.transform = 'translateY(120%)';
+    }
+    _titaniumLastScroll = top;
+  });
+}
+
 function v3GoTitaniumFromS1() {
   if (!selModel) return;
   v2Parcours = 'hors_gamme';
@@ -1225,6 +1244,8 @@ function dtGo(n) {
   document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
   v2UpdateStepper();
+  const sticky = document.getElementById('titanium-sticky');
+  if (sticky && n !== 1) sticky.style.transform = 'translateY(120%)';
 }
 
 function dtRender() {
@@ -4821,8 +4842,10 @@ if (typeof _origChooseParcours === 'function') {
 // Appel immédiat ET sur DOMContentLoaded pour être sûr
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', p11TryInit);
+  document.addEventListener('DOMContentLoaded', v3InitTitaniumSticky);
 } else {
   p11TryInit();
+  v3InitTitaniumSticky();
 }
 
 // Resize : utiliser un debounce et vérifier que la largeur a vraiment changé
