@@ -1573,6 +1573,17 @@ function dtRenderPosts() {
     const optHtml = (hasPhotos ? '<div class="opt-photo-grid">' : '<div class="opt-list">') +
       opts.map(buildOpt).join('') + '</div>';
 
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtml = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtml += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'dtRenderPosts');
+        }
+      });
+    }
+
     const _isModDt = !!(window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset] && PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
@@ -1581,7 +1592,7 @@ function dtRenderPosts() {
         (selOpt?'<span class="ph-sel">'+selOpt.name+'</span>':'<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtml + '</div>' +
     '</div>';
   }).join('');
 
@@ -1603,6 +1614,8 @@ function dtSelectOpt(postId, optId) {
   if (!opt) return;
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
   // FORCE_SELECT
   FORCE_SELECT.forEach(rule => {
     if (rule.if_selected === optId)
@@ -3852,6 +3865,17 @@ function p11RenderPosts() {
           '</div>';
         }).join('') + '</div>';
 
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtmlP11 = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtmlP11 += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'p11RenderPosts');
+        }
+      });
+    }
+
     const isModified = !!(selOpts[p.id] && window._activePreset && PRESETS[selModel] &&
       PRESETS[selModel][window._activePreset] &&
       PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
@@ -3862,7 +3886,7 @@ function p11RenderPosts() {
         (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtmlP11 + '</div>' +
     '</div>';
   }).join('');
   p11UpdateTotal();
@@ -3872,6 +3896,9 @@ function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
   selOpts[postId] = optId;
+
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
 
   // Transmission VTT : gestion des freins
   if (postId === 'transmission' && selModel === 'vtt_enduro') {
