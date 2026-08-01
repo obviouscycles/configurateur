@@ -2383,17 +2383,30 @@
     <!-- ÉTAPE 4 (standard) : Taille -->
     <!-- ÉTAPE 4 : Taille (partagée standard et standard_evo) -->
     <div class="dt-step-content" id="dt-s3">
-      <!-- Ligne 1 : 2 cartes de choix côte à côte -->
-      <div id="dt-s3-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:2rem 2rem 0;"></div>
-      <!-- Ligne 2 : panels (cachés par défaut, montrés par CSS) -->
-      <div id="dt-s3-panel-guide" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <div id="dt-s3-panel-manual" style="padding:0 2rem;margin-top:1rem;display:none;"></div>
-      <p style="font-size:13px;color:#aaa;margin:1.25rem 2rem 0;line-height:1.6;text-align:center;">
-        Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
-      </p>
+      <div class="dt-step-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-ruler-2" style="font-size:16px;color:#F5C400;"></i>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px;">Laissez-vous guider</div>
+            <div style="font-size:15px;color:#f2f2f2;font-weight:500;">Déterminons votre taille de cadre</div>
+          </div>
+        </div>
+        <div id="dt-s3-panel-guide"></div>
+        <p style="font-size:13px;color:#aaa;margin-top:1.25rem;line-height:1.6;text-align:center;">
+          Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
+        </p>
+      </div>
+      <div class="dt-step-footer" id="dt-s3-footer">
+        <button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>
+      </div>
+    </div>
 
-      <div style="margin:2rem 2rem 0;padding-top:1.5rem;border-top:0.5px solid #222;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+    <!-- ÉTAPE 5 (perso) : Personnalisation (Évolution seule) -->
+    <div class="dt-step-content" id="dt-s5perso">
+      <div class="dt-step-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
           <div style="width:36px;height:36px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-settings" style="font-size:16px;color:#F5C400;"></i>
           </div>
@@ -2405,11 +2418,10 @@
         <div id="v2-evo-total" style="font-size:13px;color:#666;margin-bottom:1rem;padding:.75rem;background:#111;border:0.5px solid #222;">Sélectionnez les options souhaitées</div>
         <div id="v2-evo-options" style="display:flex;flex-direction:column;gap:.6rem;"></div>
       </div>
-
       <div class="dt-step-footer">
-        <button class="dt-btn-back" onclick="v2BackFromTaille()"><i class="ti ti-chevron-left"></i> Retour</button>
-        <button class="dt-btn-next" id="dt-next-taille" onclick="v2NextFromTaille()">
-          <span id="dt-next-taille-lbl">Ma configuration</span> <i class="ti ti-arrow-right"></i>
+        <button class="dt-btn-back" onclick="dtGo(2)"><i class="ti ti-chevron-left"></i> Retour</button>
+        <button class="dt-btn-next" onclick="v2GoRecap()">
+          Ma configuration <i class="ti ti-arrow-right"></i>
         </button>
       </div>
     </div>
