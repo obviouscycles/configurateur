@@ -1851,10 +1851,20 @@ function dtCheckSizeResult() {
   // selSize rempli
   if (!validated && window.sizeValidated) validated = true;
 
-  if (validated) {
-    v2SetTailleLabel(true);
-    if (dtGuideOnlyActive) dtShowGuideResultButtons();
+  if (validated) v2SetTailleLabel(true);
+
+  // Signal fiable pour la page guidée seule : une VRAIE taille a-t-elle été déterminée ?
+  // (le texte affiché par le calculateur peut être non-vide même sans résultat exploitable)
+  if (dtGuideOnlyActive) {
+    if (selSize.taille) dtShowGuideResultButtons();
+    else dtShowGuideDefaultFooter();
   }
+}
+
+function dtShowGuideDefaultFooter() {
+  const footer = document.getElementById('dt-s3-footer');
+  if (!footer) return;
+  footer.innerHTML = '<button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>';
 }
 
 // ─── PAGE "LAISSEZ-VOUS GUIDER" SEULE (dt-s3) — outil autonome, revient toujours à l'étape 2 ──
@@ -1877,13 +1887,18 @@ function dtRenderS3GuideOnly() {
 function v3EnterGuideOnly() {
   dtGuideOnlyActive = true;
   dtPreGuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
-  window.sizeValidated = false;
   dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s3')?.classList.add('active');
   dtRenderS3GuideOnly();
-  const footer = document.getElementById('dt-s3-footer');
-  if (footer) footer.innerHTML = '<button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>';
+  // Si une taille est déjà connue (résultat d'un calcul précédent), le refléter immédiatement
+  if (selSize.taille) {
+    window.sizeValidated = true;
+    dtShowGuideResultButtons();
+  } else {
+    window.sizeValidated = false;
+    dtShowGuideDefaultFooter();
+  }
   v2UpdateStepper();
   const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
 }
