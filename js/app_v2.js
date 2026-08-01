@@ -399,6 +399,7 @@ function selectModel(id) {
         }
       });
     });
+    syncAllPostDims();
   } else {
     autoSelectLocked(id);
   }
