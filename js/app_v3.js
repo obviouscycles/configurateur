@@ -1221,11 +1221,9 @@ function v3InitTitaniumSticky() {
   document.body.appendChild(sticky);
 
   let inlineVisible = true;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => { inlineVisible = entry.isIntersecting; });
-    updateSticky();
-  }, { threshold: 0 });
-  observer.observe(inline);
+  // hasScrolled n'est JAMAIS activé à l'initialisation — uniquement par un vrai événement
+  // 'scroll' mesurant plus de 40px, jamais par le rendu initial ou l'IntersectionObserver.
+  let hasScrolled = false;
 
   function scrollDistance() {
     const dtMain = document.getElementById('dt-main');
@@ -1240,18 +1238,29 @@ function v3InitTitaniumSticky() {
     card.style.marginLeft = r.left + 'px';
   }
 
-  function updateSticky() {
+  function render() {
     if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
-    const shouldShow = scrollDistance() > 40 && !inlineVisible;
+    const shouldShow = hasScrolled && !inlineVisible;
     if (shouldShow) syncWidth();
     sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(120%)';
   }
 
-  window.addEventListener('scroll', updateSticky);
-  window.addEventListener('resize', updateSticky);
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { inlineVisible = entry.isIntersecting; });
+    render();
+  }, { threshold: 0 });
+  observer.observe(inline);
+
+  // Seul point d'entrée qui peut activer hasScrolled — jamais au chargement de la page
+  function onScroll() {
+    hasScrolled = scrollDistance() > 40;
+    render();
+  }
+
+  window.addEventListener('scroll', onScroll);
+  window.addEventListener('resize', render);
   const dtMain = document.getElementById('dt-main');
-  if (dtMain) dtMain.addEventListener('scroll', updateSticky);
-  updateSticky();
+  if (dtMain) dtMain.addEventListener('scroll', onScroll);
 }
 
 function v3GoTitaniumFromS1() {
