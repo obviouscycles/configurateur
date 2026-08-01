@@ -1977,7 +1977,7 @@ function dtReset() {
   if (mz) mz._init = false;
   // Garder le modèle ET _singleModel — réinitialiser uniquement les options
   const keptModel = selModel;
-  selOpts = {}; selSize = {}; window.sizeValidated = false; openPost = null;
+  selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false; openPost = null;
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
@@ -2832,6 +2832,7 @@ function updateFloatingPrice() {
 
 // ─── ÉTAT TAILLE ──────────────────────────────────────────────────────────────
 let selSize = {};  // {taille, potence, cintre, manivelle, cassette, plateaux, largeur_selle, section, debattement}
+let selSizeSource = {}; // 'user' ou 'default' pour chaque clé de selSize
 let currentSizeMode = null;
 let overlapTailles = null;
 
@@ -4339,7 +4340,7 @@ function p11QuickSave() {
 
 function p11Reset() {
   // Tout remettre à zéro — y compris le modèle
-  selModel = null; selOpts = {}; selSize = {}; window.sizeValidated = false;
+  selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
   window._activePreset = null;
   v2Parcours = 'standard'; evoChecked = {}; evoInsertsChecked = {}; evoOrder = [];
