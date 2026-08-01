@@ -1206,27 +1206,29 @@ document.addEventListener('click', () => {
 let dtStep = 1;
 
 // Bandeau Titanium en page 1 — nécessite un modèle sélectionné (comme le bouton Composants)
-// Bandeau Titanium flottant — apparaît au scroll vers le bas, disparaît si on remonte (étape 1 seulement)
-let _titaniumLastScroll = 0;
+// Bandeau Titanium flottant — apparaît quand le bandeau original sort de l'écran (étape 1 seulement).
+// Utilise IntersectionObserver (fonctionne qu'il y ait du scroll ou non) et rattache l'élément
+// directement à <body> pour garantir un vrai position:fixed sans dépendance à un conteneur parent.
 function v3InitTitaniumSticky() {
-  const scrollEl = document.getElementById('dt-main');
-  const sticky = document.getElementById('titanium-sticky');
-  if (!scrollEl || !sticky || scrollEl._titaniumBound) return;
-  scrollEl._titaniumBound = true;
-  scrollEl.addEventListener('scroll', () => {
-    if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
-    const top = scrollEl.scrollTop;
-    if (top > _titaniumLastScroll && top > 40) {
-      sticky.style.transform = 'translateY(0)';
-    } else if (top < _titaniumLastScroll) {
-      sticky.style.transform = 'translateY(120%)';
-    }
-    _titaniumLastScroll = top;
-  });
+  const sticky  = document.getElementById('titanium-sticky');
+  const inline  = document.getElementById('titanium-banner-inline');
+  if (!sticky || !inline || sticky._titaniumBound) return;
+  sticky._titaniumBound = true;
+
+  // Détache du HTML statique et rattache à <body> : élimine tout risque qu'un ancêtre
+  // (transform, overflow...) ne casse le calcul de position:fixed par rapport à la fenêtre.
+  document.body.appendChild(sticky);
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
+      sticky.style.transform = entry.isIntersecting ? 'translateY(120%)' : 'translateY(0)';
+    });
+  }, { threshold: 0 });
+  observer.observe(inline);
 }
 
 function v3GoTitaniumFromS1() {
-  if (!selModel) return;
   v2Parcours = 'hors_gamme';
   dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
