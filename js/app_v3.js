@@ -416,19 +416,28 @@ function selectModel(id) {
 const POST_DIM_FIELDS = { transmission: ['plateaux','cassette','manivelle'], pneus: ['section'], fourche: ['debattement'], pilotage: ['cintre','potence'], selle: ['largeur_selle'] };
 const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle', manivelle: 'Longueur manivelle', cintre: 'Largeur cintre (ext/ext)', potence: 'Longueur potence' };
 const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm', manivelle: 'mm', cintre: 'mm', potence: 'mm' };
-// Champs "morphologiques" : leur valeur par défaut dépend de la taille de cadre choisie (DEFAULTS_BY_TAILLE)
-const MORPHO_DIM_KEYS = ['manivelle', 'cintre', 'potence', 'largeur_selle']; // NB: largeur_selle n'a pas encore de données DEFAULTS_BY_TAILLE -> affichera toujours "choisir"
+// Champs "morphologiques" : sans taille de cadre connue (JNSP ou sur-mesure), ils affichent "choisir" (pas de défaut forcé)
+const MORPHO_DIM_KEYS = ['manivelle', 'cintre', 'potence', 'largeur_selle'];
 
-// Calcule la valeur par défaut à proposer pour un champ donné, selon sa catégorie
+// Calcule la valeur par défaut à proposer pour un champ donné, à partir de DEFAULTS_BY_TAILLE
+// (source : configurateur_velos_v2.xlsx, onglet 5_GEOMETRIES) — TOUJOURS validée contre les
+// options réellement offertes par le composant choisi avant d'être appliquée.
 function computeDimDefault(key, options) {
-  if (MORPHO_DIM_KEYS.includes(key)) {
-    // Dépend de la taille de cadre : seulement si une taille standard est choisie (pas sur-mesure, pas JNSP)
-    if (v2Parcours === 'sur_mesure' || !selSize.taille) return null;
-    const ref = DEFAULTS_BY_TAILLE[selModel]?.[selSize.taille]?.[key];
-    return closestNumericMatch(ref, options);
+  const isMorpho = MORPHO_DIM_KEYS.includes(key);
+
+  if (isMorpho && (v2Parcours === 'sur_mesure' || !selSize.taille)) return null; // "choisir"
+
+  const ref = (selModel && selSize.taille) ? DEFAULTS_BY_TAILLE[selModel]?.[selSize.taille]?.[key] : undefined;
+  if (ref !== undefined && ref !== null) {
+    const refStr = String(ref);
+    if (options.map(String).includes(refStr)) return refStr; // correspondance exacte (ex: cassette "10x51")
+    const closest = closestNumericMatch(ref, options); // valeur purement numérique -> plus proche dispo
+    if (closest !== null) return closest;
   }
-  // Catégorie C (usage) : valeur de base = première option de la liste
-  return options[0];
+
+  // Pas de recommandation exploitable pour le composant choisi :
+  // catégorie C (usage) retombe sur la première option ; morphologique retombe sur "choisir".
+  return isMorpho ? null : options[0];
 }
 
 // Nettoie / auto-remplit selSize pour les clés dépendantes d'un composant donné, selon l'option choisie
@@ -1809,16 +1818,20 @@ function dtRenderS3() {
   if (guideZone)  guideZone.style.display  = 'none';
   if (manualZone) manualZone.style.display = 'none';
 
-  // Hooker les fonctions de calcul
-  if (!window._dtCalcHooked) {
-    window._dtCalcHooked = true;
-    const _calcSize = window.calcSize;
-    window.calcSize = function() { if (_calcSize) _calcSize(); setTimeout(dtCheckSizeResult, 400); };
-    const _chooseUsage = window.chooseUsage;
-    window.chooseUsage = function(u) { if (_chooseUsage) _chooseUsage(u); setTimeout(dtCheckSizeResult, 200); };
-    const _validateDims = window.validateDims;
-    window.validateDims = function() { if (_validateDims) _validateDims(); window.sizeValidated=true; setTimeout(dtCheckSizeResult, 100); };
-  }
+  dtHookCalcFunctions();
+}
+
+// Enveloppe calcSize/chooseUsage/validateDims une seule fois pour déclencher dtCheckSizeResult()
+// après chaque calcul — indispensable notamment pour afficher "Choisir ces résultats" / "Sortir"
+function dtHookCalcFunctions() {
+  if (window._dtCalcHooked) return;
+  window._dtCalcHooked = true;
+  const _calcSize = window.calcSize;
+  window.calcSize = function() { if (_calcSize) _calcSize(); setTimeout(dtCheckSizeResult, 400); };
+  const _chooseUsage = window.chooseUsage;
+  window.chooseUsage = function(u) { if (_chooseUsage) _chooseUsage(u); setTimeout(dtCheckSizeResult, 200); };
+  const _validateDims = window.validateDims;
+  window.validateDims = function() { if (_validateDims) _validateDims(); window.sizeValidated=true; setTimeout(dtCheckSizeResult, 100); };
 }
 
 function dtCheckSizeResult() {
@@ -1857,6 +1870,8 @@ function dtRenderS3GuideOnly() {
     guideZone._init = true;
   }
   if (guideZone) guideZone.style.display = 'block';
+  if (typeof buildDimsGrid === 'function') buildDimsGrid();
+  dtHookCalcFunctions();
 }
 
 function v3EnterGuideOnly() {
@@ -2718,12 +2733,8 @@ function v2BackFromTaille() {
 }
 
 function v2BackFromMesureOrHorsGamme() {
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3bif')?.classList.add('active');
-  dtStep = 3;
-  v2UpdateStepper();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
+  // La page bifurcation (dt-s3bif) n'existe plus dans le flux — retour direct à l'étape 2 (Composants)
+  dtGo(2);
 }
 
 function v2BackFromDevis() {
@@ -3179,103 +3190,189 @@ const DEFAULTS_BY_TAILLE = {
     "XXS": {
       "manivelle": 165,
       "cintre": 380,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "S": {
       "manivelle": 170,
       "cintre": 400,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 420,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 440,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     }
   },
   "gravel_racing": {
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "S": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     }
   },
   "gravel_bikepacking": {
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x51"
     },
     "S": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x52"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x53"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x54"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x55"
     }
   },
   "vtt_enduro": {
     "S": {
-      "manivelle": 165
+      "manivelle": 165,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "M": {
-      "manivelle": 170
+      "manivelle": 170,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "L": {
-      "manivelle": 170
+      "manivelle": 170,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "XL": {
-      "manivelle": 172.5
+      "manivelle": 172.5,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     }
   }
-}
+};
+// Source : configurateur_velos_v2.xlsx, onglet 5_GEOMETRIES — utilisée comme RECOMMANDATION.
+// Toujours validée contre les options réelles du composant choisi avant application (voir computeDimDefault).
 
 function buildDimsGrid() {
   const grid = document.getElementById('dims-grid');
