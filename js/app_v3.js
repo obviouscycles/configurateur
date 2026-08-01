@@ -399,6 +399,7 @@ function selectModel(id) {
         }
       });
     });
+    syncAllPostDims();
   } else {
     autoSelectLocked(id);
   }
@@ -411,6 +412,62 @@ function selectModel(id) {
 }
 
 // ─── RENDU POSTES ─────────────────────────────────────────────────────────────
+// ─── DIMENSIONS DE COMPOSANTS CHOISIES EN ÉTAPE 2 (plateaux/cassette/section/débattement) ──
+const POST_DIM_FIELDS = { transmission: ['plateaux','cassette'], pneus: ['section'], fourche: ['debattement'], selle: ['largeur_selle'] };
+const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle' };
+const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm' };
+
+// Nettoie / auto-remplit selSize pour les clés dépendantes d'un composant donné, selon l'option choisie
+function syncPostDims(postId, opt) {
+  const keys = POST_DIM_FIELDS[postId];
+  if (!keys) return;
+  keys.forEach(key => {
+    const options = (opt && opt.dims && opt.dims[key]) ? opt.dims[key].map(String) : [];
+    if (options.length === 0) {
+      delete selSize[key]; delete selSizeSource[key];
+    } else if (options.length === 1) {
+      selSize[key] = options[0]; selSizeSource[key] = 'default';
+    } else if (!options.includes(selSize[key])) {
+      delete selSize[key]; delete selSizeSource[key];
+    }
+  });
+}
+
+function renderPostDims(postId, opt) {
+  const keys = POST_DIM_FIELDS[postId];
+  if (!keys || !opt || !opt.dims) return '';
+  let html = '';
+  keys.forEach(key => {
+    const options = opt.dims[key];
+    if (!options || options.length < 2) return; // 1 seule valeur = auto, rien à afficher
+    const fieldId = 'compdim-' + postId + '-' + key;
+    const current = selSize[key] || '';
+    html += '<div class="dim-field" onclick="event.stopPropagation()" style="margin:10px 14px 0;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;">' +
+      '<label for="' + fieldId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">' + DIM_LABELS[key] + ' <span style="color:#e05555;">*</span></label>' +
+      '<select class="size-select" id="' + fieldId + '" onchange="selectPostDim(\'' + postId + '\',\'' + key + '\',this.value)">' +
+        '<option value="">— choisir —</option>' +
+        options.map(o => '<option value="' + o + '"' + (current === String(o) ? ' selected' : '') + '>' + o + (DIM_UNITS[key] ? ' ' + DIM_UNITS[key] : '') + '</option>').join('') +
+        '<option value="__unknown__"' + (current === '__unknown__' ? ' selected' : '') + '>Je ne sais pas encore</option>' +
+      '</select>' +
+    '</div>';
+  });
+  return html;
+}
+
+function selectPostDim(postId, key, value) {
+  if (value) { selSize[key] = value; selSizeSource[key] = 'user'; }
+  else { delete selSize[key]; delete selSizeSource[key]; }
+}
+
+// Resynchronise les 3 postes concernés (transmission/pneus/fourche) — utile après chargement d'une préconfig
+function syncAllPostDims() {
+  Object.keys(POST_DIM_FIELDS).forEach(postId => {
+    const optId = selOpts[postId];
+    const opt = optId ? ALL_OPTIONS[postId]?.find(o => o.id === optId) : null;
+    syncPostDims(postId, opt);
+  });
+}
+
 function renderPosts() {
   // Masquer le poste power s'il ne contient que pwr_all
   const visiblePosts = POST_META.filter(p => {
@@ -511,6 +568,7 @@ function renderPosts() {
       '</div>' +
       '<div class="post-opts ' + (isOpen ? 'open' : '') + '">' +
         optsHTML +
+        (selOpt ? renderPostDims(p.id, selOpt) : '') +
         (function() {
           if ((p.id === 'transmission' || p.id === 'pilotage') &&
               selOpts['transmission'] === 'trans_gr_sh_cuf' &&
@@ -551,6 +609,12 @@ function togglePost(id) {
 function selectOpt(postId, optId) {
   updateFloatingPrice();
   selOpts[postId] = optId;
+
+  // Synchroniser les dimensions dépendantes du composant (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) {
+    const chosenOpt = optId ? ALL_OPTIONS[postId]?.find(o => o.id === optId) : null;
+    syncPostDims(postId, chosenOpt);
+  }
 
   // Transmission VTT : gestion des freins
   if (postId === 'transmission' && selModel === 'vtt_enduro') {
@@ -1034,6 +1098,7 @@ function loadPreset(decl) {
   if (!preset) return;
   window._activePreset = decl;
   selOpts = {...preset};
+  syncAllPostDims();
   // Appliquer FORCE_SELECT
   Object.keys(selOpts).forEach(postId => {
     const optId = selOpts[postId];
@@ -1116,6 +1181,19 @@ document.addEventListener('click', () => {
 // PROTO13 — STEPPER DESKTOP
 // ════════════════════════════════════════════════════════════════
 let dtStep = 1;
+
+// Bandeau Titanium en page 1 — nécessite un modèle sélectionné (comme le bouton Composants)
+function v3GoTitaniumFromS1() {
+  if (!selModel) return;
+  v2Parcours = 'hors_gamme';
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4horsgamme')?.classList.add('active');
+  v2UpdateStepper();
+  dtRenderRecap();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
 
 function dtGo(n) {
   if (window.innerWidth < 768) return;
@@ -1251,7 +1329,7 @@ function dtSelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
   const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; }
+  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1271,7 +1349,7 @@ function dtSelectModel(id) {
 function dtLoadPreset(decl) {
   const preset = PRESETS[selModel] && PRESETS[selModel][decl];
   if (!preset) return;
-  window._activePreset = decl; selOpts = {...preset};
+  window._activePreset = decl; selOpts = {...preset}; syncAllPostDims();
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1418,17 +1496,6 @@ function dtShowAllModels() {
   dtRender();
 }
 
-// ── Visuel vélo dynamique (illustration SVG, remplace la photo statique) ──
-// Met à jour tous les canvases présents dans le DOM (Step 2 et récap devis Step 6),
-// et fait "flasher" en jaune la pièce qui vient d'être modifiée (changedPostId).
-function dtUpdateBikeVisual(changedPostId) {
-  if (typeof BikeVisual === 'undefined' || !selModel) return;
-  ['dt-s2-bike-visual', 'dt-s6-bike-visual'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) BikeVisual.mount(el, selModel, selOpts, changedPostId);
-  });
-}
-
 // ── Étape 2 : split modèle | composants ──
 function dtRenderS2() {
   // Left : fiche modèle
@@ -1436,7 +1503,7 @@ function dtRenderS2() {
   const model = MODELS.find(m => m.id === selModel);
   if (left && model) {
     left.innerHTML =
-      '<div id="dt-s2-bike-visual"></div>' +
+      '<img class="mc-photo" src="' + (model.photo||'') + '" alt="' + model.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
@@ -1444,13 +1511,35 @@ function dtRenderS2() {
         '<span class="mc-price">à partir de ' + (model.basePrice + (model.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
       dtPresetBar(model.id);
-    dtUpdateBikeVisual(null);
   }
   // Right : composants — réutiliser renderPosts vers dt-posts-list
   dtRenderPosts();
 }
 
 // Rendu des postes dans dt-posts-list — délégation d'événements pour éviter l'escaping
+// Rendu d'un sous-champ de dimension DANS l'accordéon composants (pneus/transmission/fourche)
+function renderComponentDimField(key, label, options, refreshFn) {
+  if (!options || options.length === 0) return '';
+  if (options.length === 1) {
+    if (!selSize[key]) { selSize[key] = String(options[0]); selSizeSource[key] = 'default'; }
+    return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
+      <label style="font-size:11px;color:#999;display:block;margin-bottom:4px;">${label}</label>
+      <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value;selSizeSource['${key}']='user';${refreshFn}();">
+        <option value="${options[0]}" selected>${options[0]}</option>
+      </select>
+    </div>`;
+  }
+  const optHTML = options.map(o => `<option value="${o}" ${selSize[key]==o?'selected':''}>${o}</option>`).join('');
+  return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
+    <label style="font-size:11px;color:#999;display:block;margin-bottom:4px;">${label}</label>
+    <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value;selSizeSource['${key}']='user';${refreshFn}();">
+      <option value="">— choisir —</option>
+      ${optHTML}
+      <option value="">Je ne sais pas encore</option>
+    </select>
+  </div>`;
+}
+
 function dtRenderPosts() {
   const container = document.getElementById('dt-posts-list');
   if (!container || !selModel) return;
@@ -1497,6 +1586,17 @@ function dtRenderPosts() {
     const optHtml = (hasPhotos ? '<div class="opt-photo-grid">' : '<div class="opt-list">') +
       opts.map(buildOpt).join('') + '</div>';
 
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtml = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtml += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'dtRenderPosts');
+        }
+      });
+    }
+
     const _isModDt = !!(window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset] && PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
@@ -1505,7 +1605,7 @@ function dtRenderPosts() {
         (selOpt?'<span class="ph-sel">'+selOpt.name+'</span>':'<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtml + '</div>' +
     '</div>';
   }).join('');
 
@@ -1527,6 +1627,8 @@ function dtSelectOpt(postId, optId) {
   if (!opt) return;
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
   // FORCE_SELECT
   FORCE_SELECT.forEach(rule => {
     if (rule.if_selected === optId)
@@ -1536,7 +1638,6 @@ function dtSelectOpt(postId, optId) {
       });
   });
   dtRenderPosts();
-  dtUpdateBikeVisual(postId);
 }
 
 function dtTogglePost(postId) {
@@ -1676,7 +1777,7 @@ function dtRenderS4() {
     '<div style="display:grid;grid-template-columns:'+(document.body.classList.contains('config-shared-mode')?'340px':'280px')+' 1fr;gap:2rem;align-items:start;">' +
       // Colonne gauche : photo + infos
       '<div>' +
-        '<div id="dt-s6-bike-visual" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';background:#0d0d0d;border:0.5px solid #222;border-radius:8px;overflow:hidden;margin-bottom:1rem;"></div>' +
+        (model.photo ? '<img src="'+model.photo+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
@@ -1730,7 +1831,6 @@ function dtRenderS4() {
     '</div>' +
     v2RecapBlock() +
     '';
-  dtUpdateBikeVisual(null);
 }
 
 // Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
@@ -1903,7 +2003,7 @@ function dtReset() {
   if (mz) mz._init = false;
   // Garder le modèle ET _singleModel — réinitialiser uniquement les options
   const keptModel = selModel;
-  selOpts = {}; selSize = {}; window.sizeValidated = false; openPost = null;
+  selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false; openPost = null;
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
@@ -2758,6 +2858,7 @@ function updateFloatingPrice() {
 
 // ─── ÉTAT TAILLE ──────────────────────────────────────────────────────────────
 let selSize = {};  // {taille, potence, cintre, manivelle, cassette, plateaux, largeur_selle, section, debattement}
+let selSizeSource = {}; // 'user' ou 'default' pour chaque clé de selSize
 let currentSizeMode = null;
 let overlapTailles = null;
 
@@ -3003,10 +3104,7 @@ function buildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'dim-manivelle', label:'Longueur manivelle (mm)', options: transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
-      fields.push({id:'dim-plateaux', label:'Plateau(x)', options: transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
-      fields.push({id:'dim-cassette', label:'Cassette', options: transOpt.dims.cassette, key:'cassette'});
+    // plateaux/cassette : choisis désormais directement sur la page Composants (étape 2)
   }
 
   // Pilotage
@@ -3025,31 +3123,8 @@ function buildDimsGrid() {
     }
   }
 
-  // Pneus
-  const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o => o.id === selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
-    // Modification 1 : gravel_bikepacking = max 42mm (cadre limité)
-    let sectionOpts = pneuOpt.dims.section;
-    if (selModel === 'gravel_bikepacking') {
-      sectionOpts = sectionOpts.filter(s => {
-        const num = parseFloat(String(s).replace(',', '.'));
-        return isNaN(num) || num <= 42;
-      });
-    }
-    if (sectionOpts.length >= 1)
-      fields.push({id:'dim-section', label:'Section pneu', options: sectionOpts, key:'section',
-        });
-  }
-
-  // Fourche VTT
-  const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o => o.id === selOpts.fourche) : null;
-  if (fourcheOpt && fourcheOpt.dims && fourcheOpt.dims.debattement && fourcheOpt.dims.debattement.length > 1)
-    fields.push({id:'dim-debattement', label:'Débattement fourche (mm)', options: fourcheOpt.dims.debattement, key:'debattement'});
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o => o.id === selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'dim-largeur-selle', label:'Largeur selle (mm)', options: selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:var(--text3);font-size:13px;">Sélectionnez d\'abord un modèle et vos composants en étape 2.</p>';
@@ -3090,7 +3165,7 @@ function buildDimsGrid() {
     });
   }
 
-  const SECONDARY_KEYS = ['plateaux', 'cassette', 'section', 'debattement', 'largeur_selle'];
+  const SECONDARY_KEYS = [];
   const primaryFields   = fields.filter(f => !SECONDARY_KEYS.includes(f.key));
   const secondaryFields = fields.filter(f =>  SECONDARY_KEYS.includes(f.key));
 
@@ -3100,7 +3175,7 @@ function buildDimsGrid() {
       `<option value="${o}" ${selSize[f.key]==o?'selected':''}>${o}${f.key==='manivelle'||f.key==='potence'?' mm':''}</option>`
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; buildDimsGrid();`
+      ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; buildDimsGrid();`
       : `selSize['${f.key}']=this.value`;
     const jnspOption = f.options.length >= 2
       ? `<option value="">Je ne sais pas encore</option>`
@@ -3144,7 +3219,7 @@ function buildDimsGrid() {
         if (orig) { orig.value = this.value; orig.dispatchEvent(new Event('change')); }
         else {
           // Fallback : trouver la clé depuis les fields
-          if (this.id === 'p11-dim-taille') { selSize.taille = this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; buildDimsGrid(); }
+          if (this.id === 'p11-dim-taille') { selSize.taille = this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; buildDimsGrid(); }
         }
       });
     });
@@ -3694,6 +3769,7 @@ function p11LoadPreset(decl) {
   if (!preset) return;
   window._activePreset = decl;
   selOpts = {...preset};
+  syncAllPostDims();
   // Appliquer FORCE_SELECT
   Object.keys(selOpts).forEach(postId => {
     const optId = selOpts[postId];
@@ -3719,7 +3795,7 @@ function p11LoadPreset(decl) {
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
   const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; }
+  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   p11RenderModels();
   p11RenderPresets();
   // Activer bouton next
@@ -3798,6 +3874,17 @@ function p11RenderPosts() {
           '</div>';
         }).join('') + '</div>';
 
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtmlP11 = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtmlP11 += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'p11RenderPosts');
+        }
+      });
+    }
+
     const isModified = !!(selOpts[p.id] && window._activePreset && PRESETS[selModel] &&
       PRESETS[selModel][window._activePreset] &&
       PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
@@ -3808,7 +3895,7 @@ function p11RenderPosts() {
         (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtmlP11 + '</div>' +
     '</div>';
   }).join('');
   p11UpdateTotal();
@@ -3818,6 +3905,9 @@ function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
   selOpts[postId] = optId;
+
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
 
   // Transmission VTT : gestion des freins
   if (postId === 'transmission' && selModel === 'vtt_enduro') {
@@ -3993,10 +4083,7 @@ function p11BuildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'p11-dim-manivelle', label:'Longueur manivelle (mm)', options:transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
-      fields.push({id:'p11-dim-plateaux', label:'Plateau(x)', options:transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
-      fields.push({id:'p11-dim-cassette', label:'Cassette', options:transOpt.dims.cassette, key:'cassette'});
+    // plateaux/cassette : choisis désormais directement sur la page Composants (étape 2)
   }
 
   // Pilotage
@@ -4013,27 +4100,8 @@ function p11BuildDimsGrid() {
     }
   }
 
-  // Pneus
-  const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o=>o.id===selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
-    let sectionOpts = pneuOpt.dims.section;
-    if (selModel === 'gravel_bikepacking') {
-      sectionOpts = sectionOpts.filter(s => { const num = parseFloat(String(s).replace(',','.')); return isNaN(num) || num <= 42; });
-    }
-    if (sectionOpts.length >= 1)
-      fields.push({id:'p11-dim-section', label:'Section pneu', options:sectionOpts, key:'section',
-        });
-  }
-
-  // Fourche VTT
-  const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o=>o.id===selOpts.fourche) : null;
-  if (fourcheOpt && fourcheOpt.dims && fourcheOpt.dims.debattement && fourcheOpt.dims.debattement.length > 1)
-    fields.push({id:'p11-dim-debattement', label:'Débattement fourche (mm)', options:fourcheOpt.dims.debattement, key:'debattement'});
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o=>o.id===selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'p11-dim-largeur-selle', label:'Largeur selle (mm)', options:selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:#666;font-size:13px;">Sélectionnez d\'abord vos composants à l\'étape 2.</p>';
@@ -4065,7 +4133,7 @@ function p11BuildDimsGrid() {
     });
   }
 
-  const P11_SEC = ['plateaux','cassette','section','debattement','largeur_selle'];
+  const P11_SEC = [];
   const p11Primary   = fields.filter(f => !P11_SEC.includes(f.key));
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
@@ -4076,7 +4144,7 @@ function p11BuildDimsGrid() {
       (['manivelle','potence'].includes(f.key) ? ' mm' : '') + '</option>'
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; p11BuildDimsGrid();"
+      ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; p11BuildDimsGrid();"
       : "selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
@@ -4304,7 +4372,7 @@ function p11QuickSave() {
 
 function p11Reset() {
   // Tout remettre à zéro — y compris le modèle
-  selModel = null; selOpts = {}; selSize = {}; window.sizeValidated = false;
+  selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
   window._activePreset = null;
   v2Parcours = 'standard'; evoChecked = {}; evoInsertsChecked = {}; evoOrder = [];
