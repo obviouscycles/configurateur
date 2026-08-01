@@ -1205,7 +1205,6 @@
     position: sticky; top: 0;
   }
   #dt-s2-left .mc-photo { width: 100%; height: 220px; object-fit: cover; display: block; }
-  #dt-s2-bike-visual { width: 100%; height: 220px; background: #0d0d0d; border: 0.5px solid #222; border-radius: 8px; overflow: hidden; }
   #dt-s2-left .mc-text { padding: 14px 0 0; }
   #dt-s2-left .mc-badge { display: block; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
   #dt-s2-left .mc-name { display: block; font-size: 18px; font-weight: 500; color: #f2f2f2; margin-bottom: 4px; }
@@ -2287,6 +2286,16 @@
         <p class="section-title" style="color:#f2f2f2;margin-bottom:1.5rem;">Choisissez votre modèle</p>
       
         <div class="model-grid" id="dt-model-grid"></div>
+
+        <div onclick="v3GoTitaniumFromS1()" style="margin-top:1.25rem;background:#1a1a1a;border:0.5px solid #333;border-radius:10px;padding:1.25rem 1.5rem;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;gap:16px;" onmouseover="this.style.borderColor='#F5C400'" onmouseout="this.style.borderColor='#333'">
+          <div style="width:44px;height:44px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="ti ti-sparkles" style="font-size:20px;color:#F5C400;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:14px;color:#f2f2f2;font-weight:500;">Envie d'un vélo hors norme, que nous n'avons pas au catalogue ?</div>
+            <div style="font-size:13px;color:#F5C400;margin-top:2px;">Suivez Obvious On Demand — Titanium →</div>
+          </div>
+        </div>
       </div>
       <div class="dt-step-footer">
         <span style="font-size:13px;color:#555;">Sélectionnez un modèle pour continuer</span>
@@ -2646,12 +2655,10 @@
   <link rel="preload" href="/configurateur/data/modeles.js" as="script">
 <link rel="preload" href="/configurateur/data/composants.js" as="script">
 <link rel="preload" href="/configurateur/data/geometries.js" as="script">
-<link rel="preload" href="/configurateur/js/bike-visual.js" as="script">
 <link rel="preload" href="/configurateur/js/app_v3.js" as="script">
 <script src="/configurateur/data/modeles.js"></script>
 <script src="/configurateur/data/composants.js"></script>
 <script src="/configurateur/data/geometries.js"></script>
-<script src="/configurateur/js/bike-visual.js"></script>
 <script src="/configurateur/js/app_v3.js"></script>
 
 
