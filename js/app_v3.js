@@ -1592,7 +1592,7 @@ function dtUpdateStep2Footer() {
   } else {
     zone.innerHTML =
       '<button onclick="v3EnterGuideOnly()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
-      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoPersoFromS2()">Taille — Personnalisation <i class="ti ti-arrow-right"></i></button>';
+      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoPersoFromS2()">Personnalisation <i class="ti ti-arrow-right"></i></button>';
   }
 }
 
