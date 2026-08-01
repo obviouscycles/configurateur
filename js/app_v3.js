@@ -1212,6 +1212,7 @@ let dtStep = 1;
 function v3InitTitaniumSticky() {
   const sticky  = document.getElementById('titanium-sticky');
   const inline  = document.getElementById('titanium-banner-inline');
+  const card    = document.getElementById('titanium-sticky-card');
   if (!sticky || !inline || sticky._titaniumBound) return;
   sticky._titaniumBound = true;
 
@@ -1219,13 +1220,38 @@ function v3InitTitaniumSticky() {
   // (transform, overflow...) ne casse le calcul de position:fixed par rapport à la fenêtre.
   document.body.appendChild(sticky);
 
+  let inlineVisible = true;
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
-      sticky.style.transform = entry.isIntersecting ? 'translateY(120%)' : 'translateY(0)';
-    });
+    entries.forEach(entry => { inlineVisible = entry.isIntersecting; });
+    updateSticky();
   }, { threshold: 0 });
   observer.observe(inline);
+
+  function scrollDistance() {
+    const dtMain = document.getElementById('dt-main');
+    return Math.max(window.scrollY || 0, dtMain ? dtMain.scrollTop : 0);
+  }
+
+  // Aligne la largeur (et la position horizontale) du bandeau flottant sur celles du bandeau original
+  function syncWidth() {
+    if (!card) return;
+    const r = inline.getBoundingClientRect();
+    card.style.width = r.width + 'px';
+    card.style.marginLeft = r.left + 'px';
+  }
+
+  function updateSticky() {
+    if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
+    const shouldShow = scrollDistance() > 40 && !inlineVisible;
+    if (shouldShow) syncWidth();
+    sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(120%)';
+  }
+
+  window.addEventListener('scroll', updateSticky);
+  window.addEventListener('resize', updateSticky);
+  const dtMain = document.getElementById('dt-main');
+  if (dtMain) dtMain.addEventListener('scroll', updateSticky);
+  updateSticky();
 }
 
 function v3GoTitaniumFromS1() {
