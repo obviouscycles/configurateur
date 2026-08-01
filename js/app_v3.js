@@ -413,9 +413,23 @@ function selectModel(id) {
 
 // ─── RENDU POSTES ─────────────────────────────────────────────────────────────
 // ─── DIMENSIONS DE COMPOSANTS CHOISIES EN ÉTAPE 2 (plateaux/cassette/section/débattement) ──
-const POST_DIM_FIELDS = { transmission: ['plateaux','cassette'], pneus: ['section'], fourche: ['debattement'], selle: ['largeur_selle'] };
-const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle' };
-const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm' };
+const POST_DIM_FIELDS = { transmission: ['plateaux','cassette','manivelle'], pneus: ['section'], fourche: ['debattement'], pilotage: ['cintre','potence'], selle: ['largeur_selle'] };
+const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle', manivelle: 'Longueur manivelle', cintre: 'Largeur cintre (ext/ext)', potence: 'Longueur potence' };
+const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm', manivelle: 'mm', cintre: 'mm', potence: 'mm' };
+// Champs "morphologiques" : leur valeur par défaut dépend de la taille de cadre choisie (DEFAULTS_BY_TAILLE)
+const MORPHO_DIM_KEYS = ['manivelle', 'cintre', 'potence', 'largeur_selle']; // NB: largeur_selle n'a pas encore de données DEFAULTS_BY_TAILLE -> affichera toujours "choisir"
+
+// Calcule la valeur par défaut à proposer pour un champ donné, selon sa catégorie
+function computeDimDefault(key, options) {
+  if (MORPHO_DIM_KEYS.includes(key)) {
+    // Dépend de la taille de cadre : seulement si une taille standard est choisie (pas sur-mesure, pas JNSP)
+    if (v2Parcours === 'sur_mesure' || !selSize.taille) return null;
+    const ref = DEFAULTS_BY_TAILLE[selModel]?.[selSize.taille]?.[key];
+    return closestNumericMatch(ref, options);
+  }
+  // Catégorie C (usage) : valeur de base = première option de la liste
+  return options[0];
+}
 
 // Nettoie / auto-remplit selSize pour les clés dépendantes d'un composant donné, selon l'option choisie
 function syncPostDims(postId, opt) {
@@ -1518,24 +1532,42 @@ function dtRenderS2() {
 
 // Rendu des postes dans dt-posts-list — délégation d'événements pour éviter l'escaping
 // Rendu d'un sous-champ de dimension DANS l'accordéon composants (pneus/transmission/fourche)
-function renderComponentDimField(key, label, options, refreshFn) {
+// Trouve, parmi une liste d'options, la valeur numérique la plus proche d'une cible donnée
+function closestNumericMatch(target, options) {
+  const nums = options.map(Number).filter(n => !isNaN(n));
+  if (nums.length === 0 || target === undefined || target === null) return null;
+  let best = nums[0], bestDiff = Math.abs(nums[0] - target);
+  nums.forEach(n => { const d = Math.abs(n - target); if (d < bestDiff) { best = n; bestDiff = d; } });
+  return String(best);
+}
+
+// defaultValue : valeur à pré-sélectionner si rien n'est encore choisi.
+//   - une valeur concrète (ex: options[0], ou calculée depuis DEFAULTS_BY_TAILLE) -> auto-sélectionnée, badge "défaut"
+//   - null/undefined -> aucun défaut, le menu affiche "— choisir —" et "Je ne sais pas encore" reste disponible
+function renderComponentDimField(key, label, options, refreshFn, defaultValue) {
   if (!options || options.length === 0) return '';
   if (options.length === 1) {
     if (!selSize[key]) { selSize[key] = String(options[0]); selSizeSource[key] = 'default'; }
     return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
-      <label style="font-size:11px;color:#999;display:block;margin-bottom:4px;">${label}</label>
+      <label style="font-size:13px;color:#ccc;display:block;margin-bottom:5px;">${label}</label>
       <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value;selSizeSource['${key}']='user';${refreshFn}();">
         <option value="${options[0]}" selected>${options[0]}</option>
       </select>
     </div>`;
   }
-  const optHTML = options.map(o => `<option value="${o}" ${selSize[key]==o?'selected':''}>${o}</option>`).join('');
+  if (!selSize[key] && defaultValue !== null && defaultValue !== undefined && options.map(String).includes(String(defaultValue))) {
+    selSize[key] = String(defaultValue);
+    selSizeSource[key] = 'default';
+  }
+  const hasDefault = defaultValue !== null && defaultValue !== undefined;
+  const optHTML = options.map(o => `<option value="${o}" ${selSize[key]==String(o)?'selected':''}>${o}</option>`).join('');
+  const placeholder = hasDefault ? '' : `<option value="" ${!selSize[key] ? 'selected' : ''}>— choisir —</option>`;
   return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
-    <label style="font-size:11px;color:#999;display:block;margin-bottom:4px;">${label}</label>
-    <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value;selSizeSource['${key}']='user';${refreshFn}();">
-      <option value="">— choisir —</option>
+    <label style="font-size:13px;color:#ccc;display:block;margin-bottom:5px;">${label}</label>
+    <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value=='__unknown__'?null:this.value;selSizeSource['${key}']='user';${refreshFn}();">
+      ${placeholder}
       ${optHTML}
-      <option value="">Je ne sais pas encore</option>
+      <option value="__unknown__" ${selSize[key]===null?'selected':''}>Je ne sais pas encore</option>
     </select>
   </div>`;
 }
@@ -1547,11 +1579,11 @@ function dtUpdateStep2Footer() {
   if (v2Parcours === 'sur_mesure') {
     zone.innerHTML = '<button class="dt-btn-next" onclick="v3GoSurMesureFromS2()">Continuer <i class="ti ti-arrow-right"></i></button>';
   } else if (!selSize.taille) {
-    zone.innerHTML = '<button class="dt-btn-next" onclick="v3GoDeterminerTaille()">Déterminer ma taille <i class="ti ti-arrow-right"></i></button>';
+    zone.innerHTML = '<button class="dt-btn-next" onclick="v3EnterGuideOnly()">Déterminer ma taille <i class="ti ti-arrow-right"></i></button>';
   } else {
     zone.innerHTML =
-      '<button onclick="v3GoDeterminerTaille()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
-      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoDevisFast()">Taille — Personnalisation <i class="ti ti-arrow-right"></i></button>';
+      '<button onclick="v3EnterGuideOnly()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
+      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoPersoFromS2()">Taille — Personnalisation <i class="ti ti-arrow-right"></i></button>';
   }
 }
 
@@ -1616,6 +1648,12 @@ function selectCadreTaille(value) {
     v2Parcours = 'standard';
     delete selSize.taille; delete selSizeSource.taille;
   }
+  // La taille de cadre change : les dimensions morphologiques auto-remplies (source 'default')
+  // ne sont plus forcément pertinentes -> on les efface pour qu'elles se recalculent au rendu suivant.
+  // On préserve en revanche les choix explicites du visiteur (source 'user').
+  MORPHO_DIM_KEYS.forEach(key => {
+    if (selSizeSource[key] === 'default') { delete selSize[key]; delete selSizeSource[key]; }
+  });
   dtRenderPosts();
   dtRenderRecap();
   dtUpdateStep2Footer();
@@ -1673,7 +1711,7 @@ function dtRenderPosts() {
       POST_DIM_FIELDS[p.id].forEach(key => {
         const dimOptions = selOpt.dims[key];
         if (dimOptions && dimOptions.length >= 1) {
-          dimsHtml += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'dtRenderPosts');
+          dimsHtml += renderComponentDimField(key, DIM_LABELS[key], dimOptions, 'dtRenderPosts', computeDimDefault(key, dimOptions));
         }
       });
     }
@@ -1802,7 +1840,75 @@ function dtCheckSizeResult() {
 
   if (validated) {
     v2SetTailleLabel(true);
+    if (dtGuideOnlyActive) dtShowGuideResultButtons();
   }
+}
+
+// ─── PAGE "LAISSEZ-VOUS GUIDER" SEULE (dt-s3) — outil autonome, revient toujours à l'étape 2 ──
+let dtGuideOnlyActive = false;
+let dtPreGuideSnapshot = null;
+
+function dtRenderS3GuideOnly() {
+  const guideZone = document.getElementById('dt-s3-panel-guide');
+  const panelGuide = document.getElementById('panel-guide');
+  if (guideZone && panelGuide && !guideZone._init) {
+    guideZone.appendChild(panelGuide);
+    panelGuide.classList.add('open');
+    guideZone._init = true;
+  }
+  if (guideZone) guideZone.style.display = 'block';
+}
+
+function v3EnterGuideOnly() {
+  dtGuideOnlyActive = true;
+  dtPreGuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
+  window.sizeValidated = false;
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s3')?.classList.add('active');
+  dtRenderS3GuideOnly();
+  const footer = document.getElementById('dt-s3-footer');
+  if (footer) footer.innerHTML = '<button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>';
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+}
+
+function dtShowGuideResultButtons() {
+  const footer = document.getElementById('dt-s3-footer');
+  if (!footer) return;
+  footer.innerHTML =
+    '<button class="dt-btn-back" onclick="v3SortirSansReport()">Sortir</button>' +
+    '<button class="dt-btn-next" onclick="v3ChoisirResultats()">Choisir ces résultats <i class="ti ti-arrow-right"></i></button>';
+}
+
+// Les résultats sont déjà écrits en direct dans selSize par le calculateur -> on garde simplement.
+function v3ChoisirResultats() {
+  dtGuideOnlyActive = false;
+  dtPreGuideSnapshot = null;
+  dtGo(2);
+}
+
+// Annule tout changement effectué depuis l'entrée sur la page guidée.
+function v3SortirSansReport() {
+  if (dtPreGuideSnapshot) {
+    selSize = dtPreGuideSnapshot.selSize;
+    selSizeSource = dtPreGuideSnapshot.selSizeSource;
+    v2Parcours = dtPreGuideSnapshot.v2Parcours;
+  }
+  dtGuideOnlyActive = false;
+  dtPreGuideSnapshot = null;
+  dtGo(2);
+}
+
+// ─── PAGE "PERSONNALISATION" SEULE (dt-s5perso) — cadre standard déjà connu ──────
+function v3GoPersoFromS2() {
+  dtStep = 5;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s5perso')?.classList.add('active');
+  evoActiveContainer = 'v2-evo-options';
+  evoRender();
+  v2UpdateStepper(); dtRenderRecap();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
 }
 
 function dtToggleSizeMode(mode) {
@@ -3967,7 +4073,7 @@ function p11RenderPosts() {
       POST_DIM_FIELDS[p.id].forEach(key => {
         const dimOptions = selOpt.dims[key];
         if (dimOptions && dimOptions.length >= 1) {
-          dimsHtmlP11 += renderComponentDimField(key, DIM_LABELS[key] + (dimOptions.length >= 2 ? ' *' : ''), dimOptions, 'p11RenderPosts');
+          dimsHtmlP11 += renderComponentDimField(key, DIM_LABELS[key], dimOptions, 'p11RenderPosts', computeDimDefault(key, dimOptions));
         }
       });
     }
