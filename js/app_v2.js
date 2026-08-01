@@ -413,9 +413,9 @@ function selectModel(id) {
 
 // ─── RENDU POSTES ─────────────────────────────────────────────────────────────
 // ─── DIMENSIONS DE COMPOSANTS CHOISIES EN ÉTAPE 2 (plateaux/cassette/section/débattement) ──
-const POST_DIM_FIELDS = { transmission: ['plateaux','cassette'], pneus: ['section'], fourche: ['debattement'] };
-const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement' };
-const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm' };
+const POST_DIM_FIELDS = { transmission: ['plateaux','cassette'], pneus: ['section'], fourche: ['debattement'], selle: ['largeur_selle'] };
+const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle' };
+const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm' };
 
 // Nettoie / auto-remplit selSize pour les clés dépendantes d'un composant donné, selon l'option choisie
 function syncPostDims(postId, opt) {
@@ -3110,12 +3110,8 @@ function buildDimsGrid() {
     }
   }
 
-  // Section pneu et débattement fourche : choisis désormais directement sur la page Composants (étape 2)
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o => o.id === selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'dim-largeur-selle', label:'Largeur selle (mm)', options: selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:var(--text3);font-size:13px;">Sélectionnez d\'abord un modèle et vos composants en étape 2.</p>';
@@ -3156,7 +3152,7 @@ function buildDimsGrid() {
     });
   }
 
-  const SECONDARY_KEYS = ['largeur_selle'];
+  const SECONDARY_KEYS = [];
   const primaryFields   = fields.filter(f => !SECONDARY_KEYS.includes(f.key));
   const secondaryFields = fields.filter(f =>  SECONDARY_KEYS.includes(f.key));
 
@@ -4091,12 +4087,8 @@ function p11BuildDimsGrid() {
     }
   }
 
-  // Section pneu et débattement fourche : choisis désormais directement sur la page Composants (étape 2)
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o=>o.id===selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'p11-dim-largeur-selle', label:'Largeur selle (mm)', options:selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:#666;font-size:13px;">Sélectionnez d\'abord vos composants à l\'étape 2.</p>';
@@ -4128,7 +4120,7 @@ function p11BuildDimsGrid() {
     });
   }
 
-  const P11_SEC = ['largeur_selle'];
+  const P11_SEC = [];
   const p11Primary   = fields.filter(f => !P11_SEC.includes(f.key));
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
