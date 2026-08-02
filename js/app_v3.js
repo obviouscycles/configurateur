@@ -1824,7 +1824,8 @@ function v3GoDevisFast() {
 }
 
 // ─── CARTE "CADRE" — nouvelle en tête de l'étape Composants ──────────────────
-function renderCadreCard() {
+function renderCadreCard(selectId) {
+  selectId = selectId || 'cadre-taille-select';
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
   const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
   const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '');
@@ -1839,8 +1840,8 @@ function renderCadreCard() {
     '</div>' +
     '<div class="post-opts open">' +
       '<div class="dim-field" style="max-width:320px;">' +
-        '<label for="cadre-taille-select" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
-        '<select class="size-select" id="cadre-taille-select" onchange="selectCadreTaille(this.value)">' +
+        '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
+        '<select class="size-select" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
           '<option value="">Je ne sais pas encore</option>' +
           tailles.map(t => '<option value="' + t + '"' + (current === t ? ' selected' : '') + '>' + t + '</option>').join('') +
           '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
@@ -1867,9 +1868,11 @@ function selectCadreTaille(value) {
   MORPHO_DIM_KEYS.forEach(key => {
     if (selSizeSource[key] === 'default') { delete selSize[key]; delete selSizeSource[key]; }
   });
-  dtRenderPosts();
-  dtRenderRecap();
-  dtUpdateStep2Footer();
+  if (typeof dtRenderPosts === 'function') dtRenderPosts();
+  if (typeof dtRenderRecap === 'function') dtRenderRecap();
+  if (typeof dtUpdateStep2Footer === 'function') dtUpdateStep2Footer();
+  if (typeof p11RenderPosts === 'function') p11RenderPosts();
+  if (typeof p11UpdateStep2Footer === 'function') p11UpdateStep2Footer();
 }
 
 function dtRenderPosts() {
@@ -4338,7 +4341,7 @@ function p11RenderPosts() {
   const container = document.getElementById('p11-posts-list');
   if (!container || !selModel) return;
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
-  container.innerHTML = POST_META.map(p => {
+  container.innerHTML = renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
