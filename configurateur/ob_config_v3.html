@@ -1648,7 +1648,7 @@
 
     <!-- Bandeau Titanium collant mobile — apparaît au scroll une fois le bandeau original hors champ,
          disparaît en remontant. Pas de survol (tactile) : le tap déclenche directement l'action. -->
-    <div id="p11-titanium-sticky" onclick="v3GoTitaniumFromS1()" style="position:fixed;left:0;right:0;bottom:0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:940;padding:0 .75rem calc(.75rem + env(safe-area-inset-bottom));">
+    <div id="p11-titanium-sticky" onclick="v3GoTitaniumFromS1()" style="position:fixed;left:0;right:0;bottom:0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:940;padding:0 .75rem calc(.75rem + env(safe-area-inset-bottom));pointer-events:none;">
       <div style="background:#1a1a1a;border:1px solid #F5C400;border-radius:10px;padding:.75rem 1rem;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.45);">
         <div style="width:34px;height:34px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i class="ti ti-sparkles" style="font-size:15px;color:#F5C400;"></i>
@@ -1813,13 +1813,13 @@
 
     <!-- Étape 4 (hors_gamme) : Projet spécifique -->
     <div class="p11-step" id="p11-s4horsgamme" style="background:#111;padding-bottom:80px;">
-      <div style="padding:1.5rem 1rem 0;">
+      <div style="padding:1.5rem 1rem 0;" id="p11-titanium-main-content">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
           <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-bulb" style="font-size:18px;color:#F5C400;"></i>
           </div>
           <div>
-            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Niveau Titanium — dès 720 €</div>
+            <div style="font-size:10px;color:#F5C400;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Prestation Titanium — 720 €</div>
             <div style="font-size:16px;color:#f2f2f2;font-weight:500;">Projet spécifique</div>
           </div>
         </div>
@@ -1829,6 +1829,7 @@
           <span style="font-size:13px;color:#f2f2f2;font-weight:500;">Parlez-nous de votre vélo</span>
         </div>
         <div style="font-size:12px;color:#888;margin-bottom:.6rem;line-height:1.5;">Votre projet ne correspond à aucun modèle Obvious ? Décrivez-le.</div>
+        <div style="font-size:11px;color:#888;background:#151515;border-left:2px solid #F5C400;padding:8px 10px;margin-bottom:1rem;line-height:1.5;">Les 720 € correspondent à l'étude et à la conception de votre projet — pas au prix du vélo final, qui dépendra de votre projet.</div>
         <textarea id="p11-horsgamme-message" rows="4" placeholder="Type de vélo, usage, inspirations, contraintes techniques..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;border-radius:8px;color:#f2f2f2;padding:12px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.6;margin-bottom:1.25rem;"></textarea>
 
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
@@ -1845,8 +1846,18 @@
         </div>
         <div style="display:flex;gap:.75rem;padding-bottom:1.5rem;">
           <button onclick="p11Back()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
-          <button onclick="p11GoDevisFromOOD()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Ma configuration →</button>
+          <button onclick="openTitaniumModal()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Envoyer mon projet →</button>
         </div>
+      </div>
+
+      <!-- Confirmation après envoi -->
+      <div style="display:none;text-align:center;padding:3rem 1.5rem;" id="p11-titanium-confirm">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+          <i class="ti ti-check" style="font-size:24px;color:#F5C400;"></i>
+        </div>
+        <div style="font-size:16px;color:#f2f2f2;font-weight:500;margin-bottom:.5rem;">Votre projet nous est parvenu</div>
+        <div style="font-size:13px;color:#999;line-height:1.6;">Nous reviendrons vers vous pour en discuter.</div>
+        <button onclick="p11UpdateStep(1)" style="margin-top:1.75rem;background:none;border:0.5px solid #333;color:#888;padding:10px 18px;font-size:12px;cursor:pointer;font-family:inherit;border-radius:8px;">Retour à l'accueil</button>
       </div>
     </div>
 
