@@ -1957,7 +1957,7 @@ function dtRenderPosts() {
       const isDef = isPresetDefault(p.id, o.id);
       const rec2 = isRecommended(o, selModel);
       const d = o.price - curPrice;
-      const diff = isDef ? 'inclus' : sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+      const diff = sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
       if (hasPhotos) {
         const imgHtml = (o.image && o.image !== 'assets/no_option.png')
           ? '<img src="' + o.image + '" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;display:block;">'
@@ -4518,7 +4518,7 @@ function p11RenderPosts() {
             pc = curPrice!==0?'neg':'incl';
           } else {
             const d = o.price - curPrice;
-            diff = isDefault ? 'inclus' : sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
             pc = d<0?'neg':d>0?'pos':'zero';
           }
           const imgHTML = o.image && o.image !== 'assets/no_option.png'
@@ -4531,7 +4531,8 @@ function p11RenderPosts() {
               (rec ? '<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span></div>' : '') +
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
-              (isDefault ? '<span class="incl-preset">inclus</span>' : (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '')) +
+              (isDefault ? '<span class="incl-preset">inclus</span>' : '') +
+              (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
         }).join('') + '</div>'
@@ -4545,7 +4546,7 @@ function p11RenderPosts() {
             diffNeg = false;
           } else {
             const d = o.price - curPrice;
-            diff = isDefault ? 'inclus' : sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
             diffNeg = d < 0;
           }
           return '<div class="opt-item' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
@@ -4554,7 +4555,7 @@ function p11RenderPosts() {
               '<div class="oi-name">' + o.name + '</div>' +
               (o.desc ? '<div class="oi-desc">' + o.desc + '</div>' : '') +
             '</div>' +
-            '<div class="oi-meta">' + (isDefault ? '<span class="incl-preset">inclus</span>' : '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div>') + '</div>' +
+            '<div class="oi-meta">' + (isDefault ? '<span class="incl-preset">inclus</span>' : '') + '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
         }).join('') + '</div>';
 
