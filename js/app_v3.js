@@ -4156,9 +4156,7 @@ function p11UpdateStep(n) {
     } else if (n === 4) {
       nextLbl.textContent = 'Ma configuration';
     } else if (n === 2) {
-      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
-        : !selSize.taille ? 'Déterminer ma taille'
-        : 'Personnalisation';
+      nextLbl.textContent = !selSize.taille && v2Parcours !== 'sur_mesure' ? 'Déterminer ma taille' : 'Personnalisation';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
