@@ -1324,8 +1324,12 @@ function v3InitTitaniumSticky() {
   // Un seul élément change de forme : carré replié <-> bandeau complet déplié.
   // Ni les deux affichés en même temps, ni jamais visible quand le bandeau original l'est déjà.
   function render() {
+    // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
+    // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
+    const realHeight = Math.round(inline.getBoundingClientRect().height) || 78;
+
     if (dtStep !== 1) {
-      morph.style.width = '52px'; morph.style.height = '52px'; morph.style.borderRadius = '12px';
+      morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '12px';
       morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
       if (text) text.style.opacity = '0';
       return;
@@ -1335,30 +1339,18 @@ function v3InitTitaniumSticky() {
 
     morph.style.opacity = showAtAll ? '1' : '0';
     morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
+    morph.style.height = realHeight + 'px'; // identique dans les deux états, jamais "auto"
 
     if (expanded) {
       const bannerR = inline.getBoundingClientRect();
-      // "height: auto" ne s'anime pas en CSS — on mesure la hauteur cible réelle en pixels
-      // (texte visible, largeur finale) puis on l'applique comme valeur de transition.
-      const prevHeight = morph.style.height;
-      const prevWidth  = morph.style.width;
-      if (text) text.style.opacity = '1';
-      morph.style.width = bannerR.width + 'px';
-      morph.style.height = 'auto';
-      const targetHeight = morph.scrollHeight;
-      morph.style.width = prevWidth;
-      morph.style.height = prevHeight;
-      void morph.offsetHeight; // force le reflow pour que la transition reparte bien du point de départ
-
       morph.style.left = bannerR.left + 'px';
       morph.style.width = bannerR.width + 'px';
-      morph.style.height = targetHeight + 'px';
       morph.style.borderRadius = '10px';
+      if (text) text.style.opacity = '1';
     } else {
       const iconR = inlineIconRect();
       morph.style.left = iconR.left + 'px';
-      morph.style.width = '52px';
-      morph.style.height = '52px';
+      morph.style.width = realHeight + 'px'; // carré parfait : largeur = hauteur
       morph.style.borderRadius = '12px';
       if (text) text.style.opacity = '0';
     }
