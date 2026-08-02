@@ -1385,6 +1385,16 @@ function v3InitTitaniumSticky() {
   morph.addEventListener('mouseenter', () => { isHovered = true; render(); });
   morph.addEventListener('mouseleave', () => { isHovered = false; render(); });
 
+  // Observe directement les changements de classe sur #dt-s1 (ajout/retrait de "active") —
+  // couvre TOUS les chemins de navigation qui montrent/masquent l'étape 1, quelle que soit
+  // la fonction JS qui déclenche le changement (dtGo, retour Titanium, sélection modèle...),
+  // sans avoir besoin de patcher chaque fonction individuellement.
+  const dtS1 = document.getElementById('dt-s1');
+  if (dtS1) {
+    const stepObserver = new MutationObserver(() => render());
+    stepObserver.observe(dtS1, { attributes: true, attributeFilter: ['class'] });
+  }
+
   render(); // état initial : carré replié, aligné à gauche sur le bandeau original
 }
 
