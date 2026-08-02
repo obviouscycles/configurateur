@@ -1337,13 +1337,23 @@ function v3InitTitaniumSticky() {
     morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
 
     if (expanded) {
-      const iconR = inlineIconRect();
       const bannerR = inline.getBoundingClientRect();
-      morph.style.left = bannerR.left + 'px';
+      // "height: auto" ne s'anime pas en CSS — on mesure la hauteur cible réelle en pixels
+      // (texte visible, largeur finale) puis on l'applique comme valeur de transition.
+      const prevHeight = morph.style.height;
+      const prevWidth  = morph.style.width;
+      if (text) text.style.opacity = '1';
       morph.style.width = bannerR.width + 'px';
       morph.style.height = 'auto';
+      const targetHeight = morph.scrollHeight;
+      morph.style.width = prevWidth;
+      morph.style.height = prevHeight;
+      void morph.offsetHeight; // force le reflow pour que la transition reparte bien du point de départ
+
+      morph.style.left = bannerR.left + 'px';
+      morph.style.width = bannerR.width + 'px';
+      morph.style.height = targetHeight + 'px';
       morph.style.borderRadius = '10px';
-      if (text) text.style.opacity = '1';
     } else {
       const iconR = inlineIconRect();
       morph.style.left = iconR.left + 'px';
