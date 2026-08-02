@@ -1294,6 +1294,59 @@ let dtStep = 1;
 // Bandeau Titanium flottant — apparaît quand le bandeau original sort de l'écran (étape 1 seulement).
 // Utilise IntersectionObserver (fonctionne qu'il y ait du scroll ou non) et rattache l'élément
 // directement à <body> pour garantir un vrai position:fixed sans dépendance à un conteneur parent.
+// ─── BANDEAU TITANIUM COLLANT MOBILE — plus simple que le desktop (pas de morph,
+// pas de survol) : apparaît/disparaît en glissant, déclenché par le scroll uniquement. ──
+function v3InitTitaniumStickyMobile() {
+  const sticky = document.getElementById('p11-titanium-sticky');
+  const inline = document.getElementById('p11-titanium-banner-inline');
+  if (!sticky || !inline || sticky._titaniumBound) return;
+  sticky._titaniumBound = true;
+
+  // Détache du HTML statique (imbriqué dans #p11-container) et rattache à <body> :
+  // élimine tout risque qu'un ancêtre ne casse le calcul de position:fixed par rapport
+  // à la fenêtre — même correctif que celui appliqué côté desktop.
+  document.body.appendChild(sticky);
+
+  let hasScrolled = false;
+
+  function currentlyVisible() {
+    const r = inline.getBoundingClientRect();
+    return r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+  }
+
+  function render() {
+    if (typeof p11CurrentStep !== 'undefined' && p11CurrentStep !== 1) {
+      sticky.style.transform = 'translateY(100%)';
+      sticky.style.pointerEvents = 'none';
+      return;
+    }
+    const visible = currentlyVisible();
+    // Si un modèle est déjà choisi, le bandeau bas standard (p11-bottom-bar, "Configurer vos
+    // composants") occupe déjà cette zone -> ne pas superposer le bandeau Titanium dessus.
+    const bottomBarShowing = !!selModel;
+    const shouldShow = hasScrolled && !visible && !bottomBarShowing;
+    sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(100%)';
+    sticky.style.pointerEvents = shouldShow ? 'auto' : 'none';
+  }
+
+  function onScroll() {
+    hasScrolled = (window.scrollY || document.documentElement.scrollTop || 0) > 40;
+    render();
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', render);
+
+  // Robuste face à tout changement de step, quelle que soit la fonction qui le déclenche
+  const p11S1 = document.getElementById('p11-s1');
+  if (p11S1) {
+    const stepObserver = new MutationObserver(() => render());
+    stepObserver.observe(p11S1, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
+
+  render();
+}
+
 function v3InitTitaniumSticky() {
   const morph = document.getElementById('titanium-morph');
   const text  = document.getElementById('titanium-morph-text');
@@ -1400,14 +1453,19 @@ function v3InitTitaniumSticky() {
 
 function v3GoTitaniumFromS1() {
   v2Parcours = 'hors_gamme';
-  dtStep = 4;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s4horsgamme')?.classList.add('active');
   // Réinitialiser l'affichage (au cas où un envoi précédent aurait laissé la confirmation visible)
   const mainContent = document.getElementById('titanium-main-content');
   const confirm = document.getElementById('titanium-confirm');
   if (mainContent) mainContent.style.display = '';
   if (confirm) confirm.style.display = 'none';
+
+  if (window.innerWidth < 768) {
+    p11UpdateStep(4);
+    return;
+  }
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4horsgamme')?.classList.add('active');
   v2UpdateStepper();
   dtRenderRecap();
   const main = document.getElementById('dt-main');
@@ -2152,8 +2210,7 @@ function p11ChoisirResultatsSheet() {
   p11GuideOnlyActive = false;
   p11GuideSnapshot = null;
   p11CloseGuideSheetVisual();
-  p11RenderPosts();
-  p11UpdateTotal();
+  p11UpdateStep(2); // re-rend tout, y compris le libellé du bouton ("Personnalisation" désormais)
 }
 
 // Annule tout changement effectué depuis l'ouverture du sheet, puis le referme.
@@ -2166,8 +2223,7 @@ function p11SortirGuideSheet() {
   p11GuideOnlyActive = false;
   p11GuideSnapshot = null;
   p11CloseGuideSheetVisual();
-  p11RenderPosts();
-  p11UpdateTotal();
+  p11UpdateStep(2); // re-rend tout, y compris le libellé du bouton
 }
 
 function v3EnterGuideOnly() {
@@ -4148,7 +4204,10 @@ function p11Back() {
   if (p11CurrentStep === 1) return;
   if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
   if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
-  if (p11CurrentStep === 4) { p11UpdateStep(2); return; } // sur_mesure/hors_gamme reviennent direct en composants
+  if (p11CurrentStep === 4) {
+    if (v2Parcours === 'hors_gamme') { p11UpdateStep(1); return; } // Titanium -> retour étape 1 (démarré de là)
+    p11UpdateStep(2); return; // Performance -> retour composants
+  }
   if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
   if (p11CurrentStep === 6) {
     if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
@@ -5140,9 +5199,11 @@ if (typeof _origChooseParcours === 'function') {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', p11TryInit);
   document.addEventListener('DOMContentLoaded', v3InitTitaniumSticky);
+  document.addEventListener('DOMContentLoaded', v3InitTitaniumStickyMobile);
 } else {
   p11TryInit();
   v3InitTitaniumSticky();
+  v3InitTitaniumStickyMobile();
 }
 
 // Resize : utiliser un debounce et vérifier que la largeur a vraiment changé
