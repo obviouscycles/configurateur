@@ -1349,7 +1349,10 @@ function v3InitTitaniumSticky() {
       if (text) text.style.opacity = '1';
     } else {
       const iconR = inlineIconRect();
-      morph.style.left = iconR.left + 'px';
+      // Centre le carré sur l'icône d'origine (plutôt qu'aligner les bords gauche) — évite
+      // le décalage dû à la marge interne de l'icône dans le carré, qui n'a plus la même largeur.
+      const iconCenterX = iconR.left + iconR.width / 2;
+      morph.style.left = (iconCenterX - realHeight / 2) + 'px';
       morph.style.width = realHeight + 'px'; // carré parfait : largeur = hauteur
       morph.style.borderRadius = '12px';
       if (text) text.style.opacity = '0';
