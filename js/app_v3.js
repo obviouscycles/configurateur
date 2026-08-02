@@ -1298,12 +1298,14 @@ function v3InitTitaniumSticky() {
   const sticky  = document.getElementById('titanium-sticky');
   const inline  = document.getElementById('titanium-banner-inline');
   const card    = document.getElementById('titanium-sticky-card');
+  const mini    = document.getElementById('titanium-mini');
   if (!sticky || !inline || sticky._titaniumBound) return;
   sticky._titaniumBound = true;
 
   // Détache du HTML statique et rattache à <body> : élimine tout risque qu'un ancêtre
   // (transform, overflow...) ne casse le calcul de position:fixed par rapport à la fenêtre.
   document.body.appendChild(sticky);
+  if (mini) document.body.appendChild(mini);
 
   let inlineVisible = true;
   // hasScrolled n'est JAMAIS activé à l'initialisation — uniquement par un vrai événement
@@ -1323,11 +1325,22 @@ function v3InitTitaniumSticky() {
     card.style.marginLeft = r.left + 'px';
   }
 
+  // Le badge mini est le "repos" par défaut sur l'étape 1 ; le bandeau complet est
+  // l'état "ouvert" déclenché par le scroll — jamais les deux affichés en même temps.
   function render() {
-    if (dtStep !== 1) { sticky.style.transform = 'translateY(120%)'; return; }
+    if (dtStep !== 1) {
+      sticky.style.transform = 'translateY(120%)';
+      if (mini) { mini.style.opacity = '0'; mini.style.transform = 'scale(.6)'; mini.style.pointerEvents = 'none'; }
+      return;
+    }
     const shouldShow = hasScrolled && !inlineVisible;
     if (shouldShow) syncWidth();
     sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(120%)';
+    if (mini) {
+      mini.style.opacity = shouldShow ? '0' : '1';
+      mini.style.transform = shouldShow ? 'scale(.6)' : 'scale(1)';
+      mini.style.pointerEvents = shouldShow ? 'none' : 'auto';
+    }
   }
 
   const observer = new IntersectionObserver((entries) => {
@@ -1346,6 +1359,7 @@ function v3InitTitaniumSticky() {
   window.addEventListener('resize', render);
   const dtMain = document.getElementById('dt-main');
   if (dtMain) dtMain.addEventListener('scroll', onScroll);
+  render(); // état initial : badge mini visible, bandeau complet caché (hasScrolled=false)
 }
 
 function v3GoTitaniumFromS1() {
@@ -1372,7 +1386,13 @@ function dtGo(n) {
   dtRender();
   v2UpdateStepper();
   const sticky = document.getElementById('titanium-sticky');
-  if (sticky && n !== 1) sticky.style.transform = 'translateY(120%)';
+  const mini = document.getElementById('titanium-mini');
+  if (n !== 1) {
+    if (sticky) sticky.style.transform = 'translateY(120%)';
+    if (mini) { mini.style.opacity = '0'; mini.style.transform = 'scale(.6)'; mini.style.pointerEvents = 'none'; }
+  } else if (mini) {
+    mini.style.opacity = '1'; mini.style.transform = 'scale(1)'; mini.style.pointerEvents = 'auto';
+  }
 }
 
 function dtRender() {
