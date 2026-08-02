@@ -2066,6 +2066,10 @@ function dtCheckSizeResult() {
     if (selSize.taille) dtShowGuideResultButtons();
     else dtShowGuideDefaultFooter();
   }
+  if (typeof p11GuideOnlyActive !== 'undefined' && p11GuideOnlyActive) {
+    if (selSize.taille) p11ShowGuideResultButtons();
+    else p11ShowGuideDefaultFooter();
+  }
 }
 
 function dtShowGuideDefaultFooter() {
@@ -2090,6 +2094,80 @@ function dtRenderS3GuideOnly() {
   if (guideZone) guideZone.style.display = 'block';
   if (typeof buildDimsGrid === 'function') buildDimsGrid();
   dtHookCalcFunctions();
+}
+
+// ─── "LAISSEZ-VOUS GUIDER" EN BOTTOM SHEET MOBILE — même principe que la popup
+// desktop : la page Composants reste visible/préservée en dessous. ────────────
+let p11GuideOnlyActive = false;
+let p11GuideSnapshot = null;
+
+function p11RenderGuideSheet() {
+  const zone = document.getElementById('p11-guide-sheet-content');
+  const panelGuide = document.getElementById('panel-guide');
+  if (zone && panelGuide && !zone._init) {
+    zone.appendChild(panelGuide);
+    panelGuide.classList.add('open');
+    zone._init = true;
+  }
+  if (typeof buildDimsGrid === 'function') buildDimsGrid();
+  dtHookCalcFunctions();
+}
+
+function p11OpenGuideSheet() {
+  p11GuideOnlyActive = true;
+  p11GuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
+  p11RenderGuideSheet();
+  if (selSize.taille) { window.sizeValidated = true; p11ShowGuideResultButtons(); }
+  else { window.sizeValidated = false; p11ShowGuideDefaultFooter(); }
+  const overlay = document.getElementById('p11-guide-sheet-overlay');
+  const sheet = document.getElementById('p11-guide-sheet');
+  if (overlay) overlay.style.display = 'block';
+  requestAnimationFrame(() => { if (sheet) sheet.style.transform = 'translateY(0)'; });
+}
+
+function p11CloseGuideSheetVisual() {
+  const overlay = document.getElementById('p11-guide-sheet-overlay');
+  const sheet = document.getElementById('p11-guide-sheet');
+  if (sheet) sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+}
+
+function p11ShowGuideResultButtons() {
+  const footer = document.getElementById('p11-guide-sheet-footer');
+  if (!footer) return;
+  footer.innerHTML =
+    '<button onclick="p11SortirGuideSheet()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">Sortir</button>' +
+    '<button onclick="p11ChoisirResultatsSheet()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Choisir ces résultats →</button>';
+}
+
+function p11ShowGuideDefaultFooter() {
+  const footer = document.getElementById('p11-guide-sheet-footer');
+  if (!footer) return;
+  footer.innerHTML = '<button onclick="p11SortirGuideSheet()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>';
+}
+
+// Les résultats sont déjà écrits en direct dans selSize par le calculateur — on referme
+// le sheet et on rafraîchit la page Composants (restée active en dessous) pour les refléter.
+function p11ChoisirResultatsSheet() {
+  p11GuideOnlyActive = false;
+  p11GuideSnapshot = null;
+  p11CloseGuideSheetVisual();
+  p11RenderPosts();
+  p11UpdateTotal();
+}
+
+// Annule tout changement effectué depuis l'ouverture du sheet, puis le referme.
+function p11SortirGuideSheet() {
+  if (p11GuideSnapshot) {
+    selSize = p11GuideSnapshot.selSize;
+    selSizeSource = p11GuideSnapshot.selSizeSource;
+    v2Parcours = p11GuideSnapshot.v2Parcours;
+  }
+  p11GuideOnlyActive = false;
+  p11GuideSnapshot = null;
+  p11CloseGuideSheetVisual();
+  p11RenderPosts();
+  p11UpdateTotal();
 }
 
 function v3EnterGuideOnly() {
@@ -3932,7 +4010,7 @@ const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre
 function p11StepDivId(n) {
   if (n === 1) return 'p11-s1';
   if (n === 2) return 'p11-s2';
-  if (n === 3) return 'p11-s3bif';
+  if (n === 3) return 'p11-s5perso'; // repurposé : Personnalisation (cadre standard déjà connu)
   if (n === 4) {
     if (v2Parcours === 'sur_mesure') return 'p11-s4mesure';
     if (v2Parcours === 'hors_gamme') return 'p11-s4horsgamme';
@@ -4017,10 +4095,17 @@ function p11UpdateStep(n) {
       nextLbl.textContent = 'Mes personnalisations';
     } else if (n === 4) {
       nextLbl.textContent = 'Ma configuration';
+    } else if (n === 2) {
+      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
+        : !selSize.taille ? 'Déterminer ma taille'
+        : 'Personnalisation';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
   }
+  // Lien discret "Besoin d'aide" — uniquement étape 2, cadre = taille déjà connue
+  const aideLink = document.getElementById('p11-aide-taille-link');
+  if (aideLink) aideLink.style.display = (n === 2 && v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
   // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape 6, récap déjà détaillé)
   if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
@@ -4030,6 +4115,8 @@ function p11UpdateStep(n) {
   if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
   if (n === 2) { p11RenderPosts(); p11UpdateTotal(); }
+  // Step 3 (repurposé) : Personnalisation seule (cadre standard déjà connu)
+  if (n === 3) { p11EvoActiveContainer = 'p11-evo-options-perso'; p11EvoRender(); }
   // Step 4std (taille) : rebuilder dims si mode connu
   if (n === 4 && v2Parcours !== 'sur_mesure' && v2Parcours !== 'hors_gamme' && p11SizeMode) p11BuildDimsGrid();
   // Step 4 sur_mesure : rendre les options Évolution incluses (sans prix)
@@ -4043,8 +4130,13 @@ function p11UpdateStep(n) {
 
 function p11Next() {
   if (p11CurrentStep === 1) { if (!selModel) return; p11UpdateStep(2); return; }
-  if (p11CurrentStep === 2) { p11UpdateStep(3); return; }
-  if (p11CurrentStep === 3) return; // navigation par tap sur une carte uniquement
+  if (p11CurrentStep === 2) {
+    // Destination selon le choix Cadre (carte "Cadre" en haut des composants)
+    if (v2Parcours === 'sur_mesure') { p11UpdateStep(4); return; }
+    if (!selSize.taille) { p11OpenGuideSheet(); return; }
+    p11UpdateStep(3); return; // Personnalisation (repurposé)
+  }
+  if (p11CurrentStep === 3) return; // navigation par boutons inline uniquement
   if (p11CurrentStep === 4) {
     if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
     p11UpdateStep(6); return;
@@ -4056,11 +4148,12 @@ function p11Back() {
   if (p11CurrentStep === 1) return;
   if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
   if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
-  if (p11CurrentStep === 4) { p11UpdateStep(3); return; }
+  if (p11CurrentStep === 4) { p11UpdateStep(2); return; } // sur_mesure/hors_gamme reviennent direct en composants
   if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
   if (p11CurrentStep === 6) {
     if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
-    p11UpdateStep(4); return;
+    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') { p11UpdateStep(4); return; }
+    p11UpdateStep(3); return; // standard -> retour Personnalisation
   }
 }
 
@@ -4230,7 +4323,8 @@ function p11EvoUpdateGravureText(val) {
 
 function p11EvoUpdateTotal() {
   const isMesure = p11EvoActiveContainer === 'p11-mesure-evo-options';
-  const totalId = isMesure ? 'p11-mesure-evo-total' : 'p11-evo-total';
+  const isPerso  = p11EvoActiveContainer === 'p11-evo-options-perso';
+  const totalId = isMesure ? 'p11-mesure-evo-total' : isPerso ? 'p11-evo-total-perso' : 'p11-evo-total';
   const totalEl = document.getElementById(totalId);
   if (!totalEl) return;
   if (isMesure) {
