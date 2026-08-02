@@ -2933,11 +2933,19 @@ function v2BackFromTaille() {
 }
 
 function v2BackFromMesureOrHorsGamme() {
-  // Navigation directe (pas dtGo(2), qui exige un modèle sélectionné — Titanium peut ne pas en avoir)
-  dtStep = 2;
+  // Titanium (hors_gamme) est démarré directement depuis l'étape 1 -> y retourner.
+  // Performance (sur_mesure) est démarré depuis la carte Cadre en étape 2 -> y retourner.
+  // Navigation directe (pas dtGo()), qui exige un modèle sélectionné — Titanium peut ne pas en avoir.
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s2')?.classList.add('active');
-  dtRenderS2 && dtRenderS2();
+  if (v2Parcours === 'hors_gamme') {
+    dtStep = 1;
+    document.getElementById('dt-s1')?.classList.add('active');
+    dtRenderS1 && dtRenderS1();
+  } else {
+    dtStep = 2;
+    document.getElementById('dt-s2')?.classList.add('active');
+    dtRenderS2 && dtRenderS2();
+  }
   v2UpdateStepper();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
