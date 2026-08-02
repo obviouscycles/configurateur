@@ -2480,13 +2480,13 @@
 
     <!-- ÉTAPE 4 (hors_gamme) : Description -->
     <div class="dt-step-content" id="dt-s4horsgamme">
-      <div class="dt-step-body">
+      <div class="dt-step-body" id="titanium-main-content">
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:1.25rem;">
           <div style="width:44px;height:44px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-bulb" style="font-size:20px;color:#F5C400;"></i>
           </div>
           <div>
-            <div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Niveau Titanium — à partir de 720 €</div>
+            <div style="font-size:11px;color:#F5C400;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;">Prestation Titanium — 720 €</div>
             <div style="font-size:18px;color:#f2f2f2;font-weight:500;">Projet spécifique</div>
           </div>
         </div>
@@ -2496,6 +2496,7 @@
             <span style="font-size:14px;color:#f2f2f2;font-weight:500;">Parlez-nous de votre vélo</span>
           </div>
           <div style="font-size:12px;color:#666;margin-bottom:10px;line-height:1.5;">Votre projet ne correspond à aucun modèle Obvious ? Décrivez-le — nous étudierons sa faisabilité avec vous.</div>
+          <div style="font-size:11px;color:#888;background:#151515;border-left:2px solid #F5C400;padding:8px 10px;margin-bottom:1rem;line-height:1.5;">Les 720 € correspondent à l'étude et à la conception de votre projet — pas au prix du vélo final, qui dépendra de votre projet.</div>
           <textarea id="v2-horsgamme-message" rows="4" placeholder="Type de vélo, usage, inspirations, contraintes techniques particulières..." style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;border-radius:8px;color:#f2f2f2;padding:12px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.6;"></textarea>
         </div>
 
@@ -2515,8 +2516,18 @@
 
         <div style="display:flex;gap:1rem;margin-top:2rem;">
           <button onclick="v2BackFromMesureOrHorsGamme()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:10px;font-size:12px;cursor:pointer;font-family:var(--font);border-radius:6px;">← Retour</button>
-          <button onclick="v2GoDevis()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);border-radius:6px;">Ma configuration →</button>
+          <button onclick="openTitaniumModal()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);border-radius:6px;">Envoyer mon projet pour étude →</button>
         </div>
+      </div>
+
+      <!-- Confirmation après envoi -->
+      <div class="dt-step-body" id="titanium-confirm" style="display:none;text-align:center;padding-top:3rem;">
+        <div style="width:64px;height:64px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;">
+          <i class="ti ti-check" style="font-size:28px;color:#F5C400;"></i>
+        </div>
+        <div style="font-size:18px;color:#f2f2f2;font-weight:500;margin-bottom:.5rem;">Votre projet nous est parvenu</div>
+        <div style="font-size:14px;color:#999;line-height:1.6;max-width:400px;margin:0 auto;">Nous reviendrons vers vous pour en discuter.</div>
+        <button onclick="dtGo(1)" style="margin-top:2rem;background:none;border:0.5px solid #333;color:#888;padding:10px 20px;font-size:12px;cursor:pointer;font-family:var(--font);border-radius:6px;">Retour à l'accueil</button>
       </div>
     </div>
 
@@ -2603,6 +2614,38 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSizeAlert()">Annuler</button>
       <button class="btn-send" onclick="closeSizeAlert(); openOrderModal();"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="titanium-modal">
+  <div class="modal">
+    <h3><i class="ti ti-sparkles"></i> Envoyer mon projet</h3>
+    <p>Renseignez vos coordonnées pour que notre équipe étudie votre projet et revienne vers vous.</p>
+    <div class="field">
+      <label>Votre nom et prénom</label>
+      <input type="text" id="titanium-name" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Votre email</label>
+      <input type="email" id="titanium-email" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Votre n° de téléphone</label>
+      <input type="tel" id="titanium-phone" placeholder="" />
+    </div>
+    <div class="field">
+      <label>Votre adresse postale</label>
+      <textarea id="titanium-address" rows="2" placeholder="Numéro, rue, code postal, ville"></textarea>
+    </div>
+    <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-bottom:.75rem;padding:8px 10px;background:var(--bg3);border-left:2px solid #333;">
+      <strong style="color:var(--text2);"><i class="ti ti-shield-lock" style="font-size:11px;margin-right:3px;"></i>Données personnelles (RGPD)</strong>
+      Vos informations sont utilisées uniquement pour traiter votre demande et vous recontacter. Ni vendues ni transmises à des tiers. Droit d'accès/rectification/suppression : <a href="mailto:info@obviouscycles.com" style="color:var(--text2);">info@obviouscycles.com</a> — <a href="https://www.obviouscycles.com/politique-de-confidentialite/" target="_blank" style="color:var(--text3);">politique de confidentialité</a>.
+    </div>
+    <div id="titanium-send-error" style="display:none;color:#e05555;font-size:12px;margin-bottom:.75rem;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeTitaniumModal()">Annuler</button>
+      <button class="btn-send" id="titanium-send-btn" onclick="sendTitaniumProject()"><i class="ti ti-send"></i> Envoyer</button>
     </div>
   </div>
 </div>
