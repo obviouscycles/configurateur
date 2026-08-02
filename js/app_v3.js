@@ -965,6 +965,91 @@ function closeSizeAlert() {
   document.getElementById('size-alert-modal').classList.remove('open');
 }
 
+// ─── PROJET TITANIUM — circuit d'envoi dédié (pas de modèle/prix associé) ──────
+function openTitaniumModal() {
+  document.getElementById('titanium-modal').classList.add('open');
+}
+function closeTitaniumModal() {
+  document.getElementById('titanium-modal').classList.remove('open');
+}
+
+async function sendTitaniumProject() {
+  const name    = document.getElementById('titanium-name').value.trim();
+  const email   = document.getElementById('titanium-email').value.trim();
+  const phone   = document.getElementById('titanium-phone').value.trim();
+  const address = document.getElementById('titanium-address').value.trim();
+  const message = document.getElementById('v2-horsgamme-message')?.value.trim() || '';
+  const fileInput = document.getElementById('v2-horsgamme-file');
+  const errorEl = document.getElementById('titanium-send-error');
+  errorEl.style.display = 'none';
+
+  if (!name)    { errorEl.textContent = 'Merci de renseigner votre nom et prénom.'; errorEl.style.display = 'block'; return; }
+  if (!email)   { errorEl.textContent = 'Merci de renseigner votre adresse email.'; errorEl.style.display = 'block'; return; }
+  if (!address) { errorEl.textContent = 'Merci de renseigner votre adresse postale.'; errorEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('titanium-send-btn');
+  const btnLabel = btn.innerHTML;
+  btn.innerHTML = 'Envoi en cours...';
+  btn.disabled = true;
+
+  try {
+    const configId = generateConfigId();
+
+    // Envoi via Formspree en multipart/form-data pour joindre réellement le fichier
+    const formData = new FormData();
+    formData.append('type_demande', 'Projet Titanium (hors catalogue)');
+    formData.append('nom', name);
+    formData.append('email', email);
+    formData.append('telephone', phone || '—');
+    formData.append('adresse_postale', address);
+    formData.append('description_projet', message || '—');
+    formData.append('reference', configId);
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      formData.append('document_joint', fileInput.files[0]);
+    }
+
+    const response = await fetch('https://formspree.io/f/mqeoqewy', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Erreur envoi Formspree: ' + response.status);
+
+    // Sauvegarde légère dans Supabase — non bloquante si elle échoue
+    try {
+      await saveConfigToSupabase({
+        config_id: configId,
+        modele: null,
+        preset: null,
+        prix: null,
+        config_json: {
+          type: 'titanium',
+          description: message,
+          nom_client: name,
+          email_client: email,
+          adresse_postale: address,
+          telephone: phone,
+        },
+        nom_client: name,
+        email_client: email,
+        statut: 'projet_titanium',
+      });
+    } catch (e) { /* non bloquant */ }
+
+    closeTitaniumModal();
+    const mainContent = document.getElementById('titanium-main-content');
+    const confirm = document.getElementById('titanium-confirm');
+    if (mainContent) mainContent.style.display = 'none';
+    if (confirm) confirm.style.display = 'block';
+  } catch (e) {
+    errorEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez ou contactez-nous directement à info@obviouscycles.com.";
+    errorEl.style.display = 'block';
+  } finally {
+    btn.innerHTML = btnLabel;
+    btn.disabled = false;
+  }
+}
+
 function openOrderModal() {
   syncSelSize();
   document.getElementById('order-config-display').value = buildConfigText(selModel, selOpts);
@@ -1268,6 +1353,11 @@ function v3GoTitaniumFromS1() {
   dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s4horsgamme')?.classList.add('active');
+  // Réinitialiser l'affichage (au cas où un envoi précédent aurait laissé la confirmation visible)
+  const mainContent = document.getElementById('titanium-main-content');
+  const confirm = document.getElementById('titanium-confirm');
+  if (mainContent) mainContent.style.display = '';
+  if (confirm) confirm.style.display = 'none';
   v2UpdateStepper();
   dtRenderRecap();
   const main = document.getElementById('dt-main');
