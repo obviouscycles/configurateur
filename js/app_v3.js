@@ -1309,6 +1309,7 @@ function v3InitTitaniumSticky() {
   // hasScrolled n'est JAMAIS activé à l'initialisation — uniquement par un vrai événement
   // 'scroll' mesurant plus de 40px, jamais par le rendu initial ou l'IntersectionObserver.
   let hasScrolled = false;
+  let isHovered = false;
 
   function scrollDistance() {
     const dtMain = document.getElementById('dt-main');
@@ -1326,7 +1327,8 @@ function v3InitTitaniumSticky() {
   function render() {
     // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
     // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
-    const realHeight = Math.round(inline.getBoundingClientRect().height) || 78;
+    const bannerR = inline.getBoundingClientRect();
+    const realHeight = Math.round(bannerR.height) || 78;
 
     if (dtStep !== 1) {
       morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '12px';
@@ -1334,25 +1336,22 @@ function v3InitTitaniumSticky() {
       if (text) text.style.opacity = '0';
       return;
     }
-    const expanded = hasScrolled && !inlineVisible;
+    // Le survol de la souris force aussi l'ouverture, en plus du scroll
+    const expanded = (hasScrolled || isHovered) && !inlineVisible;
     const showAtAll = !inlineVisible; // masqué dès que le bandeau original redevient visible
 
     morph.style.opacity = showAtAll ? '1' : '0';
     morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
     morph.style.height = realHeight + 'px'; // identique dans les deux états, jamais "auto"
+    // Bord gauche identique dans les deux états (aligné sur le bandeau original, comme les vélos)
+    // — jamais besoin d'animer "left", donc aucun risque de décalage visuel pendant la transition.
+    morph.style.left = bannerR.left + 'px';
 
     if (expanded) {
-      const bannerR = inline.getBoundingClientRect();
-      morph.style.left = bannerR.left + 'px';
       morph.style.width = bannerR.width + 'px';
       morph.style.borderRadius = '10px';
       if (text) text.style.opacity = '1';
     } else {
-      const iconR = inlineIconRect();
-      // Centre le carré sur l'icône d'origine (plutôt qu'aligner les bords gauche) — évite
-      // le décalage dû à la marge interne de l'icône dans le carré, qui n'a plus la même largeur.
-      const iconCenterX = iconR.left + iconR.width / 2;
-      morph.style.left = (iconCenterX - realHeight / 2) + 'px';
       morph.style.width = realHeight + 'px'; // carré parfait : largeur = hauteur
       morph.style.borderRadius = '12px';
       if (text) text.style.opacity = '0';
@@ -1375,7 +1374,12 @@ function v3InitTitaniumSticky() {
   window.addEventListener('resize', render);
   const dtMain = document.getElementById('dt-main');
   if (dtMain) dtMain.addEventListener('scroll', onScroll);
-  render(); // état initial : carré replié, aligné sur l'icône du bandeau original
+
+  // Survol de la souris : ouvre le carré en bandeau, même sans avoir scrollé
+  morph.addEventListener('mouseenter', () => { isHovered = true; render(); });
+  morph.addEventListener('mouseleave', () => { isHovered = false; render(); });
+
+  render(); // état initial : carré replié, aligné à gauche sur le bandeau original
 }
 
 function v3GoTitaniumFromS1() {
@@ -2929,8 +2933,14 @@ function v2BackFromTaille() {
 }
 
 function v2BackFromMesureOrHorsGamme() {
-  // La page bifurcation (dt-s3bif) n'existe plus dans le flux — retour direct à l'étape 2 (Composants)
-  dtGo(2);
+  // Navigation directe (pas dtGo(2), qui exige un modèle sélectionné — Titanium peut ne pas en avoir)
+  dtStep = 2;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s2')?.classList.add('active');
+  dtRenderS2 && dtRenderS2();
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
 }
 
 function v2BackFromDevis() {
