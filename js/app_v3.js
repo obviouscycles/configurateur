@@ -1336,9 +1336,15 @@ function v3InitTitaniumSticky() {
       if (text) text.style.opacity = '0';
       return;
     }
+    // Mesure directe et immédiate (pas la valeur mise en cache par l'IntersectionObserver,
+    // qui peut être asynchrone/en retard juste après un changement d'étape) : le bandeau
+    // original est considéré visible s'il chevauche la fenêtre actuellement.
+    const currentlyVisible = bannerR.height > 0 && bannerR.bottom > 0 && bannerR.top < window.innerHeight;
+    inlineVisible = currentlyVisible; // garde la variable synchronisée pour l'observer aussi
+
     // Le survol de la souris force aussi l'ouverture, en plus du scroll
-    const expanded = (hasScrolled || isHovered) && !inlineVisible;
-    const showAtAll = !inlineVisible; // masqué dès que le bandeau original redevient visible
+    const expanded = (hasScrolled || isHovered) && !currentlyVisible;
+    const showAtAll = !currentlyVisible; // masqué dès que le bandeau original redevient visible
 
     morph.style.opacity = showAtAll ? '1' : '0';
     morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
@@ -1409,6 +1415,9 @@ function dtGo(n) {
   if (morph && n !== 1) {
     morph.style.opacity = '0';
     morph.style.pointerEvents = 'none';
+  } else if (n === 1) {
+    // Redéclenche le calcul d'affichage du carré/bandeau Titanium au retour sur l'étape 1
+    window.dispatchEvent(new Event('resize'));
   }
 }
 
