@@ -1344,10 +1344,13 @@ function v3InitTitaniumSticky() {
     const shouldShow = hasScrolled && !inlineVisible;
     if (shouldShow) syncWidth();
     sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(120%)';
+    // Le badge mini ne s'affiche QUE quand ni le bandeau original ni le bandeau flottant
+    // ne sont visibles — jamais en même temps que l'un ou l'autre.
+    const showMini = !inlineVisible && !hasScrolled;
     if (mini) {
-      mini.style.opacity = shouldShow ? '0' : '1';
-      mini.style.transform = shouldShow ? 'scale(.6)' : 'scale(1)';
-      mini.style.pointerEvents = shouldShow ? 'none' : 'auto';
+      mini.style.opacity = showMini ? '1' : '0';
+      mini.style.transform = showMini ? 'scale(1)' : 'scale(.6)';
+      mini.style.pointerEvents = showMini ? 'auto' : 'none';
     }
   }
 
