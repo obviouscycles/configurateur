@@ -4508,19 +4508,14 @@ function p11RenderPosts() {
 
     const optHtml = hasPhotos
       ? '<div class="opt-photo-grid">' + opts.map(o => {
-          const locked = isLocked(o, selModel);
           const sel = selOpts[p.id] === o.id;
           const isDefault = isPresetDefault(p.id, o.id);
           const rec = isRecommended(o, selModel);
-          let diff, pc;
-          if (locked) {
-            diff = curPrice!==0 ? '−'+Math.abs(curPrice).toLocaleString('fr-FR')+' €' : '';
-            pc = curPrice!==0?'neg':'incl';
-          } else {
-            const d = o.price - curPrice;
-            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
-            pc = d<0?'neg':d>0?'pos':'zero';
-          }
+          // Toujours l'écart réel vs le composant actuellement sélectionné (comme sur desktop) —
+          // le statut "locked" de l'option affichée n'a pas à changer ce calcul.
+          const d = o.price - curPrice;
+          const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+          const pc = d<0?'neg':d>0?'pos':'zero';
           const imgHTML = o.image && o.image !== 'assets/no_option.png'
             ? '<img src="' + o.image + '" alt="' + o.name + '" loading="lazy" onerror="this.style.display=\'none\'">'
             : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
@@ -4537,18 +4532,12 @@ function p11RenderPosts() {
           '</div>';
         }).join('') + '</div>'
       : '<div class="opt-list">' + opts.map(o => {
-          const locked = isLocked(o, selModel);
           const sel = selOpts[p.id] === o.id;
           const isDefault = isPresetDefault(p.id, o.id);
-          let diff, diffNeg;
-          if (locked) {
-            diff = curPrice!==0 ? '−'+Math.abs(curPrice).toLocaleString('fr-FR')+' €' : '—';
-            diffNeg = false;
-          } else {
-            const d = o.price - curPrice;
-            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
-            diffNeg = d < 0;
-          }
+          // Toujours l'écart réel vs le composant actuellement sélectionné (comme sur desktop)
+          const d = o.price - curPrice;
+          const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+          const diffNeg = d < 0;
           return '<div class="opt-item' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
             '<div class="opt-radio"><div class="radio-dot"></div></div>' +
             '<div class="oi-info">' +
