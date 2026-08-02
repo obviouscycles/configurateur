@@ -1348,6 +1348,10 @@ function v3InitTitaniumStickyMobile() {
 }
 
 function v3InitTitaniumSticky() {
+  // Réservé au desktop — le bandeau/carré mobile est géré séparément par
+  // v3InitTitaniumStickyMobile(). Sans ce garde-fou, sa logique de visibilité (basée sur
+  // dtStep, jamais mis à jour pendant une navigation mobile) l'affiche par erreur partout.
+  if (window.innerWidth < 768) return;
   const morph = document.getElementById('titanium-morph');
   const text  = document.getElementById('titanium-morph-text');
   const inline = document.getElementById('titanium-banner-inline');
