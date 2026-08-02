@@ -1295,17 +1295,15 @@ let dtStep = 1;
 // Utilise IntersectionObserver (fonctionne qu'il y ait du scroll ou non) et rattache l'élément
 // directement à <body> pour garantir un vrai position:fixed sans dépendance à un conteneur parent.
 function v3InitTitaniumSticky() {
-  const sticky  = document.getElementById('titanium-sticky');
-  const inline  = document.getElementById('titanium-banner-inline');
-  const card    = document.getElementById('titanium-sticky-card');
-  const mini    = document.getElementById('titanium-mini');
-  if (!sticky || !inline || sticky._titaniumBound) return;
-  sticky._titaniumBound = true;
+  const morph = document.getElementById('titanium-morph');
+  const text  = document.getElementById('titanium-morph-text');
+  const inline = document.getElementById('titanium-banner-inline');
+  if (!morph || !inline || morph._titaniumBound) return;
+  morph._titaniumBound = true;
 
   // Détache du HTML statique et rattache à <body> : élimine tout risque qu'un ancêtre
   // (transform, overflow...) ne casse le calcul de position:fixed par rapport à la fenêtre.
-  document.body.appendChild(sticky);
-  if (mini) document.body.appendChild(mini);
+  document.body.appendChild(morph);
 
   let inlineVisible = true;
   // hasScrolled n'est JAMAIS activé à l'initialisation — uniquement par un vrai événement
@@ -1317,40 +1315,42 @@ function v3InitTitaniumSticky() {
     return Math.max(window.scrollY || 0, dtMain ? dtMain.scrollTop : 0);
   }
 
-  // Aligne la largeur (et la position horizontale) du bandeau flottant sur celles du bandeau original
-  function syncWidth() {
-    if (!card) return;
-    const r = inline.getBoundingClientRect();
-    card.style.width = r.width + 'px';
-    card.style.marginLeft = r.left + 'px';
-  }
-
-  // Positionne le badge mini exactement à l'endroit où se trouve l'icône dans le bandeau original
-  function syncMiniPosition() {
-    if (!mini) return;
+  // Position (icône du bandeau original) et largeur cible du bandeau original, pour le déploiement
+  function inlineIconRect() {
     const iconEl = inline.querySelector('i');
-    const r = (iconEl ? iconEl.parentElement : inline).getBoundingClientRect();
-    mini.style.left = r.left + 'px';
+    return (iconEl ? iconEl.parentElement : inline).getBoundingClientRect();
   }
 
-  // Le badge mini est le "repos" par défaut sur l'étape 1 ; le bandeau complet est
-  // l'état "ouvert" déclenché par le scroll — jamais les deux affichés en même temps.
+  // Un seul élément change de forme : carré replié <-> bandeau complet déplié.
+  // Ni les deux affichés en même temps, ni jamais visible quand le bandeau original l'est déjà.
   function render() {
     if (dtStep !== 1) {
-      sticky.style.transform = 'translateY(120%)';
-      if (mini) { mini.style.opacity = '0'; mini.style.transform = 'scale(.6)'; mini.style.pointerEvents = 'none'; }
+      morph.style.width = '52px'; morph.style.height = '52px'; morph.style.borderRadius = '12px';
+      morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
+      if (text) text.style.opacity = '0';
       return;
     }
-    const shouldShow = hasScrolled && !inlineVisible;
-    if (shouldShow) syncWidth();
-    sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(120%)';
-    // Le badge mini ne s'affiche QUE quand ni le bandeau original ni le bandeau flottant
-    // ne sont visibles — jamais en même temps que l'un ou l'autre.
-    const showMini = !inlineVisible && !hasScrolled;
-    if (mini) {
-      mini.style.opacity = showMini ? '1' : '0';
-      mini.style.transform = showMini ? 'scale(1)' : 'scale(.6)';
-      mini.style.pointerEvents = showMini ? 'auto' : 'none';
+    const expanded = hasScrolled && !inlineVisible;
+    const showAtAll = !inlineVisible; // masqué dès que le bandeau original redevient visible
+
+    morph.style.opacity = showAtAll ? '1' : '0';
+    morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
+
+    if (expanded) {
+      const iconR = inlineIconRect();
+      const bannerR = inline.getBoundingClientRect();
+      morph.style.left = bannerR.left + 'px';
+      morph.style.width = bannerR.width + 'px';
+      morph.style.height = 'auto';
+      morph.style.borderRadius = '10px';
+      if (text) text.style.opacity = '1';
+    } else {
+      const iconR = inlineIconRect();
+      morph.style.left = iconR.left + 'px';
+      morph.style.width = '52px';
+      morph.style.height = '52px';
+      morph.style.borderRadius = '12px';
+      if (text) text.style.opacity = '0';
     }
   }
 
@@ -1367,11 +1367,10 @@ function v3InitTitaniumSticky() {
   }
 
   window.addEventListener('scroll', onScroll);
-  window.addEventListener('resize', () => { syncMiniPosition(); render(); });
+  window.addEventListener('resize', render);
   const dtMain = document.getElementById('dt-main');
   if (dtMain) dtMain.addEventListener('scroll', onScroll);
-  syncMiniPosition();
-  render(); // état initial : badge mini visible (aligné sur l'icône), bandeau complet caché
+  render(); // état initial : carré replié, aligné sur l'icône du bandeau original
 }
 
 function v3GoTitaniumFromS1() {
@@ -1397,13 +1396,10 @@ function dtGo(n) {
   document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
   v2UpdateStepper();
-  const sticky = document.getElementById('titanium-sticky');
-  const mini = document.getElementById('titanium-mini');
-  if (n !== 1) {
-    if (sticky) sticky.style.transform = 'translateY(120%)';
-    if (mini) { mini.style.opacity = '0'; mini.style.transform = 'scale(.6)'; mini.style.pointerEvents = 'none'; }
-  } else if (mini) {
-    mini.style.opacity = '1'; mini.style.transform = 'scale(1)'; mini.style.pointerEvents = 'auto';
+  const morph = document.getElementById('titanium-morph');
+  if (morph && n !== 1) {
+    morph.style.opacity = '0';
+    morph.style.pointerEvents = 'none';
   }
 }
 
