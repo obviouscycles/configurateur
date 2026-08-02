@@ -1325,6 +1325,14 @@ function v3InitTitaniumSticky() {
     card.style.marginLeft = r.left + 'px';
   }
 
+  // Positionne le badge mini exactement à l'endroit où se trouve l'icône dans le bandeau original
+  function syncMiniPosition() {
+    if (!mini) return;
+    const iconEl = inline.querySelector('i');
+    const r = (iconEl ? iconEl.parentElement : inline).getBoundingClientRect();
+    mini.style.left = r.left + 'px';
+  }
+
   // Le badge mini est le "repos" par défaut sur l'étape 1 ; le bandeau complet est
   // l'état "ouvert" déclenché par le scroll — jamais les deux affichés en même temps.
   function render() {
@@ -1356,10 +1364,11 @@ function v3InitTitaniumSticky() {
   }
 
   window.addEventListener('scroll', onScroll);
-  window.addEventListener('resize', render);
+  window.addEventListener('resize', () => { syncMiniPosition(); render(); });
   const dtMain = document.getElementById('dt-main');
   if (dtMain) dtMain.addEventListener('scroll', onScroll);
-  render(); // état initial : badge mini visible, bandeau complet caché (hasScrolled=false)
+  syncMiniPosition();
+  render(); // état initial : badge mini visible (aligné sur l'icône), bandeau complet caché
 }
 
 function v3GoTitaniumFromS1() {
