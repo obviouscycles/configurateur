@@ -2383,8 +2383,11 @@
 
     <!-- ÉTAPE 4 (standard) : Taille -->
     <!-- ÉTAPE 4 : Taille (partagée standard et standard_evo) -->
-    <div class="dt-step-content" id="dt-s3">
-      <div class="dt-step-body">
+    <!-- "Laissez-vous guider" est maintenant une popup (pas un changement de page) : la page
+         Composants reste visible/préservée en dessous, ce qui rassure le visiteur — revenir en
+         arrière ne fait jamais perdre ce qu'il a déjà rempli. -->
+    <div class="modal-overlay" id="taille-guide-modal">
+      <div class="modal" style="max-width:600px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
           <div style="width:36px;height:36px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-ruler-2" style="font-size:16px;color:#F5C400;"></i>
@@ -2398,9 +2401,9 @@
         <p style="font-size:13px;color:#aaa;margin-top:1.25rem;line-height:1.6;text-align:center;">
           Vous n'avez pas toutes les informations ? Nous vous recontacterons de toute façon pour affiner et valider vos cotes.
         </p>
-      </div>
-      <div class="dt-step-footer" id="dt-s3-footer">
-        <button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>
+        <div class="modal-actions" id="dt-s3-footer">
+          <button class="btn-cancel" onclick="v3SortirSansReport()">Retour</button>
+        </div>
       </div>
     </div>
 
