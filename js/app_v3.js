@@ -2068,10 +2068,11 @@ function dtCheckSizeResult() {
 function dtShowGuideDefaultFooter() {
   const footer = document.getElementById('dt-s3-footer');
   if (!footer) return;
-  footer.innerHTML = '<button class="dt-btn-back" onclick="v3SortirSansReport()"><i class="ti ti-chevron-left"></i> Retour</button>';
+  footer.innerHTML = '<button class="btn-cancel" onclick="v3SortirSansReport()">Retour</button>';
 }
 
-// ─── PAGE "LAISSEZ-VOUS GUIDER" SEULE (dt-s3) — outil autonome, revient toujours à l'étape 2 ──
+// ─── "LAISSEZ-VOUS GUIDER" EN POPUP — la page Composants reste visible/préservée en dessous.
+// Revenir en arrière (Retour/Sortir) ne fait jamais perdre ce qui a déjà été rempli en page 2. ──
 let dtGuideOnlyActive = false;
 let dtPreGuideSnapshot = null;
 
@@ -2091,9 +2092,6 @@ function dtRenderS3GuideOnly() {
 function v3EnterGuideOnly() {
   dtGuideOnlyActive = true;
   dtPreGuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
-  dtStep = 4;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3')?.classList.add('active');
   dtRenderS3GuideOnly();
   // Si une taille est déjà connue (résultat d'un calcul précédent), le refléter immédiatement
   if (selSize.taille) {
@@ -2103,26 +2101,29 @@ function v3EnterGuideOnly() {
     window.sizeValidated = false;
     dtShowGuideDefaultFooter();
   }
-  v2UpdateStepper();
-  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+  document.getElementById('taille-guide-modal')?.classList.add('open');
 }
 
 function dtShowGuideResultButtons() {
   const footer = document.getElementById('dt-s3-footer');
   if (!footer) return;
   footer.innerHTML =
-    '<button class="dt-btn-back" onclick="v3SortirSansReport()">Sortir</button>' +
-    '<button class="dt-btn-next" onclick="v3ChoisirResultats()">Choisir ces résultats <i class="ti ti-arrow-right"></i></button>';
+    '<button class="btn-cancel" onclick="v3SortirSansReport()">Sortir</button>' +
+    '<button class="btn-send" onclick="v3ChoisirResultats()">Choisir ces résultats <i class="ti ti-arrow-right"></i></button>';
 }
 
-// Les résultats sont déjà écrits en direct dans selSize par le calculateur -> on garde simplement.
+// Les résultats sont déjà écrits en direct dans selSize par le calculateur — on ferme la
+// popup et on rafraîchit la page Composants (restée active en dessous) pour les refléter.
 function v3ChoisirResultats() {
   dtGuideOnlyActive = false;
   dtPreGuideSnapshot = null;
-  dtGo(2);
+  document.getElementById('taille-guide-modal')?.classList.remove('open');
+  dtRenderPosts();
+  dtRenderRecap();
 }
 
-// Annule tout changement effectué depuis l'entrée sur la page guidée.
+// Annule tout changement effectué depuis l'ouverture de la popup, puis la referme —
+// la page Composants n'a jamais quitté l'écran, rien n'y est perdu.
 function v3SortirSansReport() {
   if (dtPreGuideSnapshot) {
     selSize = dtPreGuideSnapshot.selSize;
@@ -2131,7 +2132,9 @@ function v3SortirSansReport() {
   }
   dtGuideOnlyActive = false;
   dtPreGuideSnapshot = null;
-  dtGo(2);
+  document.getElementById('taille-guide-modal')?.classList.remove('open');
+  dtRenderPosts();
+  dtRenderRecap();
 }
 
 // ─── PAGE "PERSONNALISATION" SEULE (dt-s5perso) — cadre standard déjà connu ──────
