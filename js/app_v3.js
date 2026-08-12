@@ -3443,6 +3443,36 @@ function checkEntrejambeConsistency(chosenTaille, tailles, entrejambe) {
   return { taille: chosenTaille, warning: null };
 }
 
+// Cas du CHEVAUCHEMENT (plusieurs tailles conviennent selon la stature) : vérifie si
+// l'entrejambe sort de la plage COMBINÉE de ces tailles candidates. Si oui, résout
+// directement vers une taille adjacente (sans passer par le choix sport/confort) avec
+// un avertissement. Si l'entrejambe reste dans la plage combinée (ou n'est pas
+// renseigné), renvoie null — le choix sport/confort normal s'applique.
+function checkEntrejambeOutOfCombinedRange(matches, allTailles, entrejambe) {
+  if (!entrejambe) return null;
+  const combinedMin = Math.min(...matches.map(t => t.ej_min));
+  const combinedMax = Math.max(...matches.map(t => t.ej_max));
+  if (entrejambe >= combinedMin && entrejambe <= combinedMax) return null;
+  const sorted = [...allTailles].sort((a, b) => a.stature_min - b.stature_min);
+  const byStature = [...matches].sort((a, b) => a.stature_min - b.stature_min);
+  if (entrejambe > combinedMax) {
+    const largest = byStature[byStature.length - 1];
+    const idx = sorted.findIndex(t => t.taille === largest.taille);
+    const next = sorted[idx + 1];
+    return {
+      taille: next || largest,
+      warning: "Votre entrejambe (" + entrejambe + " cm) dépasse la plage habituelle pour les tailles correspondant à votre stature — nous vous recommandons de nous contacter pour valider votre configuration."
+    };
+  }
+  const smallest = byStature[0];
+  const idx = sorted.findIndex(t => t.taille === smallest.taille);
+  const prev = sorted[idx - 1];
+  return {
+    taille: prev || smallest,
+    warning: "Votre entrejambe (" + entrejambe + " cm) est en dessous de la plage habituelle pour les tailles correspondant à votre stature — nous vous recommandons de nous contacter pour valider votre configuration."
+  };
+}
+
 function calcSize() {
   const stature = parseInt(document.getElementById('guide-stature').value);
   const selle   = parseInt(document.getElementById('guide-selle').value) || null;
@@ -3464,9 +3494,9 @@ function calcSize() {
 
   const tailles = TAILLES_CADRE[selModel] || [];
   // Priorité à la STATURE : elle doit obligatoirement entrer dans la plage préconisée
-  // par le cadre. En cas de chevauchement (plusieurs tailles conviennent), on demande
-  // toujours sport/confort — l'entrejambe sert seulement, ensuite, à vérifier la
-  // cohérence de la taille retenue (voir checkEntrejambeConsistency).
+  // par le cadre. En cas de chevauchement, on vérifie d'abord si l'entrejambe sort de
+  // la plage combinée des tailles candidates (résolution directe + avertissement) ;
+  // sinon on demande sport/confort normalement.
   let matches = tailles.filter(t => stature >= t.stature_min && stature <= t.stature_max);
 
   if (matches.length === 0) {
@@ -3511,8 +3541,39 @@ function calcSize() {
     return;
   }
 
-  // Chevauchement
+  // Chevauchement : l'entrejambe sort-il de la plage combinée des tailles candidates ?
+  const outOfRange = checkEntrejambeOutOfCombinedRange(matches, tailles, selle);
+  if (outOfRange) {
+    const t = outOfRange.taille;
+    selSize.taille = t.taille;
+    showSizeActionBtns();
+    if (typeof buildDimsGrid === 'function') buildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) info += ' · Cintre recommandé : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + outOfRange.warning + '</div>';
+    sub.innerHTML = info;
+    return;
+  }
+
   overlapTailles = matches;
+  const sortedCheck = [...matches].sort((a,b) => a.stature_min - b.stature_min);
+  if (sortedCheck[0].taille === sortedCheck[sortedCheck.length - 1].taille) {
+    // Sport et confort mèneraient à la même taille : pas la peine de demander.
+    const t = sortedCheck[0];
+    overlapTailles = null;
+    selSize.taille = t.taille;
+    showSizeActionBtns();
+    if (typeof buildDimsGrid === 'function') buildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let infoSame = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (selle) infoSame += ' · Entrejambe ' + t.ej_min + '–' + t.ej_max + ' cm';
+    if (acro && selSize.cintre) infoSame += ' · Cintre recommandé : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    sub.innerHTML = infoSame;
+    return;
+  }
   main.innerHTML = 'Votre stature correspond à deux tailles : <span style="color:#F5C400">' + matches.map(t=>t.taille).join(' ou ') + '</span>';
   sub.textContent = 'Précisez votre usage pour affiner le choix.';
   overlap.style.display = 'block';
@@ -3523,12 +3584,11 @@ function chooseUsage(usage) {
   document.getElementById('btn-sport').classList.toggle('sel', usage === 'sport');
   document.getElementById('btn-confort').classList.toggle('sel', usage === 'confort');
   // sport → petite taille, confort → grande taille
+  // (l'entrejambe a déjà été vérifié en amont, contre la plage combinée des tailles
+  // candidates, avant même de proposer ce choix — voir checkEntrejambeOutOfCombinedRange
+  // dans calcSize() — donc aucun ajustement supplémentaire ici)
   const sorted = [...overlapTailles].sort((a,b) => a.stature_min - b.stature_min);
-  let chosen = usage === 'sport' ? sorted[0] : sorted[sorted.length-1];
-  const selleU = parseInt(document.getElementById('guide-selle').value) || null;
-  const allTailles = TAILLES_CADRE[selModel] || [];
-  const { taille: adjusted, warning } = checkEntrejambeConsistency(chosen, allTailles, selleU);
-  chosen = adjusted;
+  const chosen = usage === 'sport' ? sorted[0] : sorted[sorted.length-1];
   selSize.taille = chosen.taille;
   showSizeActionBtns();
   selSize.taille = chosen.taille;
@@ -3542,9 +3602,8 @@ function chooseUsage(usage) {
   document.getElementById('guide-result-main').innerHTML =
     'Taille recommandée : <span style="color:#F5C400">' + chosen.taille + '</span>' +
     ' <span style="font-size:13px;color:var(--text2)">(' + (usage==='sport'?'usage sportif':'usage confort') + ')</span>';
-  const warningHtml = warning ? '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + warning + '</div>' : '';
   document.getElementById('guide-result-sub').innerHTML =
-    'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm' + cintreInfo + warningHtml;
+    'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm' + cintreInfo;
 }
 
 // ─── GRILLE DIMENSIONS MANUELLES ─────────────────────────────────────────────
@@ -4704,7 +4763,41 @@ function p11CalcSize() {
     if (_nextLbl) _nextLbl.textContent = 'Ma configuration';
     return;
   }
+  // Chevauchement : l'entrejambe sort-il de la plage combinée des tailles candidates ?
+  const outOfRangeM = checkEntrejambeOutOfCombinedRange(matches, tailles, ejRaw);
+  if (outOfRangeM) {
+    const t = outOfRangeM.taille;
+    window.sizeValidated = true;
+    selSize.taille = t.taille;
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) info += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + outOfRangeM.warning + '</div>';
+    sub.innerHTML = info;
+    const _nextLbl2 = document.getElementById('p11-next-label');
+    if (_nextLbl2) _nextLbl2.textContent = 'Ma configuration';
+    return;
+  }
   p11OverlapTailles = matches;
+  const sortedCheckM = [...matches].sort((a,b) => a.stature_min - b.stature_min);
+  if (sortedCheckM[0].taille === sortedCheckM[sortedCheckM.length - 1].taille) {
+    // Sport et confort mèneraient à la même taille : pas la peine de demander.
+    const t = sortedCheckM[0];
+    p11OverlapTailles = null;
+    window.sizeValidated = true;
+    selSize.taille = t.taille;
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let infoSame = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) infoSame += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    sub.innerHTML = infoSame;
+    const _nextLbl3 = document.getElementById('p11-next-label');
+    if (_nextLbl3) _nextLbl3.textContent = 'Ma configuration';
+    return;
+  }
   main.innerHTML = 'Deux tailles : <span style="color:#F5C400">' + matches.map(t=>t.taille).join(' ou ') + '</span>';
   sub.innerHTML = '<span style="color:#e8e8e8">Précisez votre usage ↓</span>';
   overlap.style.display = 'block';
@@ -4714,12 +4807,11 @@ function p11ChooseUsage(usage) {
   if (!p11OverlapTailles) return;
   document.getElementById('p11-btn-sport').classList.toggle('sel', usage==='sport');
   document.getElementById('p11-btn-confort').classList.toggle('sel', usage==='confort');
+  // (l'entrejambe a déjà été vérifié en amont, contre la plage combinée des tailles
+  // candidates, avant même de proposer ce choix — voir checkEntrejambeOutOfCombinedRange
+  // dans p11CalcSize() — donc aucun ajustement supplémentaire ici)
   const sorted = [...p11OverlapTailles].sort((a,b)=>a.stature_min-b.stature_min);
-  let chosen = usage==='sport' ? sorted[0] : sorted[sorted.length-1];
-  const ejRawU = parseFloat(document.getElementById('p11-guide-ej').value) || null;
-  const allTaillesU = TAILLES_CADRE[selModel] || [];
-  const { taille: adjustedU, warning: warningU } = checkEntrejambeConsistency(chosen, allTaillesU, ejRawU);
-  chosen = adjustedU;
+  const chosen = usage==='sport' ? sorted[0] : sorted[sorted.length-1];
   window.sizeValidated = true;
   selSize.taille = chosen.taille;
   const _cLbl = document.getElementById('p11-next-label');
@@ -4731,8 +4823,7 @@ function p11ChooseUsage(usage) {
   if (acroRaw) calcCintreFromAcro(Math.round(acroRaw*10));
   document.getElementById('p11-result-main').innerHTML =
     'Taille recommandée : <span style="color:#F5C400">' + chosen.taille + '</span> <span style="font-size:12px;color:#888">(' + (usage==='sport'?'sportif':'confort') + ')</span>';
-  const warningHtmlU = warningU ? '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + warningU + '</div>' : '';
-  document.getElementById('p11-result-sub').innerHTML = 'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm' + warningHtmlU;
+  document.getElementById('p11-result-sub').innerHTML = 'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm';
   // Mettre à jour le bouton "Continuer sans taille" → "Voir votre configuration"
   const _nextLbl = document.getElementById('p11-next-label');
   if (_nextLbl && p11CurrentStep === 4) _nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
