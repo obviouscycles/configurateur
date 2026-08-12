@@ -830,17 +830,6 @@ function toggleSaveForm1() {
   }
 }
 
-function toggleSaveForm2() {
-  const f = document.getElementById('save-form-2');
-  f.classList.toggle('open');
-  if (f.classList.contains('open')) {
-    const model = MODELS.find(m => m.id === selModel);
-    if (model) document.getElementById('save-name-2').value = model.name + ' — ma configuration';
-    document.getElementById('save-toast-2').style.display = 'none';
-    setTimeout(() => document.getElementById('save-name-2').focus(), 50);
-  }
-}
-
 function doSave(inputId, toastId) {
   syncSelSize();
   const name = document.getElementById(inputId).value.trim();
@@ -952,15 +941,6 @@ function buildSizeText() {
 }
 
 // ─── OUVERTURE MODAL DEPUIS ONGLET TAILLE ────────────────────────────────────
-function openOrderModalFromSize() {
-  syncSelSize();
-  if (!window.sizeValidated) {
-    // Pas de taille validée → alerte
-    document.getElementById('size-alert-modal').classList.add('open');
-  } else {
-    openOrderModal();
-  }
-}
 function closeSizeAlert() {
   document.getElementById('size-alert-modal').classList.remove('open');
 }
@@ -1869,20 +1849,6 @@ function v3GoSurMesureFromS2() {
   evoActiveContainer = 'v2-mesure-evo-options'; evoRender();
   v2UpdateStepper(); dtRenderRecap();
   const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
-}
-
-function v3GoDeterminerTaille() {
-  dtStep = 4;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s3')?.classList.add('active');
-  dtRenderS3();
-  setTimeout(() => dtToggleSizeMode('guide'), 50);
-  v2UpdateStepper(); dtRenderRecap();
-  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
-}
-
-function v3GoDevisFast() {
-  v2GoRecap();
 }
 
 // ─── CARTE "CADRE" — nouvelle en tête de l'étape Composants ──────────────────
@@ -3035,17 +3001,6 @@ function v2GoRecap() {
   if (main) main.scrollTop = 0;
 }
 
-
-function v2GoEvo() {
-  dtStep = 5;
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  document.getElementById('dt-s5evo')?.classList.add('active');
-  evoActiveContainer = 'v2-evo-options';
-  v2UpdateStepper();
-  evoRender();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
-}
 
 function v2GoDevis() {
   // Blocage si gravure trop longue
