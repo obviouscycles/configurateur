@@ -1295,6 +1295,14 @@ function v3InitTitaniumStickyMobile() {
   }
 
   function render() {
+    // Ce bandeau est réservé au mobile — sur desktop, c'est #titanium-morph qui gère
+    // l'équivalent. Sans ce garde-fou, ce bandeau s'affichait aussi sur desktop car
+    // p11CurrentStep vaut 1 par défaut, y compris quand le visiteur est sur desktop.
+    if (window.innerWidth >= 768) {
+      sticky.style.transform = 'translateY(100%)';
+      sticky.style.pointerEvents = 'none';
+      return;
+    }
     if (typeof p11CurrentStep !== 'undefined' && p11CurrentStep !== 1) {
       sticky.style.transform = 'translateY(100%)';
       sticky.style.pointerEvents = 'none';
