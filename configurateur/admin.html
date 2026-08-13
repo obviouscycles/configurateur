@@ -71,6 +71,7 @@
   .badge{display:inline-block;padding:2px 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
   .badge-devis{background:#1a2a00;color:var(--yellow);border:0.5px solid var(--yellow);}
   .badge-sauvegarde{background:var(--bg4);color:var(--text3);border:0.5px solid var(--border2);}
+  .badge-titanium{background:#2a1a00;color:#e0a370;border:0.5px solid #e08b3a;}
   .badge-nouveau{background:#1a1a2a;color:#8888ff;border:0.5px solid #444;}
   .badge-en_cours{background:#2a1a00;color:#ffaa00;border:0.5px solid #665500;}
   .badge-commande{background:#0a2a0a;color:#44cc44;border:0.5px solid #226622;}
@@ -165,6 +166,7 @@
         <select id="f-statut" onchange="applyFilters()">
           <option value="">Tous</option>
           <option value="devis">Devis demandé</option>
+          <option value="projet_titanium">Projet Titanium</option>
           <option value="sauvegarde">Sauvegardé</option>
         </select>
       </label>
@@ -377,7 +379,7 @@ function renderTable() {
       '<td style="font-weight:600">' + (c.prix||0).toLocaleString('fr-FR') + ' €</td>' +
       '<td>' + taille + '</td>' +
       '<td style="text-align:center">' + (c.nb_consultations||0) + '</td>' +
-      '<td><span class="badge ' + (c.statut==='devis'?'badge-devis':'badge-sauvegarde') + '">' + (c.statut==='devis'?'Devis':'Sauvegardé') + '</span></td>' +
+      '<td><span class="badge ' + (c.statut==='devis'?'badge-devis':c.statut==='projet_titanium'?'badge-titanium':'badge-sauvegarde') + '">' + (c.statut==='devis'?'Devis':c.statut==='projet_titanium'?'Titanium':'Sauvegardé') + '</span></td>' +
       '<td><span class="badge ' + scBadge[sc] + '">' + scLabel[sc] + '</span></td>';
     tbody.appendChild(tr);
   });
