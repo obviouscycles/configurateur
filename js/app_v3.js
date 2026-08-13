@@ -2849,8 +2849,23 @@ function evoRenderCustomText() {
   </div>`;
 }
 
+// Paires d'inserts mutuellement exclusifs (impossible physiquement d'avoir les deux
+// à la fois — ex: porte-bagages 4 points et 2 points occupent le même emplacement)
+const EVO_INSERT_EXCLUSIVE_PAIRS = [['ins_pbag4', 'ins_pbag2']];
+
+function applyInsertExclusivity(id) {
+  if (!evoInsertsChecked[id]) return; // seulement si on vient de COCHER (pas décocher)
+  EVO_INSERT_EXCLUSIVE_PAIRS.forEach(pair => {
+    if (pair.includes(id)) {
+      const other = pair.find(x => x !== id);
+      if (evoInsertsChecked[other]) evoInsertsChecked[other] = false;
+    }
+  });
+}
+
 function evoToggleInsert(id) {
   evoInsertsChecked[id] = !evoInsertsChecked[id];
+  applyInsertExclusivity(id);
   // Synchronise evo_inserts checked/order selon si au moins un insert cochable est sélectionné
   const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
   const anyChecked = items.some(i => evoInsertsChecked[i.id]);
@@ -4168,6 +4183,20 @@ function p11Init() {
   p11InitSwipe();
 }
 
+// Rafraîchit le libellé du bouton + le lien "Besoin d'aide" de l'étape 2 SANS
+// naviguer — utile quand le choix Cadre change alors qu'on est déjà sur cette page
+// (p11UpdateStep(n) ne fait ce calcul qu'au moment d'un changement d'étape).
+function p11UpdateStep2Footer() {
+  const nextLbl = document.getElementById('p11-next-label');
+  const aideLink = document.getElementById('p11-aide-taille-link');
+  if (nextLbl) {
+    nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
+      : !selSize.taille ? 'Déterminer ma taille'
+      : 'Personnalisation';
+  }
+  if (aideLink) aideLink.style.display = (v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
+}
+
 function p11UpdateStep(n) {
   p11CurrentStep = n;
   // Historique : chaque changement d'étape pousse une entrée, sauf si on répond à un popstate
@@ -4209,7 +4238,9 @@ function p11UpdateStep(n) {
     } else if (n === 4) {
       nextLbl.textContent = 'Ma configuration';
     } else if (n === 2) {
-      nextLbl.textContent = !selSize.taille && v2Parcours !== 'sur_mesure' ? 'Déterminer ma taille' : 'Personnalisation';
+      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
+        : !selSize.taille ? 'Déterminer ma taille'
+        : 'Personnalisation';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
@@ -4400,6 +4431,7 @@ function p11EvoRenderCustomText() {
 
 function p11EvoToggleInsert(id) {
   evoInsertsChecked[id] = !evoInsertsChecked[id];
+  applyInsertExclusivity(id);
   const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
   const anyChecked = items.some(i => evoInsertsChecked[i.id]);
   evoChecked['evo_inserts'] = anyChecked;
