@@ -955,7 +955,7 @@
   }
   .dims-summary.show { display: block; }
   .lbl-opt { font-size: 10px; color: var(--text3); font-style: italic; margin-left: 4px; }
-  .lbl-info { cursor: pointer; color: #F5C400; font-size: 13px; margin-left: 4px; }
+  .lbl-info { cursor: pointer; color: #F5C400; font-size: 20px; margin-left: 4px; }
   .size-tooltip {
     display: none; font-size: 11px; color: var(--text2);
     background: var(--bg2); border: 0.5px solid var(--border);
@@ -1039,7 +1039,7 @@
   .preset-btn-main:hover { border-color: #F5C400; color: #F5C400; background: #1a1500; }
   .preset-btn-main.active { border-color: #F5C400; color: #F5C400; background: #1a1500; }
   .preset-btn-info {
-    padding: 7px 7px; font-size: 12px; line-height: 1;
+    padding: 7px 7px; font-size: 18px; line-height: 1;
     border: 0.5px solid #444; background: #111; color: #555;
     cursor: pointer; font-family: var(--font);
     transition: color .15s, border-color .15s;
@@ -2086,7 +2086,7 @@
         <div class="size-form-row">
           <div class="size-field">
             <label>Votre taille (cm)
-              <span id="stature-info-btn" style="cursor:pointer;color:#F5C400;font-size:13px;margin-left:4px;" onclick="const t=document.getElementById('stature-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
+              <span id="stature-info-btn" style="cursor:pointer;color:#F5C400;font-size:20px;margin-left:4px;" onclick="const t=document.getElementById('stature-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
             </label>
             <div id="stature-tooltip" style="display:none;font-size:15px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:16px 18px;margin-bottom:8px;line-height:1.7;">
               <div style="display:flex;gap:20px;align-items:flex-start;">
@@ -2102,7 +2102,7 @@
           <div class="size-field">
             <label>Entrejambe (cm)
               <span style="color:var(--text3)">optionnel</span>
-              <span id="ej-info-btn" style="cursor:pointer;color:#F5C400;font-size:13px;margin-left:4px;" onclick="const t=document.getElementById('ej-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
+              <span id="ej-info-btn" style="cursor:pointer;color:#F5C400;font-size:20px;margin-left:4px;" onclick="const t=document.getElementById('ej-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
             </label>
             <div id="ej-tooltip" style="display:none;font-size:15px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:16px 18px;margin-bottom:8px;line-height:1.7;">
               <div style="display:flex;gap:20px;align-items:flex-start;">
@@ -2118,10 +2118,10 @@
           <div class="size-field">
             <label>Largeur d'épaules (cm)
               <span style="color:var(--text3)">optionnel</span>
-              <span style="cursor:pointer;color:#F5C400;font-size:13px;margin-left:4px;" onclick="const t=document.getElementById('acro-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
+              <span style="cursor:pointer;color:#F5C400;font-size:20px;margin-left:4px;" onclick="const t=document.getElementById('acro-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
             </label>
-            <div id="acro-tooltip" style="display:none;font-size:11px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:10px 12px;margin-bottom:8px;line-height:1.6;">
-              <strong style="color:var(--text1);">Comment mesurer votre largeur d'épaules :</strong><br>
+            <div id="acro-tooltip" style="display:none;font-size:15px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:16px 18px;margin-bottom:8px;line-height:1.7;">
+              <strong style="color:var(--text1);font-size:16px;">Comment mesurer votre largeur d'épaules :</strong><br>
               Debout, bras le long du corps. Faites-vous aider pour mesurer la distance entre les deux pointes osseuses de vos épaules les plus éloignées.
             </div>
             <input type="text" inputmode="decimal" class="size-input" id="guide-acro" placeholder="Ex : 40" min="25" max="60" step="0.5">
