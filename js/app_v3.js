@@ -1575,7 +1575,7 @@ function dtPresetBar(modelId) {
   return '<div class="preset-bar" onclick="event.stopPropagation()">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
       '<div class="preset-label" style="margin-bottom:0;color:#F5C400;">3 suggestions pour démarrer</div>' +
-      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:22px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="' + infoPopupId + '" style="display:none;font-size:12px;color:#aaa;background:#111;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS_DT).map(([k,v]) =>
@@ -4513,7 +4513,7 @@ function p11RenderPresets() {
   bar.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
       '<span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.08em;">3 suggestions de départ</span>' +
-      '<button onclick="p11TogglePresetInfo()" style="background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:0 4px;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<button onclick="p11TogglePresetInfo()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:0 4px;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="p11-preset-info" style="display:none;font-size:12px;color:#aaa;background:#1a1a1a;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS).reverse().map(([k,v]) =>
