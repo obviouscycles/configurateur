@@ -1728,13 +1728,24 @@
         <div class="size-panel" id="p11-panel-guide">
           <div class="size-form-row" style="flex-direction:column;gap:.75rem;">
             <div class="size-field" style="width:100%;">
-              <label>Votre taille (cm)</label>
+              <label>Votre taille (cm) <span class="lbl-info" onclick="toggleTooltip('p11-tt-stature')">ⓘ</span></label>
+              <div class="size-tooltip" id="p11-tt-stature">
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                  <img src="/configurateur/assets/guide/stature.png" alt="" style="width:44px;height:auto;flex-shrink:0;">
+                  <span>Dos au mur, pieds joints, tête droite. Livre à plat sur la tête, mesurez sol → dessous du livre.</span>
+                </div>
+              </div>
               <input type="text" inputmode="decimal" class="size-input" id="p11-guide-stature" placeholder="Ex : 175" min="140" max="210">
             </div>
             <div style="display:flex;gap:.75rem;">
               <div class="size-field" style="flex:1;">
                 <label>Entrejambe (cm) <span class="lbl-opt">optionnel</span> <span class="lbl-info" onclick="toggleTooltip('p11-tt-ej')">ⓘ</span></label>
-                <div class="size-tooltip" id="p11-tt-ej">Debout pieds nus, dos au mur. Livre entre les jambes, mesurez sol → dessus du livre.</div>
+                <div class="size-tooltip" id="p11-tt-ej">
+                  <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <img src="/configurateur/assets/guide/entrejambe.png" alt="" style="width:44px;height:auto;flex-shrink:0;">
+                    <span>Debout pieds nus, dos au mur. Livre entre les jambes, mesurez sol → dessus du livre.</span>
+                  </div>
+                </div>
                 <input type="text" inputmode="decimal" class="size-input" id="p11-guide-ej" placeholder="Ex : 82" min="60" max="110" step="0.5">
               </div>
               <div class="size-field" style="flex:1;">
@@ -2084,7 +2095,18 @@
       <div class="size-panel" id="panel-guide">
         <div class="size-form-row">
           <div class="size-field">
-            <label>Votre taille (cm)</label>
+            <label>Votre taille (cm)
+              <span id="stature-info-btn" style="cursor:pointer;color:#F5C400;font-size:13px;margin-left:4px;" onclick="const t=document.getElementById('stature-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
+            </label>
+            <div id="stature-tooltip" style="display:none;font-size:11px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:10px 12px;margin-bottom:8px;line-height:1.6;">
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <img src="/configurateur/assets/guide/stature.png" alt="" style="width:56px;height:auto;flex-shrink:0;">
+                <div>
+                  <strong style="color:var(--text1);">Comment mesurer votre stature :</strong><br>
+                  Debout, pieds nus et joints, dos, talons, fesses et tête contre un mur. Regardez droit devant vous, tête ni relevée ni baissée. Posez un livre à plat sur le dessus de votre tête, à angle droit contre le mur. Faites-vous aider pour mesurer la distance entre le sol et le dessous du livre.
+                </div>
+              </div>
+            </div>
             <input type="text" inputmode="decimal" class="size-input" id="guide-stature" placeholder="Ex : 175" min="140" max="210">
           </div>
           <div class="size-field">
@@ -2093,8 +2115,13 @@
               <span id="ej-info-btn" style="cursor:pointer;color:#F5C400;font-size:13px;margin-left:4px;" onclick="const t=document.getElementById('ej-tooltip');t.style.display=t.style.display==='block'?'none':'block';" title="Comment mesurer ?">ⓘ</span>
             </label>
             <div id="ej-tooltip" style="display:none;font-size:11px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border);padding:10px 12px;margin-bottom:8px;line-height:1.6;">
-              <strong style="color:var(--text1);">Comment mesurer votre entrejambe :</strong><br>
-              Debout, pieds nus, dos et talons contre un mur, pieds écartés d'environ 20 cm. Placez un livre entre vos jambes avec une tranche bien calée contre le mur. Remontez-le jusqu'à sentir une pression comme avec votre selle. Faites-vous aider pour mesurer la distance entre le sol et le dessus du livre.
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <img src="/configurateur/assets/guide/entrejambe.png" alt="" style="width:56px;height:auto;flex-shrink:0;">
+                <div>
+                  <strong style="color:var(--text1);">Comment mesurer votre entrejambe :</strong><br>
+                  Debout, pieds nus, dos et talons contre un mur, pieds écartés d'environ 20 cm. Placez un livre entre vos jambes avec une tranche bien calée contre le mur. Remontez-le jusqu'à sentir une pression comme avec votre selle. Faites-vous aider pour mesurer la distance entre le sol et le dessus du livre.
+                </div>
+              </div>
             </div>
             <input type="text" inputmode="decimal" class="size-input" id="guide-selle" placeholder="Ex : 82" min="60" max="110" step="0.5">
           </div>
