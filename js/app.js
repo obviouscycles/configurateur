@@ -47,7 +47,7 @@ async function loadConfigFromUrl() {
     if (window.innerWidth >= 768) {
       dtStep = 4; dtRender();
     } else {
-      renderModels(); p11UpdateStep(4);
+      renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
@@ -187,9 +187,15 @@ function persistSaved() {
   try { localStorage.setItem('velo_configs', JSON.stringify(savedConfigs)); } catch(e) {}
 }
 function updateSavedCount() {
-  document.getElementById('saved-count').textContent = savedConfigs.length;
+  const sc = document.getElementById('saved-count');
+  if (sc) sc.textContent = savedConfigs.length;
   const tabSaved = document.getElementById('tab-saved');
   if (tabSaved) tabSaved.style.display = savedConfigs.length === 0 ? 'none' : 'flex';
+  const dtCount = document.getElementById('dt-saved-count');
+  if (dtCount) {
+    dtCount.textContent = savedConfigs.length;
+    dtCount.style.display = savedConfigs.length > 0 ? 'inline' : 'none';
+  }
 }
 
 // ─── UTILITAIRES ─────────────────────────────────────────────────────────────
@@ -393,6 +399,7 @@ function selectModel(id) {
         }
       });
     });
+    syncAllPostDims();
   } else {
     autoSelectLocked(id);
   }
@@ -405,6 +412,85 @@ function selectModel(id) {
 }
 
 // ─── RENDU POSTES ─────────────────────────────────────────────────────────────
+// ─── DIMENSIONS DE COMPOSANTS CHOISIES EN ÉTAPE 2 (plateaux/cassette/section/débattement) ──
+const POST_DIM_FIELDS = { transmission: ['plateaux','cassette','manivelle'], pneus: ['section'], fourche: ['debattement'], pilotage: ['cintre','potence'], selle: ['largeur_selle'] };
+const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle', manivelle: 'Longueur manivelle', cintre: 'Largeur cintre (ext/ext)', potence: 'Longueur potence' };
+const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm', manivelle: 'mm', cintre: 'mm', potence: 'mm' };
+// Champs "morphologiques" : sans taille de cadre connue (JNSP ou sur-mesure), ils affichent "choisir" (pas de défaut forcé)
+const MORPHO_DIM_KEYS = ['manivelle', 'cintre', 'potence', 'largeur_selle'];
+
+// Calcule la valeur par défaut à proposer pour un champ donné, à partir de DEFAULTS_BY_TAILLE
+// (source : configurateur_velos_v2.xlsx, onglet 5_GEOMETRIES) — TOUJOURS validée contre les
+// options réellement offertes par le composant choisi avant d'être appliquée.
+function computeDimDefault(key, options) {
+  const isMorpho = MORPHO_DIM_KEYS.includes(key);
+
+  if (isMorpho && (v2Parcours === 'sur_mesure' || !selSize.taille)) return null; // "choisir"
+
+  const ref = (selModel && selSize.taille) ? DEFAULTS_BY_TAILLE[selModel]?.[selSize.taille]?.[key] : undefined;
+  if (ref !== undefined && ref !== null) {
+    const refStr = String(ref);
+    if (options.map(String).includes(refStr)) return refStr; // correspondance exacte (ex: cassette "10x51")
+    const closest = closestNumericMatch(ref, options); // valeur purement numérique -> plus proche dispo
+    if (closest !== null) return closest;
+  }
+
+  // Pas de recommandation exploitable pour le composant choisi :
+  // catégorie C (usage) retombe sur la première option ; morphologique retombe sur "choisir".
+  return isMorpho ? null : options[0];
+}
+
+// Nettoie / auto-remplit selSize pour les clés dépendantes d'un composant donné, selon l'option choisie
+function syncPostDims(postId, opt) {
+  const keys = POST_DIM_FIELDS[postId];
+  if (!keys) return;
+  keys.forEach(key => {
+    const options = (opt && opt.dims && opt.dims[key]) ? opt.dims[key].map(String) : [];
+    if (options.length === 0) {
+      delete selSize[key]; delete selSizeSource[key];
+    } else if (options.length === 1) {
+      selSize[key] = options[0]; selSizeSource[key] = 'default';
+    } else if (!options.includes(selSize[key])) {
+      delete selSize[key]; delete selSizeSource[key];
+    }
+  });
+}
+
+function renderPostDims(postId, opt) {
+  const keys = POST_DIM_FIELDS[postId];
+  if (!keys || !opt || !opt.dims) return '';
+  let html = '';
+  keys.forEach(key => {
+    const options = opt.dims[key];
+    if (!options || options.length < 2) return; // 1 seule valeur = auto, rien à afficher
+    const fieldId = 'compdim-' + postId + '-' + key;
+    const current = selSize[key] || '';
+    html += '<div class="dim-field" onclick="event.stopPropagation()" style="margin:10px 14px 0;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;">' +
+      '<label for="' + fieldId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px;">' + DIM_LABELS[key] + ' <span style="color:#e05555;">*</span></label>' +
+      '<select class="size-select" id="' + fieldId + '" onchange="selectPostDim(\'' + postId + '\',\'' + key + '\',this.value)">' +
+        '<option value="">— choisir —</option>' +
+        options.map(o => '<option value="' + o + '"' + (current === String(o) ? ' selected' : '') + '>' + o + (DIM_UNITS[key] ? ' ' + DIM_UNITS[key] : '') + '</option>').join('') +
+        '<option value="__unknown__"' + (current === '__unknown__' ? ' selected' : '') + '>Je ne sais pas encore</option>' +
+      '</select>' +
+    '</div>';
+  });
+  return html;
+}
+
+function selectPostDim(postId, key, value) {
+  if (value) { selSize[key] = value; selSizeSource[key] = 'user'; }
+  else { delete selSize[key]; delete selSizeSource[key]; }
+}
+
+// Resynchronise les 3 postes concernés (transmission/pneus/fourche) — utile après chargement d'une préconfig
+function syncAllPostDims() {
+  Object.keys(POST_DIM_FIELDS).forEach(postId => {
+    const optId = selOpts[postId];
+    const opt = optId ? ALL_OPTIONS[postId]?.find(o => o.id === optId) : null;
+    syncPostDims(postId, opt);
+  });
+}
+
 function renderPosts() {
   // Masquer le poste power s'il ne contient que pwr_all
   const visiblePosts = POST_META.filter(p => {
@@ -505,6 +591,7 @@ function renderPosts() {
       '</div>' +
       '<div class="post-opts ' + (isOpen ? 'open' : '') + '">' +
         optsHTML +
+        (selOpt ? renderPostDims(p.id, selOpt) : '') +
         (function() {
           if ((p.id === 'transmission' || p.id === 'pilotage') &&
               selOpts['transmission'] === 'trans_gr_sh_cuf' &&
@@ -545,6 +632,12 @@ function togglePost(id) {
 function selectOpt(postId, optId) {
   updateFloatingPrice();
   selOpts[postId] = optId;
+
+  // Synchroniser les dimensions dépendantes du composant (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) {
+    const chosenOpt = optId ? ALL_OPTIONS[postId]?.find(o => o.id === optId) : null;
+    syncPostDims(postId, chosenOpt);
+  }
 
   // Transmission VTT : gestion des freins
   if (postId === 'transmission' && selModel === 'vtt_enduro') {
@@ -737,17 +830,6 @@ function toggleSaveForm1() {
   }
 }
 
-function toggleSaveForm2() {
-  const f = document.getElementById('save-form-2');
-  f.classList.toggle('open');
-  if (f.classList.contains('open')) {
-    const model = MODELS.find(m => m.id === selModel);
-    if (model) document.getElementById('save-name-2').value = model.name + ' — ma configuration';
-    document.getElementById('save-toast-2').style.display = 'none';
-    setTimeout(() => document.getElementById('save-name-2').focus(), 50);
-  }
-}
-
 function doSave(inputId, toastId) {
   syncSelSize();
   const name = document.getElementById(inputId).value.trim();
@@ -846,45 +928,106 @@ function renderSaved() {
 // ─── MODAL COMMANDE ───────────────────────────────────────────────────────────
 function buildSizeText() {
   const lines = [];
-
-  // Données morphologiques saisies par le visiteur (mode guidé)
-  lines.push('--- Données morphologiques ---');
-  lines.push('Stature : ' + (morphoData.stature ? morphoData.stature + ' cm' : 'N/A'));
-  lines.push('Entrejambe : ' + (morphoData.entrejambe ? morphoData.entrejambe + ' mm' : 'N/A'));
-  lines.push('Largeur épaules : ' + (morphoData.epaules ? morphoData.epaules + ' cm' : 'N/A'));
-  lines.push('');
-  lines.push('--- Dimensions retenues ---');
-
-  const srcLabel = (key) => selSizeSource[key] === 'user' ? '(sélectionné)' : selSizeSource[key] === 'default' ? '(valeur par défaut)' : '';
-
-  if (selSize.taille)        lines.push('Taille cadre : ' + selSize.taille + ' ' + srcLabel('taille'));
-  if (selSize.manivelle)     lines.push('Manivelle : ' + selSize.manivelle + ' mm ' + srcLabel('manivelle'));
-  if (selSize.plateaux)      lines.push('Plateau(x) : ' + selSize.plateaux + ' ' + srcLabel('plateaux'));
-  if (selSize.cassette)      lines.push('Cassette : ' + selSize.cassette + ' ' + srcLabel('cassette'));
-  if (selSize.cintre)        lines.push('Cintre : ' + selSize.cintre + ' mm ' + srcLabel('cintre'));
-  if (selSize.potence)       lines.push('Potence : ' + selSize.potence + ' mm ' + srcLabel('potence'));
-  if (selSize.section)       lines.push('Section pneu : ' + selSize.section + ' ' + srcLabel('section'));
-  if (selSize.debattement)   lines.push('Débattement fourche : ' + selSize.debattement + ' mm ' + srcLabel('debattement'));
-  if (selSize.largeur_selle) lines.push('Largeur selle : ' + selSize.largeur_selle + ' mm ' + srcLabel('largeur_selle'));
-
-  const hasAnyDim = ['taille','manivelle','plateaux','cassette','cintre','potence','section','debattement','largeur_selle'].some(k => selSize[k]);
-  if (!hasAnyDim) lines.push('—');
-
-  return lines.join('\n');
+  if (selSize.taille)        lines.push('Taille cadre : ' + selSize.taille);
+  if (selSize.manivelle)     lines.push('Manivelle : ' + selSize.manivelle + ' mm');
+  if (selSize.plateaux)      lines.push('Plateau(x) : ' + selSize.plateaux);
+  if (selSize.cassette)      lines.push('Cassette : ' + selSize.cassette);
+  if (selSize.cintre)        lines.push('Cintre : ' + selSize.cintre + ' mm');
+  if (selSize.potence)       lines.push('Potence : ' + selSize.potence + ' mm');
+  if (selSize.section)       lines.push('Section pneu : ' + selSize.section);
+  if (selSize.debattement)   lines.push('Débattement fourche : ' + selSize.debattement + ' mm');
+  if (selSize.largeur_selle) lines.push('Largeur selle : ' + selSize.largeur_selle + ' mm');
+  return lines.length ? lines.join('\n') : '—';
 }
 
 // ─── OUVERTURE MODAL DEPUIS ONGLET TAILLE ────────────────────────────────────
-function openOrderModalFromSize() {
-  syncSelSize();
-  if (!window.sizeValidated) {
-    // Pas de taille validée → alerte
-    document.getElementById('size-alert-modal').classList.add('open');
-  } else {
-    openOrderModal();
-  }
-}
 function closeSizeAlert() {
   document.getElementById('size-alert-modal').classList.remove('open');
+}
+
+// ─── PROJET TITANIUM — circuit d'envoi dédié (pas de modèle/prix associé) ──────
+function openTitaniumModal() {
+  document.getElementById('titanium-modal').classList.add('open');
+}
+function closeTitaniumModal() {
+  document.getElementById('titanium-modal').classList.remove('open');
+}
+
+async function sendTitaniumProject() {
+  const name    = document.getElementById('titanium-name').value.trim();
+  const email   = document.getElementById('titanium-email').value.trim();
+  const phone   = document.getElementById('titanium-phone').value.trim();
+  const address = document.getElementById('titanium-address').value.trim();
+  const message = document.getElementById('v2-horsgamme-message')?.value.trim() || '';
+  const fileInput = document.getElementById('v2-horsgamme-file');
+  const errorEl = document.getElementById('titanium-send-error');
+  errorEl.style.display = 'none';
+
+  if (!name)    { errorEl.textContent = 'Merci de renseigner votre nom et prénom.'; errorEl.style.display = 'block'; return; }
+  if (!email)   { errorEl.textContent = 'Merci de renseigner votre adresse email.'; errorEl.style.display = 'block'; return; }
+  if (!address) { errorEl.textContent = 'Merci de renseigner votre adresse postale.'; errorEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('titanium-send-btn');
+  const btnLabel = btn.innerHTML;
+  btn.innerHTML = 'Envoi en cours...';
+  btn.disabled = true;
+
+  try {
+    const configId = generateConfigId();
+
+    // Envoi via Formspree en multipart/form-data pour joindre réellement le fichier
+    const formData = new FormData();
+    formData.append('type_demande', 'Projet Titanium (hors catalogue)');
+    formData.append('nom', name);
+    formData.append('email', email);
+    formData.append('telephone', phone || '—');
+    formData.append('adresse_postale', address);
+    formData.append('description_projet', message || '—');
+    formData.append('reference', configId);
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      formData.append('document_joint', fileInput.files[0]);
+    }
+
+    const response = await fetch('https://formspree.io/f/mqeoqewy', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Erreur envoi Formspree: ' + response.status);
+
+    // Sauvegarde légère dans Supabase — non bloquante si elle échoue
+    try {
+      await saveConfigToSupabase({
+        config_id: configId,
+        modele: null,
+        preset: null,
+        prix: null,
+        config_json: {
+          type: 'titanium',
+          description: message,
+          nom_client: name,
+          email_client: email,
+          adresse_postale: address,
+          telephone: phone,
+        },
+        nom_client: name,
+        email_client: email,
+        statut: 'projet_titanium',
+      });
+    } catch (e) { /* non bloquant */ }
+
+    closeTitaniumModal();
+    const mainContent = document.getElementById('titanium-main-content');
+    const confirm = document.getElementById('titanium-confirm');
+    if (mainContent) mainContent.style.display = 'none';
+    if (confirm) confirm.style.display = 'block';
+  } catch (e) {
+    errorEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez ou contactez-nous directement à info@obviouscycles.com.";
+    errorEl.style.display = 'block';
+  } finally {
+    btn.innerHTML = btnLabel;
+    btn.disabled = false;
+  }
 }
 
 function openOrderModal() {
@@ -939,17 +1082,10 @@ async function sendOrder() {
       preset: window._activePreset || null,
       composants: selOpts,
       dimensions: selSize || {},
-      dimensions_source: selSizeSource || {}, // 'user' = sélectionné par le visiteur, 'default' = valeur par défaut appliquée automatiquement
-      morphologie: {
-        stature: morphoData.stature || null,
-        entrejambe: morphoData.entrejambe || null,
-        epaules: morphoData.epaules || null,
-      },
       prix: price,
       nom_client: name,
       email_client: email,
       adresse_postale: address,
-      message: msg || null,
     };
 
     // 3. Sauvegarder dans Supabase
@@ -1050,6 +1186,7 @@ function loadPreset(decl) {
   if (!preset) return;
   window._activePreset = decl;
   selOpts = {...preset};
+  syncAllPostDims();
   // Appliquer FORCE_SELECT
   Object.keys(selOpts).forEach(postId => {
     const optId = selOpts[postId];
@@ -1133,49 +1270,215 @@ document.addEventListener('click', () => {
 // ════════════════════════════════════════════════════════════════
 let dtStep = 1;
 
+// Bandeau Titanium en page 1 — nécessite un modèle sélectionné (comme le bouton Composants)
+// Bandeau Titanium flottant — apparaît quand le bandeau original sort de l'écran (étape 1 seulement).
+// Utilise IntersectionObserver (fonctionne qu'il y ait du scroll ou non) et rattache l'élément
+// directement à <body> pour garantir un vrai position:fixed sans dépendance à un conteneur parent.
+// ─── BANDEAU TITANIUM COLLANT MOBILE — plus simple que le desktop (pas de morph,
+// pas de survol) : apparaît/disparaît en glissant, déclenché par le scroll uniquement. ──
+function v3InitTitaniumStickyMobile() {
+  const sticky = document.getElementById('p11-titanium-sticky');
+  const inline = document.getElementById('p11-titanium-banner-inline');
+  if (!sticky || !inline || sticky._titaniumBound) return;
+  sticky._titaniumBound = true;
+
+  // Détache du HTML statique (imbriqué dans #p11-container) et rattache à <body> :
+  // élimine tout risque qu'un ancêtre ne casse le calcul de position:fixed par rapport
+  // à la fenêtre — même correctif que celui appliqué côté desktop.
+  document.body.appendChild(sticky);
+
+  let hasScrolled = false;
+
+  function currentlyVisible() {
+    const r = inline.getBoundingClientRect();
+    return r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+  }
+
+  function render() {
+    // Ce bandeau est réservé au mobile — sur desktop, c'est #titanium-morph qui gère
+    // l'équivalent. Sans ce garde-fou, ce bandeau s'affichait aussi sur desktop car
+    // p11CurrentStep vaut 1 par défaut, y compris quand le visiteur est sur desktop.
+    if (window.innerWidth >= 768) {
+      sticky.style.transform = 'translateY(100%)';
+      sticky.style.pointerEvents = 'none';
+      return;
+    }
+    if (typeof p11CurrentStep !== 'undefined' && p11CurrentStep !== 1) {
+      sticky.style.transform = 'translateY(100%)';
+      sticky.style.pointerEvents = 'none';
+      return;
+    }
+    const visible = currentlyVisible();
+    // Si un modèle est déjà choisi, le bandeau bas standard (p11-bottom-bar, "Configurer vos
+    // composants") occupe déjà cette zone -> ne pas superposer le bandeau Titanium dessus.
+    const bottomBarShowing = !!selModel;
+    const shouldShow = hasScrolled && !visible && !bottomBarShowing;
+    sticky.style.transform = shouldShow ? 'translateY(0)' : 'translateY(100%)';
+    sticky.style.pointerEvents = shouldShow ? 'auto' : 'none';
+  }
+
+  function onScroll() {
+    hasScrolled = (window.scrollY || document.documentElement.scrollTop || 0) > 40;
+    render();
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', render);
+
+  // Robuste face à tout changement de step, quelle que soit la fonction qui le déclenche
+  const p11S1 = document.getElementById('p11-s1');
+  if (p11S1) {
+    const stepObserver = new MutationObserver(() => render());
+    stepObserver.observe(p11S1, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
+
+  render();
+}
+
+function v3InitTitaniumSticky() {
+  // Réservé au desktop — le bandeau/carré mobile est géré séparément par
+  // v3InitTitaniumStickyMobile(). Sans ce garde-fou, sa logique de visibilité (basée sur
+  // dtStep, jamais mis à jour pendant une navigation mobile) l'affiche par erreur partout.
+  if (window.innerWidth < 768) return;
+  const morph = document.getElementById('titanium-morph');
+  const text  = document.getElementById('titanium-morph-text');
+  const inline = document.getElementById('titanium-banner-inline');
+  if (!morph || !inline || morph._titaniumBound) return;
+  morph._titaniumBound = true;
+
+  // Détache du HTML statique et rattache à <body> : élimine tout risque qu'un ancêtre
+  // (transform, overflow...) ne casse le calcul de position:fixed par rapport à la fenêtre.
+  document.body.appendChild(morph);
+
+  let inlineVisible = true;
+  // hasScrolled n'est JAMAIS activé à l'initialisation — uniquement par un vrai événement
+  // 'scroll' mesurant plus de 40px, jamais par le rendu initial ou l'IntersectionObserver.
+  let hasScrolled = false;
+  let isHovered = false;
+
+  function scrollDistance() {
+    const dtMain = document.getElementById('dt-main');
+    return Math.max(window.scrollY || 0, dtMain ? dtMain.scrollTop : 0);
+  }
+
+  // Position (icône du bandeau original) et largeur cible du bandeau original, pour le déploiement
+  function inlineIconRect() {
+    const iconEl = inline.querySelector('i');
+    return (iconEl ? iconEl.parentElement : inline).getBoundingClientRect();
+  }
+
+  // Un seul élément change de forme : carré replié <-> bandeau complet déplié.
+  // Ni les deux affichés en même temps, ni jamais visible quand le bandeau original l'est déjà.
+  function render() {
+    // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
+    // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
+    const bannerR = inline.getBoundingClientRect();
+    const realHeight = Math.round(bannerR.height) || 78;
+
+    if (dtStep !== 1) {
+      morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '12px';
+      morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
+      if (text) text.style.opacity = '0';
+      return;
+    }
+    // Mesure directe et immédiate (pas la valeur mise en cache par l'IntersectionObserver,
+    // qui peut être asynchrone/en retard juste après un changement d'étape) : le bandeau
+    // original est considéré visible s'il chevauche la fenêtre actuellement.
+    const currentlyVisible = bannerR.height > 0 && bannerR.bottom > 0 && bannerR.top < window.innerHeight;
+    inlineVisible = currentlyVisible; // garde la variable synchronisée pour l'observer aussi
+
+    // Le survol de la souris force aussi l'ouverture, en plus du scroll
+    const expanded = (hasScrolled || isHovered) && !currentlyVisible;
+    const showAtAll = !currentlyVisible; // masqué dès que le bandeau original redevient visible
+
+    morph.style.opacity = showAtAll ? '1' : '0';
+    morph.style.pointerEvents = showAtAll ? 'auto' : 'none';
+    morph.style.height = realHeight + 'px'; // identique dans les deux états, jamais "auto"
+    // Bord gauche identique dans les deux états (aligné sur le bandeau original, comme les vélos)
+    // — jamais besoin d'animer "left", donc aucun risque de décalage visuel pendant la transition.
+    morph.style.left = bannerR.left + 'px';
+
+    if (expanded) {
+      morph.style.width = bannerR.width + 'px';
+      morph.style.borderRadius = '10px';
+      if (text) text.style.opacity = '1';
+    } else {
+      morph.style.width = realHeight + 'px'; // carré parfait : largeur = hauteur
+      morph.style.borderRadius = '12px';
+      if (text) text.style.opacity = '0';
+    }
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { inlineVisible = entry.isIntersecting; });
+    render();
+  }, { threshold: 0 });
+  observer.observe(inline);
+
+  // Seul point d'entrée qui peut activer hasScrolled — jamais au chargement de la page
+  function onScroll() {
+    hasScrolled = scrollDistance() > 40;
+    render();
+  }
+
+  window.addEventListener('scroll', onScroll);
+  window.addEventListener('resize', render);
+  const dtMain = document.getElementById('dt-main');
+  if (dtMain) dtMain.addEventListener('scroll', onScroll);
+
+  // Survol de la souris : ouvre le carré en bandeau, même sans avoir scrollé
+  morph.addEventListener('mouseenter', () => { isHovered = true; render(); });
+  morph.addEventListener('mouseleave', () => { isHovered = false; render(); });
+
+  // Observe directement les changements de classe sur #dt-s1 (ajout/retrait de "active") —
+  // couvre TOUS les chemins de navigation qui montrent/masquent l'étape 1, quelle que soit
+  // la fonction JS qui déclenche le changement (dtGo, retour Titanium, sélection modèle...),
+  // sans avoir besoin de patcher chaque fonction individuellement.
+  const dtS1 = document.getElementById('dt-s1');
+  if (dtS1) {
+    const stepObserver = new MutationObserver(() => render());
+    stepObserver.observe(dtS1, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  render(); // état initial : carré replié, aligné à gauche sur le bandeau original
+}
+
+function v3GoTitaniumFromS1() {
+  v2Parcours = 'hors_gamme';
+  // Réinitialiser l'affichage (au cas où un envoi précédent aurait laissé la confirmation visible)
+  const mainContent = document.getElementById('titanium-main-content');
+  const confirm = document.getElementById('titanium-confirm');
+  if (mainContent) mainContent.style.display = '';
+  if (confirm) confirm.style.display = 'none';
+
+  if (window.innerWidth < 768) {
+    p11UpdateStep(4);
+    return;
+  }
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4horsgamme')?.classList.add('active');
+  v2UpdateStepper();
+  dtRenderRecap();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
 function dtGo(n) {
   if (window.innerWidth < 768) return;
   if (n > 1 && !selModel) return;
   dtStep = n;
-  document.body.classList.toggle('dt-step-4', n === 4);
+  document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
-  dtPushHistory();
-}
-
-// ─── HISTORIQUE NAVIGATEUR DESKTOP (flèche retour du navigateur) ───────────────
-let dtHistoryReady = false;
-let dtSkipPush = false;
-let dtHistDepth = 0;
-let dtLastPushedStep = 1;
-
-function dtInitHistory() {
-  if (dtHistoryReady) return;
-  dtHistoryReady = true;
-  dtHistDepth = 0;
-  dtLastPushedStep = dtStep;
-  history.replaceState({ dtHist: true, depth: 0 }, '', location.href);
-  window.addEventListener('popstate', function(e) {
-    if (window.innerWidth < 768) return;
-    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
-    if (newDepth >= dtHistDepth) {
-      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
-      history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
-      return;
-    }
-    dtSkipPush = true;
-    if (dtStep > 1) dtGo(dtStep - 1);
-    dtLastPushedStep = dtStep;
-    dtHistDepth = newDepth;
-    dtSkipPush = false;
-  });
-}
-
-function dtPushHistory() {
-  if (window.innerWidth < 768 || !dtHistoryReady || dtSkipPush) return;
-  if (dtStep === dtLastPushedStep) return;
-  dtLastPushedStep = dtStep;
-  dtHistDepth++;
-  history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
+  v2UpdateStepper();
+  const morph = document.getElementById('titanium-morph');
+  if (morph && n !== 1) {
+    morph.style.opacity = '0';
+    morph.style.pointerEvents = 'none';
+  } else if (n === 1) {
+    // Redéclenche le calcul d'affichage du carré/bandeau Titanium au retour sur l'étape 1
+    window.dispatchEvent(new Event('resize'));
+  }
 }
 
 function dtRender() {
@@ -1189,12 +1492,12 @@ function dtRender() {
   }
 
   // Stepper
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 4 ? '→' : String(i);
+    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 5 ? '→' : String(i);
   }
   const model = MODELS.find(m => m.id === selModel);
   const el = (id) => document.getElementById(id);
@@ -1217,20 +1520,29 @@ function dtRender() {
   if (next1) next1.disabled = !selModel;
 
   // Bouton next step 3
-  const next3lbl = el('dt-next-3-lbl');
-  if (next3lbl) next3lbl.textContent = window.sizeValidated ? 'Ma configuration' : 'Continuer sans taille';
+  const next3lbl = el('dt-next-taille-lbl');
+  v2SetTailleLabel(window.sizeValidated);
 
   // Bouton "changer de vélo" dans le récap — visible après reset
 
 
-  // Rendu spécifique
+  // Rendu spécifique V2
   if (n === 1) dtRenderS1();
   if (n === 2) dtRenderS2();
-  if (n === 3) { dtRenderS3(); }
-  if (n === 4) dtRenderS4();
+  if (n === 3) {
+    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+    document.getElementById('dt-s3bif')?.classList.add('active');
+  }
+  if (n === 4) {
+    if (v2Parcours === 'standard') { dtRenderS3(); }
+    else { evoRender(); }
+  }
+  if (n === 5) {
+    if (v2Parcours === 'standard') { document.body.classList.add('dt-step-4'); dtRenderS4(); }
+  }
 
-  // Récap droit (pas à l'étape 4)
-  if (n !== 4) dtRenderRecap();
+  // Récap droit (pas à l'étape devis, qui a son propre affichage détaillé)
+  if (n !== 6) dtRenderRecap();
 
   // Scroll haut
   const main = el('dt-main');
@@ -1263,13 +1575,13 @@ function dtPresetBar(modelId) {
   return '<div class="preset-bar" onclick="event.stopPropagation()">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
       '<div class="preset-label" style="margin-bottom:0;color:#F5C400;">3 suggestions pour démarrer</div>' +
-      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:15px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<button onclick="toggleDtPresetInfo(\'' + infoPopupId + '\')" style="background:none;border:none;color:#F5C400;font-size:22px;cursor:pointer;padding:0;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="' + infoPopupId + '" style="display:none;font-size:12px;color:#aaa;background:#111;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS_DT).map(([k,v]) =>
         '<div><span style="color:#F5C400;font-weight:600;">' + k + '</span> — ' + v + '</div>'
       ).join('') +
-      '<div style="font-size:11px;color:#555;margin-top:4px;">Tout reste modifiable.</div>' +
+      '<div style="font-size:11px;color:#999;margin-top:4px;">Tout reste modifiable.</div>' +
     '</div>' +
     '<div class="preset-btns">' +
     ['Signature','Ti1','Ti2'].map(decl =>
@@ -1294,7 +1606,7 @@ function dtSelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
   const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; }
+  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1314,7 +1626,7 @@ function dtSelectModel(id) {
 function dtLoadPreset(decl) {
   const preset = PRESETS[selModel] && PRESETS[selModel][decl];
   if (!preset) return;
-  window._activePreset = decl; selOpts = {...preset};
+  window._activePreset = decl; selOpts = {...preset}; syncAllPostDims();
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1385,12 +1697,12 @@ function dtShowSaved() {
   loadSaved(); // sync localStorage → savedConfigs
   dtStep = 4;
   document.body.classList.add('dt-step-4');
-  const inner = document.getElementById('dt-s4-inner');
+  const inner = document.getElementById('dt-s6devis-inner');
   if (!inner) return;
   
   const configs = savedConfigs || [];
   if (configs.length === 0) {
-    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Mes configurations</p><p style="color:#666;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#444;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
+    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#f2f2f2;margin-bottom:1rem;">Mes configurations</p><p style="color:#666;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#999;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
   } else {
     inner.innerHTML = '<p class="section-title" style="color:#f2f2f2;margin-bottom:1.5rem;">Mes configurations (' + configs.length + ')</p>' +
       configs.map((c, idx) => {
@@ -1482,12 +1794,129 @@ function dtRenderS2() {
 }
 
 // Rendu des postes dans dt-posts-list — délégation d'événements pour éviter l'escaping
+// Rendu d'un sous-champ de dimension DANS l'accordéon composants (pneus/transmission/fourche)
+// Trouve, parmi une liste d'options, la valeur numérique la plus proche d'une cible donnée
+function closestNumericMatch(target, options) {
+  const nums = options.map(Number).filter(n => !isNaN(n));
+  if (nums.length === 0 || target === undefined || target === null) return null;
+  let best = nums[0], bestDiff = Math.abs(nums[0] - target);
+  nums.forEach(n => { const d = Math.abs(n - target); if (d < bestDiff) { best = n; bestDiff = d; } });
+  return String(best);
+}
+
+// defaultValue : valeur à pré-sélectionner si rien n'est encore choisi.
+//   - une valeur concrète (ex: options[0], ou calculée depuis DEFAULTS_BY_TAILLE) -> auto-sélectionnée, badge "défaut"
+//   - null/undefined -> aucun défaut, le menu affiche "— choisir —" et "Je ne sais pas encore" reste disponible
+function renderComponentDimField(key, label, options, refreshFn, defaultValue) {
+  if (!options || options.length === 0) return '';
+  if (options.length === 1) {
+    if (!selSize[key]) { selSize[key] = String(options[0]); selSizeSource[key] = 'default'; }
+    return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
+      <label style="font-size:13px;color:#ccc;display:block;margin-bottom:5px;">${label}</label>
+      <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value;selSizeSource['${key}']='user';${refreshFn}();">
+        <option value="${options[0]}" selected>${options[0]}</option>
+      </select>
+    </div>`;
+  }
+  if (!selSize[key] && defaultValue !== null && defaultValue !== undefined && options.map(String).includes(String(defaultValue))) {
+    selSize[key] = String(defaultValue);
+    selSizeSource[key] = 'default';
+  }
+  const hasDefault = defaultValue !== null && defaultValue !== undefined;
+  const optHTML = options.map(o => `<option value="${o}" ${selSize[key]==String(o)?'selected':''}>${o}</option>`).join('');
+  const placeholder = hasDefault ? '' : `<option value="" ${!selSize[key] ? 'selected' : ''}>— choisir —</option>`;
+  return `<div class="comp-dim-field" onclick="event.stopPropagation()" style="margin-top:.6rem;padding-top:.6rem;border-top:0.5px solid #222;">
+    <label style="font-size:13px;color:#ccc;display:block;margin-bottom:5px;">${label}</label>
+    <select class="size-select" style="width:100%;" onclick="event.stopPropagation()" onchange="event.stopPropagation();selSize['${key}']=this.value=='__unknown__'?null:this.value;selSizeSource['${key}']='user';${refreshFn}();">
+      ${placeholder}
+      ${optHTML}
+      <option value="__unknown__" ${selSize[key]===null?'selected':''}>Je ne sais pas encore</option>
+    </select>
+  </div>`;
+}
+
+// ─── DESTINATION DEPUIS L'ÉTAPE 2 SELON LE CHOIX CADRE ─────────────────────────
+function dtUpdateStep2Footer() {
+  const zone = document.getElementById('dt-s2-footer-actions');
+  if (!zone) return;
+  if (v2Parcours === 'sur_mesure') {
+    zone.innerHTML = '<button class="dt-btn-next" onclick="v3GoSurMesureFromS2()">Continuer <i class="ti ti-arrow-right"></i></button>';
+  } else if (!selSize.taille) {
+    zone.innerHTML = '<button class="dt-btn-next" onclick="v3EnterGuideOnly()">Déterminer ma taille <i class="ti ti-arrow-right"></i></button>';
+  } else {
+    zone.innerHTML =
+      '<button onclick="v3EnterGuideOnly()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
+      '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoPersoFromS2()">Personnalisation <i class="ti ti-arrow-right"></i></button>';
+  }
+}
+
+function v3GoSurMesureFromS2() {
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s4mesure')?.classList.add('active');
+  evoActiveContainer = 'v2-mesure-evo-options'; evoRender();
+  v2UpdateStepper(); dtRenderRecap();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+}
+
+// ─── CARTE "CADRE" — nouvelle en tête de l'étape Composants ──────────────────
+function renderCadreCard(selectId) {
+  selectId = selectId || 'cadre-taille-select';
+  if (!selModel || !TAILLES_CADRE[selModel]) return '';
+  const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
+  const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '');
+  const summary = v2Parcours === 'sur_mesure' ? 'Sur-mesure (+300 €)'
+    : selSize.taille ? 'Taille ' + selSize.taille
+    : 'À déterminer';
+  return '<div class="post-block" data-post-id="cadre">' +
+    '<div class="post-hdr" style="cursor:default;">' +
+      '<i class="ti ti-frame ph-icon"></i>' +
+      '<span class="ph-name">Cadre</span>' +
+      '<span class="ph-sel">' + summary + '</span>' +
+    '</div>' +
+    '<div class="post-opts open">' +
+      '<div class="dim-field" style="max-width:320px;">' +
+        '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
+        '<select class="size-select" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
+          '<option value="">Je ne sais pas encore</option>' +
+          tailles.map(t => '<option value="' + t + '"' + (current === t ? ' selected' : '') + '>' + t + '</option>').join('') +
+          '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function selectCadreTaille(value) {
+  if (value === '__sur_mesure__') {
+    v2Parcours = 'sur_mesure';
+    delete selSize.taille; delete selSizeSource.taille;
+  } else if (value) {
+    v2Parcours = 'standard';
+    selSize.taille = value; selSizeSource.taille = 'user';
+  } else {
+    v2Parcours = 'standard';
+    delete selSize.taille; delete selSizeSource.taille;
+  }
+  // La taille de cadre change : les dimensions morphologiques auto-remplies (source 'default')
+  // ne sont plus forcément pertinentes -> on les efface pour qu'elles se recalculent au rendu suivant.
+  // On préserve en revanche les choix explicites du visiteur (source 'user').
+  MORPHO_DIM_KEYS.forEach(key => {
+    if (selSizeSource[key] === 'default') { delete selSize[key]; delete selSizeSource[key]; }
+  });
+  if (typeof dtRenderPosts === 'function') dtRenderPosts();
+  if (typeof dtRenderRecap === 'function') dtRenderRecap();
+  if (typeof dtUpdateStep2Footer === 'function') dtUpdateStep2Footer();
+  if (typeof p11RenderPosts === 'function') p11RenderPosts();
+  if (typeof p11UpdateStep2Footer === 'function') p11UpdateStep2Footer();
+}
+
 function dtRenderPosts() {
   const container = document.getElementById('dt-posts-list');
   if (!container || !selModel) return;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
 
-  container.innerHTML = POST_META.map(p => {
+  container.innerHTML = renderCadreCard() + POST_META.map(p => {
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -1528,6 +1957,17 @@ function dtRenderPosts() {
     const optHtml = (hasPhotos ? '<div class="opt-photo-grid">' : '<div class="opt-list">') +
       opts.map(buildOpt).join('') + '</div>';
 
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtml = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtml += renderComponentDimField(key, DIM_LABELS[key], dimOptions, 'dtRenderPosts', computeDimDefault(key, dimOptions));
+        }
+      });
+    }
+
     const _isModDt = !!(window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset] && PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
@@ -1536,7 +1976,7 @@ function dtRenderPosts() {
         (selOpt?'<span class="ph-sel">'+selOpt.name+'</span>':'<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtml + '</div>' +
     '</div>';
   }).join('');
 
@@ -1551,6 +1991,7 @@ function dtRenderPosts() {
   };
 
   dtRenderRecap();
+  dtUpdateStep2Footer();
 }
 
 function dtSelectOpt(postId, optId) {
@@ -1558,6 +1999,8 @@ function dtSelectOpt(postId, optId) {
   if (!opt) return;
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
   // FORCE_SELECT
   FORCE_SELECT.forEach(rule => {
     if (rule.if_selected === optId)
@@ -1584,6 +2027,9 @@ function dtTogglePost(postId) {
 function dtRenderS3() {
   const cardsZone = document.getElementById('dt-s3-cards');
   if (!cardsZone) return;
+
+  evoActiveContainer = 'v2-evo-options';
+  evoRender();
 
   // Mettre les cartes dans la zone
   const cardGuide  = document.getElementById('card-guide');
@@ -1615,16 +2061,20 @@ function dtRenderS3() {
   if (guideZone)  guideZone.style.display  = 'none';
   if (manualZone) manualZone.style.display = 'none';
 
-  // Hooker les fonctions de calcul
-  if (!window._dtCalcHooked) {
-    window._dtCalcHooked = true;
-    const _calcSize = window.calcSize;
-    window.calcSize = function() { if (_calcSize) _calcSize(); setTimeout(dtCheckSizeResult, 400); };
-    const _chooseUsage = window.chooseUsage;
-    window.chooseUsage = function(u) { if (_chooseUsage) _chooseUsage(u); setTimeout(dtCheckSizeResult, 200); };
-    const _validateDims = window.validateDims;
-    window.validateDims = function() { if (_validateDims) _validateDims(); window.sizeValidated=true; setTimeout(dtCheckSizeResult, 100); };
-  }
+  dtHookCalcFunctions();
+}
+
+// Enveloppe calcSize/chooseUsage/validateDims une seule fois pour déclencher dtCheckSizeResult()
+// après chaque calcul — indispensable notamment pour afficher "Choisir ces résultats" / "Sortir"
+function dtHookCalcFunctions() {
+  if (window._dtCalcHooked) return;
+  window._dtCalcHooked = true;
+  const _calcSize = window.calcSize;
+  window.calcSize = function() { if (_calcSize) _calcSize(); setTimeout(dtCheckSizeResult, 400); };
+  const _chooseUsage = window.chooseUsage;
+  window.chooseUsage = function(u) { if (_chooseUsage) _chooseUsage(u); setTimeout(dtCheckSizeResult, 200); };
+  const _validateDims = window.validateDims;
+  window.validateDims = function() { if (_validateDims) _validateDims(); window.sizeValidated=true; setTimeout(dtCheckSizeResult, 100); };
 }
 
 function dtCheckSizeResult() {
@@ -1644,10 +2094,173 @@ function dtCheckSizeResult() {
   // selSize rempli
   if (!validated && window.sizeValidated) validated = true;
 
-  if (validated) {
-    const lbl = document.getElementById('dt-next-3-lbl');
-    if (lbl) lbl.textContent = 'Ma configuration';
+  if (validated) v2SetTailleLabel(true);
+
+  // Signal fiable pour la page guidée seule : une VRAIE taille a-t-elle été déterminée ?
+  // (le texte affiché par le calculateur peut être non-vide même sans résultat exploitable)
+  if (dtGuideOnlyActive) {
+    if (selSize.taille) dtShowGuideResultButtons();
+    else dtShowGuideDefaultFooter();
   }
+  if (typeof p11GuideOnlyActive !== 'undefined' && p11GuideOnlyActive) {
+    if (selSize.taille) p11ShowGuideResultButtons();
+    else p11ShowGuideDefaultFooter();
+  }
+}
+
+function dtShowGuideDefaultFooter() {
+  const footer = document.getElementById('dt-s3-footer');
+  if (!footer) return;
+  footer.innerHTML = '<button class="btn-cancel" onclick="v3SortirSansReport()">Retour</button>';
+}
+
+// ─── "LAISSEZ-VOUS GUIDER" EN POPUP — la page Composants reste visible/préservée en dessous.
+// Revenir en arrière (Retour/Sortir) ne fait jamais perdre ce qui a déjà été rempli en page 2. ──
+let dtGuideOnlyActive = false;
+let dtPreGuideSnapshot = null;
+
+function dtRenderS3GuideOnly() {
+  const guideZone = document.getElementById('dt-s3-panel-guide');
+  const panelGuide = document.getElementById('panel-guide');
+  if (guideZone && panelGuide && !guideZone._init) {
+    guideZone.appendChild(panelGuide);
+    panelGuide.classList.add('open');
+    guideZone._init = true;
+  }
+  if (guideZone) guideZone.style.display = 'block';
+  if (typeof buildDimsGrid === 'function') buildDimsGrid();
+  dtHookCalcFunctions();
+}
+
+// ─── "LAISSEZ-VOUS GUIDER" EN BOTTOM SHEET MOBILE — même principe que la popup
+// desktop : la page Composants reste visible/préservée en dessous. ────────────
+let p11GuideOnlyActive = false;
+let p11GuideSnapshot = null;
+
+function p11RenderGuideSheet() {
+  const zone = document.getElementById('p11-guide-sheet-content');
+  const panelGuide = document.getElementById('panel-guide');
+  if (zone && panelGuide && !zone._init) {
+    zone.appendChild(panelGuide);
+    panelGuide.classList.add('open');
+    zone._init = true;
+  }
+  if (typeof buildDimsGrid === 'function') buildDimsGrid();
+  dtHookCalcFunctions();
+}
+
+function p11OpenGuideSheet() {
+  p11GuideOnlyActive = true;
+  p11GuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
+  p11RenderGuideSheet();
+  if (selSize.taille) { window.sizeValidated = true; p11ShowGuideResultButtons(); }
+  else { window.sizeValidated = false; p11ShowGuideDefaultFooter(); }
+  const overlay = document.getElementById('p11-guide-sheet-overlay');
+  const sheet = document.getElementById('p11-guide-sheet');
+  if (overlay) overlay.style.display = 'block';
+  requestAnimationFrame(() => { if (sheet) sheet.style.transform = 'translateY(0)'; });
+}
+
+function p11CloseGuideSheetVisual() {
+  const overlay = document.getElementById('p11-guide-sheet-overlay');
+  const sheet = document.getElementById('p11-guide-sheet');
+  if (sheet) sheet.style.transform = 'translateY(100%)';
+  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+}
+
+function p11ShowGuideResultButtons() {
+  const footer = document.getElementById('p11-guide-sheet-footer');
+  if (!footer) return;
+  footer.innerHTML =
+    '<button onclick="p11SortirGuideSheet()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">Sortir</button>' +
+    '<button onclick="p11ChoisirResultatsSheet()" style="flex:2;background:#F5C400;border:none;color:#1a1a00;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Choisir ces résultats →</button>';
+}
+
+function p11ShowGuideDefaultFooter() {
+  const footer = document.getElementById('p11-guide-sheet-footer');
+  if (!footer) return;
+  footer.innerHTML = '<button onclick="p11SortirGuideSheet()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>';
+}
+
+// Les résultats sont déjà écrits en direct dans selSize par le calculateur — on referme
+// le sheet et on rafraîchit la page Composants (restée active en dessous) pour les refléter.
+function p11ChoisirResultatsSheet() {
+  p11GuideOnlyActive = false;
+  p11GuideSnapshot = null;
+  p11CloseGuideSheetVisual();
+  p11UpdateStep(2); // re-rend tout, y compris le libellé du bouton ("Personnalisation" désormais)
+}
+
+// Annule tout changement effectué depuis l'ouverture du sheet, puis le referme.
+function p11SortirGuideSheet() {
+  if (p11GuideSnapshot) {
+    selSize = p11GuideSnapshot.selSize;
+    selSizeSource = p11GuideSnapshot.selSizeSource;
+    v2Parcours = p11GuideSnapshot.v2Parcours;
+  }
+  p11GuideOnlyActive = false;
+  p11GuideSnapshot = null;
+  p11CloseGuideSheetVisual();
+  p11UpdateStep(2); // re-rend tout, y compris le libellé du bouton
+}
+
+function v3EnterGuideOnly() {
+  dtGuideOnlyActive = true;
+  dtPreGuideSnapshot = { selSize: {...selSize}, selSizeSource: {...selSizeSource}, v2Parcours };
+  dtRenderS3GuideOnly();
+  // Si une taille est déjà connue (résultat d'un calcul précédent), le refléter immédiatement
+  if (selSize.taille) {
+    window.sizeValidated = true;
+    dtShowGuideResultButtons();
+  } else {
+    window.sizeValidated = false;
+    dtShowGuideDefaultFooter();
+  }
+  document.getElementById('taille-guide-modal')?.classList.add('open');
+}
+
+function dtShowGuideResultButtons() {
+  const footer = document.getElementById('dt-s3-footer');
+  if (!footer) return;
+  footer.innerHTML =
+    '<button class="btn-cancel" onclick="v3SortirSansReport()">Sortir</button>' +
+    '<button class="btn-send" onclick="v3ChoisirResultats()">Choisir ces résultats <i class="ti ti-arrow-right"></i></button>';
+}
+
+// Les résultats sont déjà écrits en direct dans selSize par le calculateur — on ferme la
+// popup et on rafraîchit la page Composants (restée active en dessous) pour les refléter.
+function v3ChoisirResultats() {
+  dtGuideOnlyActive = false;
+  dtPreGuideSnapshot = null;
+  document.getElementById('taille-guide-modal')?.classList.remove('open');
+  dtRenderPosts();
+  dtRenderRecap();
+}
+
+// Annule tout changement effectué depuis l'ouverture de la popup, puis la referme —
+// la page Composants n'a jamais quitté l'écran, rien n'y est perdu.
+function v3SortirSansReport() {
+  if (dtPreGuideSnapshot) {
+    selSize = dtPreGuideSnapshot.selSize;
+    selSizeSource = dtPreGuideSnapshot.selSizeSource;
+    v2Parcours = dtPreGuideSnapshot.v2Parcours;
+  }
+  dtGuideOnlyActive = false;
+  dtPreGuideSnapshot = null;
+  document.getElementById('taille-guide-modal')?.classList.remove('open');
+  dtRenderPosts();
+  dtRenderRecap();
+}
+
+// ─── PAGE "PERSONNALISATION" SEULE (dt-s5perso) — cadre standard déjà connu ──────
+function v3GoPersoFromS2() {
+  dtStep = 5;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s5perso')?.classList.add('active');
+  evoActiveContainer = 'v2-evo-options';
+  evoRender();
+  v2UpdateStepper(); dtRenderRecap();
+  const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
 }
 
 function dtToggleSizeMode(mode) {
@@ -1665,7 +2278,7 @@ function dtToggleSizeMode(mode) {
   // Reset résultat pour permettre un nouveau calcul
   const dtResult = document.getElementById('dt-s3-result');
   if (dtResult) { dtResult.style.display = 'none'; dtResult.innerHTML = ''; }
-  const lbl = document.getElementById('dt-next-3-lbl');
+  const lbl = document.getElementById('dt-next-taille-lbl');
   if (lbl) lbl.textContent = 'Continuer sans taille';
 
   // Reset résultats proto12 pour guide
@@ -1679,10 +2292,26 @@ function dtToggleSizeMode(mode) {
 
 // ── Étape 4 : récap plein écran ──
 function dtRenderS4() {
-  const inner = document.getElementById('dt-s4-inner');
+  const inner = document.getElementById('dt-s6devis-inner');
   if (!inner || !selModel) return;
   const model = MODELS.find(m => m.id === selModel);
-  const { price } = computeTotals(selModel, selOpts);
+  const { price: bikePrice } = computeTotals(selModel, selOpts);
+
+  // Surcoût selon le parcours Obvious On Demand
+  let oodSurcharge = 0;
+  let priceIsMin = false; // "à partir de" pour Titanium
+  if (typeof v2Parcours !== 'undefined') {
+    if (v2Parcours === 'standard_evo') {
+      const evoT = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+      oodSurcharge = evoT || 0;
+    } else if (v2Parcours === 'sur_mesure') {
+      oodSurcharge = 300;
+    } else if (v2Parcours === 'hors_gamme') {
+      oodSurcharge = 720;
+      priceIsMin = true;
+    }
+  }
+  const price = bikePrice + oodSurcharge;
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   const mc = dtModifCount();
@@ -1695,7 +2324,8 @@ function dtRenderS4() {
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
-        '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.5rem;">'+price.toLocaleString('fr-FR')+' €</div>' +
+        '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
+        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Options Évolution':v2Parcours==='sur_mesure'?'Niveau Performance':'Niveau Titanium')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -1742,10 +2372,90 @@ function dtRenderS4() {
         })() +
       '</div>') +
     '</div>' +
+    v2RecapBlock() +
     '';
 }
 
+// Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
+function v2EvoRecapBlockHtml(title, showTotal) {
+  const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
+  const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+  let lines = '';
+  if (checkedOpts.length === 0 && !evoCustomText) {
+    lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
+  } else {
+    lines = '<div style="font-size:13px;color:#f2f2f2;line-height:1.8;display:flex;flex-direction:column;gap:2px;">' +
+      checkedOpts.map(o => {
+        if (o.id === 'evo_gravure') {
+          return '<div>' + o.label + (evoGravureText ? ' : « ' + evoGravureText + ' »' : '') + '</div>';
+        }
+        if (o.id === 'evo_inserts') {
+          const selectedInserts = (typeof EVO_INSERTS !== 'undefined')
+            ? EVO_INSERTS.filter(i => evoInsertsChecked[i.id]).map(i => i.label)
+            : [];
+          return '<div>' + o.label + (selectedInserts.length ? ' : ' + selectedInserts.join(', ') : '') + '</div>';
+        }
+        return '<div>' + o.label + '</div>';
+      }).join('') +
+    '</div>';
+  }
+  const customBlock = evoCustomText
+    ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #2a2a2a;"><div style="font-size:11px;color:#666;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#f2f2f2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
+    : '';
+  return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+    '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">' + title + '</div>' +
+    lines +
+    customBlock +
+    (showTotal && total !== null ? '<div style="font-size:13px;color:#F5C400;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
+  '</div>';
+}
+
+function v2RecapBlock() {
+  if (typeof v2Parcours === 'undefined') return '';
+
+  if (v2Parcours === 'standard') {
+    return ''; // rien à afficher — le parcours standard est déjà couvert par Dimensions
+  }
+
+  if (v2Parcours === 'standard_evo') {
+    return v2EvoRecapBlockHtml('Options Évolution', true);
+  }
+
+  if (v2Parcours === 'sur_mesure') {
+    const msg = window._v2Message || '';
+    const fileInput = document.getElementById('v2-mesure-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses', false);
+  }
+
+  if (v2Parcours === 'hors_gamme') {
+    const msg = window._v2Message || '';
+    const fileInputH = document.getElementById('v2-horsgamme-file');
+    const fileNameH = (fileInputH && fileInputH.files && fileInputH.files[0]) ? fileInputH.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+      (fileNameH ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileNameH.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>';
+  }
+
+  return '';
+}
+
 // ── Récap droit ──
+// Calcule le surcoût lié au niveau Obvious On Demand choisi (partagé desktop/mobile)
+function computeOodSurcharge() {
+  let surcharge = 0, isMin = false;
+  if (v2Parcours === 'sur_mesure') surcharge = 300;
+  else if (v2Parcours === 'hors_gamme') { surcharge = 720; isMin = true; }
+  else surcharge = evoTotalPrice() || 0; // standard : les options Évolution (page Taille) s'ajoutent si cochées
+  return { surcharge, isMin };
+}
+
 function dtRenderRecap() {
   if (window.innerWidth < 768) return;
   const model = MODELS.find(m => m.id === selModel);
@@ -1758,8 +2468,10 @@ function dtRenderRecap() {
   if (get('dtr-thumb')) { get('dtr-thumb').src = model.photo||''; get('dtr-thumb').style.display = model.photo?'block':'none'; }
   if (get('dtr-model')) { get('dtr-model').textContent = model.name; get('dtr-model').style.display = 'block'; }
   if (get('dtr-preset')) get('dtr-preset').textContent = window._activePreset || '';
-  const {price} = computeTotals(selModel, selOpts);
-  if (get('dtr-price')) { get('dtr-price').textContent = price.toLocaleString('fr-FR')+' €'; get('dtr-price').style.display = 'block'; }
+  const {price: bikePriceR} = computeTotals(selModel, selOpts);
+  const { surcharge: oodR, isMin: oodRMin } = computeOodSurcharge();
+  const priceR = bikePriceR + oodR;
+  if (get('dtr-price')) { get('dtr-price').textContent = (oodRMin?'Dès ':'') + priceR.toLocaleString('fr-FR')+' €'; get('dtr-price').style.display = 'block'; }
   if (get('dtr-sep')) get('dtr-sep').style.display = 'block';
 
   const mc = dtModifCount();
@@ -1773,7 +2485,13 @@ function dtRenderRecap() {
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   const rows = get('dtr-rows');
   if (!rows) return;
-  rows.innerHTML = POST_META.map(p => {
+  const cadreSurMesure = v2Parcours === 'sur_mesure';
+  const cadreVal = cadreSurMesure ? 'Sur-mesure (+300 €)' : (selSize.taille ? 'Taille ' + selSize.taille : 'À déterminer');
+  const cadreRowHtml = '<div class="dtr-row"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '>' +
+    '<span class="dtr-lbl"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '><i class="ti ti-frame" style="font-size:8px;margin-right:3px;"></i>Cadre</span>' +
+    '<span class="dtr-val"' + (cadreSurMesure ? ' style="color:#F5C400;font-weight:600;"' : '') + '>' + cadreVal + '</span>' +
+  '</div>';
+  rows.innerHTML = cadreRowHtml + POST_META.map(p => {
     const opts = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id] : [];
     const opt = opts.find(o => o.id === selOpts[p.id]);
     if (!opt) return '';
@@ -1834,7 +2552,7 @@ function dtReset() {
   if (mz) mz._init = false;
   // Garder le modèle ET _singleModel — réinitialiser uniquement les options
   const keptModel = selModel;
-  selOpts = {}; selSize = {}; selSizeSource = {}; morphoData = { stature: null, entrejambe: null, epaules: null }; window.sizeValidated = false; openPost = null;
+  selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false; openPost = null;
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
@@ -1855,6 +2573,559 @@ function dtInit() {
   const tb = document.querySelector('.tab-bar');
   if (tb) tb.style.display = 'none';
   dtRender();
+}
+
+
+
+// ─── OBVIOUS ON DEMAND — DONNÉES ÉVOLUTION ────────────────────────────────────
+const EVO_FIXE = 50;
+const EVO_OPTIONS = [
+  {
+    "id": "evo_inserts",
+    "label": "Ajout d'inserts",
+    "price": 10,
+    "note": "Ajout d'inserts taraudés pour fixations sur cadre — porte-bidons, bagagerie, porte-bagages, garde-boue. Prix unique quelle que soit la quantité.",
+    "modeles": [
+      "route",
+      "gravel_racing",
+      "gravel_bikepacking",
+      "vtt_enduro"
+    ]
+  },
+  {
+    "id": "evo_iscg",
+    "label": "Fixation ISCG05",
+    "price": 20,
+    "note": "Ajout d'une patte de fixation pour guide-chaîne ISCG05 sur VTT.",
+    "modeles": [
+      "vtt_enduro"
+    ]
+  },
+  {
+    "id": "evo_integ",
+    "label": "Intégration direction",
+    "price": 50,
+    "note": "Intégration des gaines et durites dans la direction.",
+    "modeles": [
+      "gravel_bikepacking"
+    ]
+  },
+  {
+    "id": "evo_gravure",
+    "label": "Gravure sur tube supérieur",
+    "price": 10,
+    "note": "Gravez votre nom, votre groupe sanguin ou autre sur le tube supérieur — 20 caractères maximum.",
+    "modeles": [
+      "route",
+      "gravel_racing",
+      "gravel_bikepacking",
+      "vtt_enduro"
+    ]
+  }
+];
+
+const EVO_INSERTS = [
+  {
+    "id": "ins_pb1",
+    "label": "Porte-bidon 1",
+    "note": "Tube diagonal",
+    "avail": {
+      "route": 1,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 1
+    }
+  },
+  {
+    "id": "ins_pb2",
+    "label": "Porte-bidon 2",
+    "note": "Tube de selle",
+    "avail": {
+      "route": 1,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": "x"
+    }
+  },
+  {
+    "id": "ins_pb3",
+    "label": "Porte-bidon 3",
+    "note": "Sous tube diagonal",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 1,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 0
+    }
+  },
+  {
+    "id": "ins_sacoche",
+    "label": "Sacoche de tube supérieur",
+    "note": "Tube supérieur",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 0,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 0
+    }
+  },
+  {
+    "id": "ins_pbag4",
+    "label": "Porte-bagages arrière 4 points",
+    "note": "Pour porte-bagages classique",
+    "avail": {
+      "route": "x",
+      "gravel_racing": 0,
+      "gravel_bikepacking": 1,
+      "vtt_enduro": 0
+    }
+  },
+  {
+    "id": "ins_pbag2",
+    "label": "Porte-bagages arrière 2 points",
+    "note": "2 points en bas des haubans pour soutenir porte-bagages fixé sur tige de selle",
+    "avail": {
+      "route": 0,
+      "gravel_racing": 0,
+      "gravel_bikepacking": "x",
+      "vtt_enduro": 0
+    }
+  },
+  {
+    "id": "ins_gardeboue",
+    "label": "Garde-boue",
+    "note": "",
+    "avail": {
+      "route": "x",
+      "gravel_racing": "x",
+      "gravel_bikepacking": 1,
+      "vtt_enduro": "x"
+    }
+  }
+];
+
+let evoInsertsChecked = {}; // état des inserts individuels
+let evoCustomText = ''; // demande texte libre
+
+let evoChecked = {};
+let evoOrder = []; // ordre de sélection — le premier élément paie le fixe
+let evoGravureText = '';
+
+function evoUpdateGravureText(val) {
+  const upperVal = val.toUpperCase();
+  evoGravureText = upperVal;
+  const input = document.getElementById('evo-gravure-input');
+  // Préserver la position du curseur lors de la conversion en majuscules
+  const cursorPos = input ? input.selectionStart : null;
+  if (input && input.value !== upperVal) {
+    input.value = upperVal;
+    if (cursorPos !== null) input.setSelectionRange(cursorPos, cursorPos);
+  }
+  const errorSpan = input ? input.parentElement.querySelector('span') : null;
+  const isError = upperVal.length > 20;
+  if (input) input.style.borderColor = isError ? '#e05555' : '#333';
+  if (errorSpan) {
+    errorSpan.style.color = isError ? '#e05555' : '#555';
+    errorSpan.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (upperVal.length + ' / 20 caractères');
+  }
+}
+let v2Parcours = 'standard'; // 'standard' | 'standard_evo' | 'sur_mesure' | 'hors_gamme'
+
+// Calcul du prix affiché pour UNE option
+// Rien de coché : toutes affichent fixe + xx
+// Au moins 1 coché : SEULE la première option cochée (evoOrder[0]) affiche fixe + xx
+//                    toutes les autres (cochées ou non) affichent xx seul
+function evoOptionPrice(optId) {
+  const opt = EVO_OPTIONS.find(o => o.id === optId);
+  if (!opt) return 0;
+  if (evoOrder.length === 0) return EVO_FIXE + opt.price;
+  return optId === evoOrder[0] ? EVO_FIXE + opt.price : opt.price;
+}
+
+// Total global = fixe (1 seul) + somme des xx cochés
+function evoTotalPrice() {
+  const checked = EVO_OPTIONS.filter(o => evoChecked[o.id]);
+  if (checked.length === 0) return null; // rien de coché
+  return EVO_FIXE + checked.reduce((sum, o) => sum + o.price, 0);
+}
+
+// Rendu des options Évolution
+let evoActiveContainer = 'v2-evo-options';
+
+const EVO_ICONS = {
+  evo_inserts: 'ti-bottle', evo_iscg: 'ti-settings', evo_integ: 'ti-cable',
+  evo_gravure: 'ti-typography',
+  ins_pb1: 'ti-bottle', ins_pb2: 'ti-bottle', ins_pb3: 'ti-bottle',
+  ins_sacoche: 'ti-briefcase', ins_pbag4: 'ti-package', ins_pbag2: 'ti-package',
+  ins_gardeboue: 'ti-umbrella'
+};
+
+function evoRender() {
+  const container = document.getElementById(evoActiveContainer);
+  if (!container) return;
+  const showPrices = evoActiveContainer !== 'v2-mesure-evo-options';
+  const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
+  const firstId = evoOrder[0];
+
+  container.innerHTML = opts.map(opt => {
+    const checked = evoChecked[opt.id] || false;
+    const priceLabel = evoOptionPrice(opt.id) + ' €';
+    const isGravure = opt.id === 'evo_gravure';
+    const isInserts = opt.id === 'evo_inserts';
+    const gravureText = evoGravureText || '';
+    const gravureError = gravureText.length > 20;
+
+    const iconName = EVO_ICONS[opt.id] || 'ti-adjustments';
+    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:.9rem 1rem;border-radius:8px;transition:border-color .15s;">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="evoToggle('${opt.id}')"`}>
+        <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#F5C400' : '#666'};flex-shrink:0;margin-top:1px;"></i>
+        <div style="flex:1;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
+            <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
+            ${(isInserts || !showPrices) ? '' : `<span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
+          </div>
+          ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+        </div>
+        ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+          ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
+        </div>`}
+      </div>
+      ${isInserts ? evoRenderInsertsSubList(checked, priceLabel, showPrices) : ''}
+      ${isGravure && checked ? `
+      <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
+        <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);text-transform:uppercase;letter-spacing:.03em;">
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-size:11px;color:${gravureError ? '#e05555' : '#555'};">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</span>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Bloc demande libre — toujours affiché en bas
+  container.innerHTML += evoRenderCustomText();
+
+  evoUpdateTotal();
+}
+
+// Sous-liste des inserts filtrée par modèle
+function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel, showPrices) {
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] !== 'x');
+  if (items.length === 0) return '';
+
+  const anyInsertChecked = items.some(i => i.avail[selModel] === 0 && evoInsertsChecked[i.id]);
+
+  return `<div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;display:flex;flex-direction:column;gap:6px;">` +
+    items.map(item => {
+      const isIncluded = item.avail[selModel] === 1;
+      const isChecked = evoInsertsChecked[item.id] || false;
+      const iName = EVO_ICONS[item.id] || 'ti-plug';
+      if (isIncluded) {
+        return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
+          <i class="ti ${iName}" style="font-size:13px;color:#666;flex-shrink:0;"></i>
+          <span style="font-size:12px;color:#888;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+          <span style="font-size:11px;color:#999;margin-left:auto;">sur cadre standard</span>
+        </div>`;
+      }
+      return `<div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation();evoToggleInsert('${item.id}')">
+        <i class="ti ${iName}" style="font-size:13px;color:${isChecked ? '#F5C400' : '#666'};flex-shrink:0;"></i>
+        <span style="font-size:12px;color:#f2f2f2;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+        <div style="width:14px;height:14px;border-radius:4px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${isChecked ? '<i class="ti ti-check" style="font-size:9px;color:#1a1a00;"></i>' : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    (showPrices ? `<div style="display:flex;justify-content:flex-end;margin-top:4px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
+      <span style="font-size:12px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#666'};">${priceLabel}</span>
+    </div>` : '') +
+  '</div>';
+}
+
+// Champ texte libre pour demande spécifique
+function evoRenderCustomText() {
+  return `<div style="margin-top:.5rem;padding:1rem;background:#0d0d0d;border:0.5px dashed #333;">
+    <div style="font-size:12px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
+    <textarea id="evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);resize:vertical;line-height:1.5;">${evoCustomText}</textarea>
+    <div style="font-size:11px;color:#999;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+  </div>`;
+}
+
+// Paires d'inserts mutuellement exclusifs (impossible physiquement d'avoir les deux
+// à la fois — ex: porte-bagages 4 points et 2 points occupent le même emplacement)
+const EVO_INSERT_EXCLUSIVE_PAIRS = [['ins_pbag4', 'ins_pbag2']];
+
+function applyInsertExclusivity(id) {
+  if (!evoInsertsChecked[id]) return; // seulement si on vient de COCHER (pas décocher)
+  EVO_INSERT_EXCLUSIVE_PAIRS.forEach(pair => {
+    if (pair.includes(id)) {
+      const other = pair.find(x => x !== id);
+      if (evoInsertsChecked[other]) evoInsertsChecked[other] = false;
+    }
+  });
+}
+
+function evoToggleInsert(id) {
+  evoInsertsChecked[id] = !evoInsertsChecked[id];
+  applyInsertExclusivity(id);
+  // Synchronise evo_inserts checked/order selon si au moins un insert cochable est sélectionné
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
+  const anyChecked = items.some(i => evoInsertsChecked[i.id]);
+  evoChecked['evo_inserts'] = anyChecked;
+  if (anyChecked) {
+    if (!evoOrder.includes('evo_inserts')) evoOrder.push('evo_inserts');
+  } else {
+    evoOrder = evoOrder.filter(x => x !== 'evo_inserts');
+  }
+  evoRender();
+  dtRenderRecap();
+}
+
+// ─── DROPZONE FICHIER (drag & drop) ────────────────────────────────────────────
+function v2DropzoneDragOver(e, el) {
+  e.preventDefault();
+  el.style.borderColor = '#F5C400';
+  el.style.background = 'rgba(245,196,0,0.04)';
+}
+function v2DropzoneDragLeave(e, el) {
+  e.preventDefault();
+  el.style.borderColor = '#3a3a3a';
+  el.style.background = 'transparent';
+}
+function v2DropzoneDrop(e, el, inputId) {
+  e.preventDefault();
+  el.style.borderColor = '#3a3a3a';
+  el.style.background = 'transparent';
+  const files = e.dataTransfer.files;
+  if (files && files.length > 0) {
+    const input = document.getElementById(inputId);
+    input.files = files;
+    v2DropzoneFileChange(inputId, el.id);
+  }
+}
+function v2DropzoneFileChange(inputId, dropzoneId) {
+  const input = document.getElementById(inputId);
+  const dz = document.getElementById(dropzoneId);
+  if (!input || !dz || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const icon = dz.querySelector('i');
+  const text = dz.querySelector('.v2-dz-text');
+  const hint = dz.querySelector('.v2-dz-hint');
+  dz.style.borderStyle = 'solid';
+  dz.style.borderColor = '#F5C400';
+  if (icon) { icon.className = 'ti ti-file-check'; icon.style.color = '#F5C400'; }
+  if (text) text.innerHTML = file.name;
+  if (text) text.style.color = '#f2f2f2';
+  if (hint) hint.textContent = (file.size / 1024).toFixed(0) + ' Ko — cliquez pour changer';
+}
+
+function evoToggle(id) {
+  evoChecked[id] = !evoChecked[id];
+  if (evoChecked[id]) {
+    if (!evoOrder.includes(id)) evoOrder.push(id);
+  } else {
+    evoOrder = evoOrder.filter(x => x !== id);
+  }
+  evoRender();
+  dtRenderRecap();
+}
+
+function evoUpdateTotal() {
+  const isMesure = evoActiveContainer === 'v2-mesure-evo-options';
+  const totalId = isMesure ? 'v2-mesure-evo-total' : 'v2-evo-total';
+  const totalEl = document.getElementById(totalId);
+  if (!totalEl) return;
+  if (isMesure) {
+    totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Ces options sont incluses dans le forfait Performance — 300 €</span>';
+    return;
+  }
+  const total = evoTotalPrice();
+  if (total === null) {
+    totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Sélectionnez les options souhaitées</span>';
+  } else {
+    totalEl.innerHTML = 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong>';
+  }
+}
+
+// ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
+
+
+// ─── NAVIGATION V2 ────────────────────────────────────────────────────────────
+
+
+// Helper centralisé : définit le bon texte du bouton "Continuer" après la taille
+function v2SetTailleLabel(validated) {
+  const lbl = document.getElementById('dt-next-taille-lbl');
+  if (!lbl) return;
+  if (validated) {
+    lbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+  } else {
+    lbl.textContent = 'Continuer sans taille';
+  }
+}
+
+function v2ChooseParcours(parcours) {
+  v2Parcours = parcours;
+
+  ['standard','standard_evo','sur_mesure','hors_gamme'].forEach(p => {
+    const card = document.getElementById('v2-card-' + p);
+    if (card) card.style.borderColor = p === parcours ? '#F5C400' : '#333';
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+    const main = document.getElementById('dt-main');
+
+    if (parcours === 'standard' || parcours === 'standard_evo') {
+      dtStep = 4;
+      document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+      document.getElementById('dt-s3')?.classList.add('active');
+      dtRenderS3();
+      // Update next button label
+      const lbl = document.getElementById('dt-next-taille-lbl');
+      if (lbl) {
+        if (window.sizeValidated) {
+          lbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+        } else {
+          lbl.textContent = 'Continuer sans taille';
+        }
+      }
+    } else if (parcours === 'sur_mesure') {
+      dtStep = 4;
+      document.getElementById('dt-s4mesure')?.classList.add('active');
+      evoActiveContainer = 'v2-mesure-evo-options';
+      evoRender();
+    } else if (parcours === 'hors_gamme') {
+      dtStep = 4;
+      document.getElementById('dt-s4horsgamme')?.classList.add('active');
+    }
+    v2UpdateStepper();
+    dtRenderRecap();
+    if (main) main.scrollTop = 0;
+  }, 150);
+}
+
+function v2RenderTaille() {
+  dtRenderS3 && dtRenderS3();
+  v2UpdateStepper();
+}
+// Bouton "Suivant" depuis la taille — selon le parcours
+function v2NextFromTaille() {
+  v2GoRecap();
+}
+
+// Aller au récap avant devis
+function v2GoRecap() {
+  dtStep = 6;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s6devis')?.classList.add('active');
+  document.body.classList.add('dt-step-4');
+  v2UpdateStepper();
+  dtRenderS4 && dtRenderS4();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+
+function v2GoDevis() {
+  // Blocage si gravure trop longue
+  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+    const input = document.getElementById('evo-gravure-input');
+    if (input) { input.style.borderColor = '#e05555'; input.focus(); }
+    return;
+  }
+  // Collect data from current parcours
+  if (v2Parcours === 'sur_mesure') {
+    window._v2Message = document.getElementById('v2-mesure-message')?.value || '';
+  } else if (v2Parcours === 'hors_gamme') {
+    window._v2Message = document.getElementById('v2-horsgamme-message')?.value || '';
+  }
+  v2GoRecap();
+}
+
+function v2UpdateStepper() {
+  const n = dtStep;
+  for (let i = 1; i <= 6; i++) {
+    const s = document.getElementById('dts-' + i);
+    const d = document.getElementById('dts-dot-' + i);
+    if (!s || !d) continue;
+    s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
+    d.innerHTML = i < n
+      ? '<i class="ti ti-check" style="font-size:9px;"></i>'
+      : i === 6 ? '→' : String(i);
+  }
+  const d3 = document.getElementById('dts-d3');
+  if (d3) d3.textContent = n > 3
+    ? ({standard:'Standard',standard_evo:'Standard + perso',sur_mesure:'Sur mesure',hors_gamme:'Projet unique'}[v2Parcours] || '') + ' ✓'
+    : '';
+  const d4 = document.getElementById('dts-d4');
+  if (d4) {
+    if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
+    else if (v2Parcours === 'standard_evo') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
+    else d4.textContent = '';
+  }
+}
+
+function v2BackFromTaille() {
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s3bif')?.classList.add('active');
+  dtStep = 3;
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+function v2BackFromMesureOrHorsGamme() {
+  // Titanium (hors_gamme) est démarré directement depuis l'étape 1 -> y retourner.
+  // Performance (sur_mesure) est démarré depuis la carte Cadre en étape 2 -> y retourner.
+  // Navigation directe (pas dtGo()), qui exige un modèle sélectionné — Titanium peut ne pas en avoir.
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  if (v2Parcours === 'hors_gamme') {
+    dtStep = 1;
+    document.getElementById('dt-s1')?.classList.add('active');
+    dtRenderS1 && dtRenderS1();
+  } else {
+    dtStep = 2;
+    document.getElementById('dt-s2')?.classList.add('active');
+    dtRenderS2 && dtRenderS2();
+  }
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+function v2BackFromDevis() {
+  document.body.classList.remove('dt-step-4');
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  if (v2Parcours === 'standard') {
+    dtStep = 4;
+    document.getElementById('dt-s3')?.classList.add('active');
+    v2RenderTaille();
+  } else if (v2Parcours === 'standard_evo') {
+    dtStep = 5;
+    document.getElementById('dt-s5evo')?.classList.add('active');
+    evoActiveContainer = 'v2-evo-options';
+    evoRender();
+  } else if (v2Parcours === 'sur_mesure') {
+    dtStep = 4;
+    document.getElementById('dt-s4mesure')?.classList.add('active');
+    evoActiveContainer = 'v2-mesure-evo-options';
+    evoRender();
+  } else if (v2Parcours === 'hors_gamme') {
+    dtStep = 4;
+    document.getElementById('dt-s4horsgamme')?.classList.add('active');
+  }
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
+}
+
+function v2GoBackToTailleEvo() {
+  dtStep = 4;
+  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+  document.getElementById('dt-s3')?.classList.add('active');
+  v2RenderTaille();
+  v2UpdateStepper();
+  const main = document.getElementById('dt-main');
+  if (main) main.scrollTop = 0;
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -1983,6 +3254,7 @@ if (modeleParam) {
     // Présélection via paramètre URL ?preset=Signature|Ti1|Ti2
     const presetParam = urlParams.get('preset');
     if (presetParam && PRESETS[modeleAuto.id] && PRESETS[modeleAuto.id][presetParam]) {
+      window._v2Parcours = 'standard';
       window._activePreset = presetParam;
       selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
       // Mobile : masquer grille, afficher composants
@@ -2145,6 +3417,7 @@ function updateFloatingPrice() {
 
 // ─── ÉTAT TAILLE ──────────────────────────────────────────────────────────────
 let selSize = {};  // {taille, potence, cintre, manivelle, cassette, plateaux, largeur_selle, section, debattement}
+let selSizeSource = {}; // 'user' ou 'default' pour chaque clé de selSize
 let currentSizeMode = null;
 let overlapTailles = null;
 
@@ -2166,21 +3439,68 @@ function toggleSizeMode(mode) {
 }
 
 // ─── CALCUL TAILLE GUIDÉE ─────────────────────────────────────────────────────
-// Données morphologiques saisies (mode guidé) — pour compte-rendu devis
-let morphoData = { stature: null, entrejambe: null, epaules: null };
-// Source de chaque valeur de dimension : 'user' (choisie) ou 'default' (valeur par défaut appliquée automatiquement)
-let selSizeSource = {};
+// Vérifie la cohérence entre l'entrejambe et la taille déterminée par la stature.
+// Si l'entrejambe sort de la plage de cette taille, propose la taille adjacente
+// (plus grande si l'entrejambe dépasse par le haut, plus petite si par le bas)
+// et renvoie un avertissement invitant à contacter Obvious pour valider le choix.
+function checkEntrejambeConsistency(chosenTaille, tailles, entrejambe) {
+  if (!entrejambe) return { taille: chosenTaille, warning: null };
+  const sorted = [...tailles].sort((a, b) => a.stature_min - b.stature_min);
+  const idx = sorted.findIndex(t => t.taille === chosenTaille.taille);
+  if (idx === -1) return { taille: chosenTaille, warning: null };
+  const t = sorted[idx];
+  if (entrejambe > t.ej_max) {
+    const next = sorted[idx + 1];
+    return {
+      taille: next || t,
+      warning: "Votre entrejambe (" + entrejambe + " cm) dépasse la plage habituelle pour cette taille — nous vous recommandons de nous contacter pour valider votre configuration."
+    };
+  }
+  if (entrejambe < t.ej_min) {
+    const prev = sorted[idx - 1];
+    return {
+      taille: prev || t,
+      warning: "Votre entrejambe (" + entrejambe + " cm) est en dessous de la plage habituelle pour cette taille — nous vous recommandons de nous contacter pour valider votre configuration."
+    };
+  }
+  return { taille: chosenTaille, warning: null };
+}
+
+// Cas du CHEVAUCHEMENT (plusieurs tailles conviennent selon la stature) : vérifie si
+// l'entrejambe sort de la plage COMBINÉE de ces tailles candidates. Si oui, résout
+// directement vers une taille adjacente (sans passer par le choix sport/confort) avec
+// un avertissement. Si l'entrejambe reste dans la plage combinée (ou n'est pas
+// renseigné), renvoie null — le choix sport/confort normal s'applique.
+function checkEntrejambeOutOfCombinedRange(matches, allTailles, entrejambe) {
+  if (!entrejambe) return null;
+  const combinedMin = Math.min(...matches.map(t => t.ej_min));
+  const combinedMax = Math.max(...matches.map(t => t.ej_max));
+  if (entrejambe >= combinedMin && entrejambe <= combinedMax) return null;
+  const sorted = [...allTailles].sort((a, b) => a.stature_min - b.stature_min);
+  const byStature = [...matches].sort((a, b) => a.stature_min - b.stature_min);
+  if (entrejambe > combinedMax) {
+    const largest = byStature[byStature.length - 1];
+    const idx = sorted.findIndex(t => t.taille === largest.taille);
+    const next = sorted[idx + 1];
+    return {
+      taille: next || largest,
+      warning: "Votre entrejambe (" + entrejambe + " cm) dépasse la plage habituelle pour les tailles correspondant à votre stature — nous vous recommandons de nous contacter pour valider votre configuration."
+    };
+  }
+  const smallest = byStature[0];
+  const idx = sorted.findIndex(t => t.taille === smallest.taille);
+  const prev = sorted[idx - 1];
+  return {
+    taille: prev || smallest,
+    warning: "Votre entrejambe (" + entrejambe + " cm) est en dessous de la plage habituelle pour les tailles correspondant à votre stature — nous vous recommandons de nous contacter pour valider votre configuration."
+  };
+}
 
 function calcSize() {
   const stature = parseInt(document.getElementById('guide-stature').value);
   const selle   = parseInt(document.getElementById('guide-selle').value) || null;
   const acroRaw = parseFloat(document.getElementById('guide-acro').value) || null;
   const acro    = acroRaw ? Math.round(acroRaw * 10) : null; // cm → mm
-
-  // Mémoriser les données morphologiques saisies (pour le compte-rendu devis / admin)
-  morphoData.stature    = stature || null;
-  morphoData.entrejambe = selle || null;
-  morphoData.epaules    = acroRaw || null;
   const result  = document.getElementById('guide-result');
   const main    = document.getElementById('guide-result-main');
   const sub     = document.getElementById('guide-result-sub');
@@ -2196,22 +3516,20 @@ function calcSize() {
   }
 
   const tailles = TAILLES_CADRE[selModel] || [];
-  // Chercher par entrejambe en priorité, sinon par stature
-  let matches;
-  if (selle && selle > 0) {
-    // selle = entrejambe en mm
-    matches = tailles.filter(t => selle >= t.ej_min && selle <= t.ej_max);
-    if (matches.length === 0) {
-      // Pas de correspondance exacte — prendre la plus proche
-      const closest = tailles.reduce((a,b) => {
-        const da = Math.min(Math.abs(selle-a.ej_min), Math.abs(selle-a.ej_max));
-        const db = Math.min(Math.abs(selle-b.ej_min), Math.abs(selle-b.ej_max));
-        return da < db ? a : b;
-      });
-      matches = [closest];
-    }
-  } else {
-    matches = tailles.filter(t => stature >= t.stature_min && stature <= t.stature_max);
+  // Priorité à la STATURE : elle doit obligatoirement entrer dans la plage préconisée
+  // par le cadre. En cas de chevauchement, on vérifie d'abord si l'entrejambe sort de
+  // la plage combinée des tailles candidates (résolution directe + avertissement) ;
+  // sinon on demande sport/confort normalement.
+  let matches = tailles.filter(t => stature >= t.stature_min && stature <= t.stature_max);
+
+  if (matches.length === 0) {
+    // Aucune taille ne couvre cette stature — prendre la plus proche par stature
+    const closest = tailles.reduce((a,b) => {
+      const da = Math.min(Math.abs(stature-a.stature_min), Math.abs(stature-a.stature_max));
+      const db = Math.min(Math.abs(stature-b.stature_min), Math.abs(stature-b.stature_max));
+      return da < db ? a : b;
+    });
+    matches = [closest];
   }
 
   result.classList.add('show');
@@ -2227,14 +3545,13 @@ function calcSize() {
   }
 
   if (matches.length === 1) {
-    const t = matches[0];
+    const { taille: t, warning } = checkEntrejambeConsistency(matches[0], tailles, selle);
     selSize.taille = t.taille;
     showSizeActionBtns();
     selSize.taille = t.taille;
-    selSizeSource.taille = 'user'; // taille = résultat direct de la saisie stature/entrejambe (mode guidé)
-    // Tous les autres champs (manivelle, cintre, potence, cassette, plateaux, section, debattement, largeur_selle)
-    // sont calculés par buildDimsGrid() qui valide chaque valeur contre les options RÉELLES du composant choisi.
-    // On ne les assigne jamais directement ici pour éviter toute valeur inventée.
+    // Pré-remplir avec les valeurs par défaut de cette taille
+    // Tous les autres champs sont calculés par buildDimsGrid(), qui valide chaque valeur
+    // contre les options RÉELLES du composant choisi — jamais d'assignation directe ici.
     if (typeof buildDimsGrid === 'function') buildDimsGrid();
     // Calculer cintre depuis inter-acromions
     if (acro) calcCintreFromAcro(acro);
@@ -2242,12 +3559,44 @@ function calcSize() {
     let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
     if (selle) info += ' · Entrejambe ' + t.ej_min + '–' + t.ej_max + ' cm';
     if (acro && selSize.cintre) info += ' · Cintre recommandé : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    if (warning) info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + warning + '</div>';
     sub.innerHTML = info;
     return;
   }
 
-  // Chevauchement
+  // Chevauchement : l'entrejambe sort-il de la plage combinée des tailles candidates ?
+  const outOfRange = checkEntrejambeOutOfCombinedRange(matches, tailles, selle);
+  if (outOfRange) {
+    const t = outOfRange.taille;
+    selSize.taille = t.taille;
+    showSizeActionBtns();
+    if (typeof buildDimsGrid === 'function') buildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) info += ' · Cintre recommandé : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + outOfRange.warning + '</div>';
+    sub.innerHTML = info;
+    return;
+  }
+
   overlapTailles = matches;
+  const sortedCheck = [...matches].sort((a,b) => a.stature_min - b.stature_min);
+  if (sortedCheck[0].taille === sortedCheck[sortedCheck.length - 1].taille) {
+    // Sport et confort mèneraient à la même taille : pas la peine de demander.
+    const t = sortedCheck[0];
+    overlapTailles = null;
+    selSize.taille = t.taille;
+    showSizeActionBtns();
+    if (typeof buildDimsGrid === 'function') buildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let infoSame = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (selle) infoSame += ' · Entrejambe ' + t.ej_min + '–' + t.ej_max + ' cm';
+    if (acro && selSize.cintre) infoSame += ' · Cintre recommandé : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    sub.innerHTML = infoSame;
+    return;
+  }
   main.innerHTML = 'Votre stature correspond à deux tailles : <span style="color:#F5C400">' + matches.map(t=>t.taille).join(' ou ') + '</span>';
   sub.textContent = 'Précisez votre usage pour affiner le choix.';
   overlap.style.display = 'block';
@@ -2258,6 +3607,9 @@ function chooseUsage(usage) {
   document.getElementById('btn-sport').classList.toggle('sel', usage === 'sport');
   document.getElementById('btn-confort').classList.toggle('sel', usage === 'confort');
   // sport → petite taille, confort → grande taille
+  // (l'entrejambe a déjà été vérifié en amont, contre la plage combinée des tailles
+  // candidates, avant même de proposer ce choix — voir checkEntrejambeOutOfCombinedRange
+  // dans calcSize() — donc aucun ajustement supplémentaire ici)
   const sorted = [...overlapTailles].sort((a,b) => a.stature_min - b.stature_min);
   const chosen = usage === 'sport' ? sorted[0] : sorted[sorted.length-1];
   selSize.taille = chosen.taille;
@@ -2283,103 +3635,189 @@ const DEFAULTS_BY_TAILLE = {
     "XXS": {
       "manivelle": 165,
       "cintre": 380,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "S": {
       "manivelle": 170,
       "cintre": 400,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 420,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 440,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "28",
+      "plateaux": "52x36",
+      "cassette": "11x34"
     }
   },
   "gravel_racing": {
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "S": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "45",
+      "plateaux": "40",
+      "cassette": "10x45"
     }
   },
   "gravel_bikepacking": {
     "XS": {
       "manivelle": 165,
       "cintre": 400,
-      "potence": 80
+      "potence": 80,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x51"
     },
     "S": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 90
+      "potence": 90,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x52"
     },
     "M": {
       "manivelle": 170,
       "cintre": 420,
-      "potence": 100
+      "potence": 100,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x53"
     },
     "L": {
       "manivelle": 172.5,
       "cintre": 440,
-      "potence": 110
+      "potence": 110,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x54"
     },
     "XL": {
       "manivelle": 175,
       "cintre": 460,
-      "potence": 120
+      "potence": 120,
+      "largeur_selle": 145,
+      "section": "40",
+      "plateaux": "40",
+      "cassette": "10x55"
     }
   },
   "vtt_enduro": {
     "S": {
-      "manivelle": 165
+      "manivelle": 165,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "M": {
-      "manivelle": 170
+      "manivelle": 170,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "L": {
-      "manivelle": 170
+      "manivelle": 170,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     },
     "XL": {
-      "manivelle": 172.5
+      "manivelle": 172.5,
+      "largeur_selle": 145,
+      "section": "2.4\"",
+      "plateaux": "32",
+      "cassette": "10x52",
+      "debattement": 150
     }
   }
-}
+};
+// Source : configurateur_velos_v2.xlsx, onglet 5_GEOMETRIES — utilisée comme RECOMMANDATION.
+// Toujours validée contre les options réelles du composant choisi avant application (voir computeDimDefault).
 
 function buildDimsGrid() {
   const grid = document.getElementById('dims-grid');
@@ -2401,10 +3839,7 @@ function buildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'dim-manivelle', label:'Longueur manivelle (mm)', options: transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
-      fields.push({id:'dim-plateaux', label:'Plateau(x)', options: transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
-      fields.push({id:'dim-cassette', label:'Cassette', options: transOpt.dims.cassette, key:'cassette'});
+    // plateaux/cassette : choisis désormais directement sur la page Composants (étape 2)
   }
 
   // Pilotage
@@ -2423,31 +3858,8 @@ function buildDimsGrid() {
     }
   }
 
-  // Pneus
-  const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o => o.id === selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
-    // Modification 1 : gravel_bikepacking = max 42mm (cadre limité)
-    let sectionOpts = pneuOpt.dims.section;
-    if (selModel === 'gravel_bikepacking') {
-      sectionOpts = sectionOpts.filter(s => {
-        const num = parseFloat(String(s).replace(',', '.'));
-        return isNaN(num) || num <= 42;
-      });
-    }
-    if (sectionOpts.length >= 1)
-      fields.push({id:'dim-section', label:'Section pneu', options: sectionOpts, key:'section',
-        });
-  }
-
-  // Fourche VTT
-  const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o => o.id === selOpts.fourche) : null;
-  if (fourcheOpt && fourcheOpt.dims && fourcheOpt.dims.debattement && fourcheOpt.dims.debattement.length > 1)
-    fields.push({id:'dim-debattement', label:'Débattement fourche (mm)', options: fourcheOpt.dims.debattement, key:'debattement'});
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o => o.id === selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'dim-largeur-selle', label:'Largeur selle (mm)', options: selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:var(--text3);font-size:13px;">Sélectionnez d\'abord un modèle et vos composants en étape 2.</p>';
@@ -2479,17 +3891,16 @@ function buildDimsGrid() {
               });
             }
             selSize[f.key] = String(best);
-            selSizeSource[f.key] = 'default';
           } else {
             // Options non numériques : cherche la correspondance exacte ou skip
-            if (f.options.includes(String(defVal))) { selSize[f.key] = String(defVal); selSizeSource[f.key] = 'default'; }
+            if (f.options.includes(String(defVal))) selSize[f.key] = String(defVal);
           }
         }
       }
     });
   }
 
-  const SECONDARY_KEYS = ['plateaux', 'cassette', 'section', 'debattement', 'largeur_selle'];
+  const SECONDARY_KEYS = [];
   const primaryFields   = fields.filter(f => !SECONDARY_KEYS.includes(f.key));
   const secondaryFields = fields.filter(f =>  SECONDARY_KEYS.includes(f.key));
 
@@ -2499,13 +3910,13 @@ function buildDimsGrid() {
       `<option value="${o}" ${selSize[f.key]==o?'selected':''}>${o}${f.key==='manivelle'||f.key==='potence'?' mm':''}</option>`
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? `selSizeSource['${f.key}']='user'; selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; delete selSizeSource.manivelle; delete selSizeSource.cintre; delete selSizeSource.potence; delete selSizeSource.debattement; buildDimsGrid();`
-      : `selSizeSource['${f.key}']='user'; selSize['${f.key}']=this.value`;
+      ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; buildDimsGrid();`
+      : `selSize['${f.key}']=this.value`;
     const jnspOption = f.options.length >= 2
       ? `<option value="">Je ne sais pas encore</option>`
       : '';
     // Valeur unique : pré-sélectionner silencieusement
-    if (f.options.length === 1) { selSize[f.key] = String(f.options[0]); selSizeSource[f.key] = 'default'; }
+    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
     return `<div class="dim-field">
       <label>${f.label}</label>
       <select class="size-select" id="${f.id}" onchange="${onchangeFn}">
@@ -2543,7 +3954,7 @@ function buildDimsGrid() {
         if (orig) { orig.value = this.value; orig.dispatchEvent(new Event('change')); }
         else {
           // Fallback : trouver la clé depuis les fields
-          if (this.id === 'p11-dim-taille') { selSize.taille = this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; buildDimsGrid(); }
+          if (this.id === 'p11-dim-taille') { selSize.taille = this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; buildDimsGrid(); }
         }
       });
     });
@@ -2611,8 +4022,7 @@ function validateDims() {
   // Mettre à jour le bouton mobile ET desktop
   const _lbl = document.getElementById('p11-next-label');
   if (_lbl) _lbl.textContent = 'Ma configuration';
-  const _lbl2 = document.getElementById('dt-next-3-lbl');
-  if (_lbl2) _lbl2.textContent = 'Ma configuration';
+  v2SetTailleLabel(true);
 }
 
 // ─── DRAWER AIDE-CONTACT (mobile) ─────────────────────────────────────────────
@@ -2722,38 +4132,39 @@ let p11CurrentStep = 1;
 let p11SizeMode = null;
 let p11OverlapTailles = null;
 
-const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre taille', 'Votre configuration'];
-const P11_NEXT_LABELS = ['Configurer vos composants', 'Choisir votre taille', 'Voir votre configuration', null];
+const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre cadre', 'Votre taille', 'Personnalisation', 'Votre configuration'];
+
+// Retourne l'ID de la div à afficher pour un numéro d'étape donné, selon le parcours choisi
+function p11StepDivId(n) {
+  if (n === 1) return 'p11-s1';
+  if (n === 2) return 'p11-s2';
+  if (n === 3) return 'p11-s5perso'; // repurposé : Personnalisation (cadre standard déjà connu)
+  if (n === 4) {
+    if (v2Parcours === 'sur_mesure') return 'p11-s4mesure';
+    if (v2Parcours === 'hors_gamme') return 'p11-s4horsgamme';
+    return 'p11-s4std';
+  }
+  if (n === 5) return 'p11-s5evo';
+  if (n === 6) return 'p11-s6devis';
+  return 'p11-s1';
+}
 
 // ─── HISTORIQUE NAVIGATEUR MOBILE (bouton/geste retour matériel) ──────────────
 let p11HistoryReady = false;
 let p11SkipHistoryPush = false;
-let p11HistDepth = 0;
 
 function p11InitHistory() {
   if (p11HistoryReady) return;
   p11HistoryReady = true;
-  p11HistDepth = 0;
-  history.replaceState({ p11Hist: true, depth: 0 }, '', location.href);
+  // Marquer l'entrée courante comme étape 1 (référence pour le tout premier "retour")
+  history.replaceState({ p11step: 1 }, '', location.href);
   window.addEventListener('popstate', function(e) {
-    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
-    if (!e.state || typeof e.state.depth !== 'number') return; // pas un état de ce configurateur
-    if (newDepth >= p11HistDepth) {
-      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
-      history.pushState({ p11Hist: true, depth: p11HistDepth }, '', location.href);
-      return;
+    if (e.state && typeof e.state.p11step === 'number') {
+      p11SkipHistoryPush = true;
+      p11UpdateStep(e.state.p11step);
+      p11SkipHistoryPush = false;
     }
-    p11SkipHistoryPush = true;
-    if (p11CurrentStep > 1) p11UpdateStep(p11CurrentStep - 1);
-    p11HistDepth = newDepth;
-    p11SkipHistoryPush = false;
   });
-}
-
-function p11PushHistory() {
-  if (!p11HistoryReady || p11SkipHistoryPush) return;
-  p11HistDepth++;
-  history.pushState({ p11Hist: true, depth: p11HistDepth }, '', location.href);
 }
 
 function p11Init() {
@@ -2766,74 +4177,311 @@ function p11Init() {
   document.getElementById('p11-container').style.display = 'block';
   // Masquer FAB drawer (le drawer reste accessible si besoin)
   p11RenderModels();
+  v2Parcours = 'standard';
   p11InitHistory();
   p11UpdateStep(1);
   p11InitSwipe();
 }
 
+// Rafraîchit le libellé du bouton + le lien "Besoin d'aide" de l'étape 2 SANS
+// naviguer — utile quand le choix Cadre change alors qu'on est déjà sur cette page
+// (p11UpdateStep(n) ne fait ce calcul qu'au moment d'un changement d'étape).
+function p11UpdateStep2Footer() {
+  const nextLbl = document.getElementById('p11-next-label');
+  const aideLink = document.getElementById('p11-aide-taille-link');
+  if (nextLbl) {
+    nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
+      : !selSize.taille ? 'Déterminer ma taille'
+      : 'Personnalisation';
+  }
+  if (aideLink) aideLink.style.display = (v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
+}
+
 function p11UpdateStep(n) {
-  const _prevStep = p11CurrentStep;
   p11CurrentStep = n;
-  if (n !== _prevStep) p11PushHistory();
-  // Dots + flèches nav + labels
-  for (let i=1; i<=4; i++) {
+  // Historique : chaque changement d'étape pousse une entrée, sauf si on répond à un popstate
+  if (p11HistoryReady && !p11SkipHistoryPush) {
+    history.pushState({ p11step: n }, '', location.href);
+  }
+  // Dots + labels (6 étapes)
+  for (let i=1; i<=6; i++) {
     const dot = document.getElementById('p11-dot-' + i);
     if (!dot) continue;
     dot.className = 'p11-step-dot' + (i === n ? ' active' : i < n ? ' done' : '');
     const sl = document.getElementById('p11-sl-' + i);
-    if (sl) sl.style.color = i === n ? '#F5C400' : i < n ? '#666' : '#333';
+    if (sl) sl.style.color = i === n ? '#F5C400' : i < n ? '#666' : '#888';
   }
   const backBtn = document.getElementById('p11-back-btn');
   const fwdBtn  = document.getElementById('p11-fwd-btn');
   if (backBtn) backBtn.style.color = n > 1 ? '#F5C400' : '#333';
-  if (fwdBtn)  fwdBtn.style.color  = n < 4 ? '#F5C400' : '#333';
+  if (fwdBtn)  fwdBtn.style.color  = (n < 6 && n !== 3) ? '#F5C400' : '#333';
   // Steps
   document.querySelectorAll('.p11-step').forEach(s => { s.classList.remove('active'); s.classList.remove('p11-active'); s.style.display = 'none'; });
-  const step = document.getElementById('p11-s' + n);
+  const stepId = p11StepDivId(n);
+  const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
-  // Bouton next
+  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape 6, récap déjà détaillé)
+  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
-  if (n === 4) {
-    if (bar) bar.style.display = 'none';
-    // Bandeau onglet 4 : affiché via IntersectionObserver
-    p11InitStep4Bar();
-  } else {
-    if (bar) bar.style.display = 'block';
-    if (nextLbl) {
-      if (n === 3 && !window.sizeValidated) {
-        nextLbl.textContent = 'Continuer sans taille';
-      } else {
-        nextLbl.textContent = P11_NEXT_LABELS[n-1] || '';
-      }
+  const hasInlineNav = (n === 3) || (n === 4 && (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme')) || (n === 5) || (n === 6);
+  if (bar) bar.style.display = (selModel && n !== 6) ? 'block' : 'none';
+  if (btn) btn.style.display = hasInlineNav ? 'none' : 'flex';
+  if (n === 6) p11InitStep4Bar();
+  if (!hasInlineNav && nextLbl) {
+    if (n === 4 && !window.sizeValidated) {
+      nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
+    } else if (n === 4 && v2Parcours === 'standard_evo') {
+      nextLbl.textContent = 'Mes personnalisations';
+    } else if (n === 4) {
+      nextLbl.textContent = 'Ma configuration';
+    } else if (n === 2) {
+      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
+        : !selSize.taille ? 'Déterminer ma taille'
+        : 'Personnalisation';
+    } else {
+      nextLbl.textContent = P11_LABELS[n] || '';
     }
   }
-  // Afficher le prix uniquement sur étape 2 et 3 (config + taille)
-  if (priceStrip) priceStrip.style.display = (selModel) ? 'flex' : 'none';
+  // Lien discret "Besoin d'aide" — uniquement étape 2, cadre = taille déjà connue
+  const aideLink = document.getElementById('p11-aide-taille-link');
+  if (aideLink) aideLink.style.display = (n === 2 && v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
+  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape 6, récap déjà détaillé)
+  if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
-  if (stripSave) stripSave.style.display = (n >= 2 && selModel) ? 'flex' : 'none';
+  if (stripSave) stripSave.style.display = (n >= 2 && n !== 6 && selModel) ? 'flex' : 'none';
+  if (selModel) p11UpdateTotal();
   // Step 1 : désactiver next si pas de modèle
-  if (n === 1) btn.style.opacity = selModel ? '1' : '.4';
+  if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
   if (n === 2) { p11RenderPosts(); p11UpdateTotal(); }
-  // Step 3 : rebuilder dims si mode connu
-  if (n === 3 && p11SizeMode) p11BuildDimsGrid();
-  // Step 4 : construire le récap final
-  if (n === 4) p11RenderFinalRecap();
-  // FAB : 20px si étape 4 (pas de bandeau), 76px sinon (au-dessus du bandeau)
-  const fab = document.getElementById('fab-contact');
-  // FAB now hidden on mobile (replaced by header button)
+  // Step 3 (repurposé) : Personnalisation seule (cadre standard déjà connu)
+  if (n === 3) { p11EvoActiveContainer = 'p11-evo-options-perso'; p11EvoRender(); }
+  // Step 4std (taille) : rebuilder dims si mode connu
+  if (n === 4 && v2Parcours !== 'sur_mesure' && v2Parcours !== 'hors_gamme' && p11SizeMode) p11BuildDimsGrid();
+  // Step 4 sur_mesure : rendre les options Évolution incluses (sans prix)
+  if (n === 4 && v2Parcours === 'sur_mesure') { p11EvoActiveContainer = 'p11-mesure-evo-options'; p11EvoRender(); }
+  // Step 5 : rendre les options Évolution (avec prix)
+  if (n === 5) { p11EvoActiveContainer = 'p11-evo-options'; p11EvoRender(); }
+  // Step 6 : construire le récap final
+  if (n === 6) p11RenderFinalRecap();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function p11Next() {
-  if (p11CurrentStep === 1 && !selModel) return;
-  if (p11CurrentStep < 4) p11UpdateStep(p11CurrentStep + 1);
+  if (p11CurrentStep === 1) { if (!selModel) return; p11UpdateStep(2); return; }
+  if (p11CurrentStep === 2) {
+    // Destination selon le choix Cadre (carte "Cadre" en haut des composants)
+    if (v2Parcours === 'sur_mesure') { p11UpdateStep(4); return; }
+    if (!selSize.taille) { p11OpenGuideSheet(); return; }
+    p11UpdateStep(3); return; // Personnalisation (repurposé)
+  }
+  if (p11CurrentStep === 3) return; // navigation par boutons inline uniquement
+  if (p11CurrentStep === 4) {
+    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
+    p11UpdateStep(6); return;
+  }
+  if (p11CurrentStep === 5) { p11UpdateStep(6); return; }
+}
+
+function p11Back() {
+  if (p11CurrentStep === 1) return;
+  if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
+  if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
+  if (p11CurrentStep === 4) {
+    if (v2Parcours === 'hors_gamme') { p11UpdateStep(1); return; } // Titanium -> retour étape 1 (démarré de là)
+    p11UpdateStep(2); return; // Performance -> retour composants
+  }
+  if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
+  if (p11CurrentStep === 6) {
+    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
+    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') { p11UpdateStep(4); return; }
+    p11UpdateStep(3); return; // standard -> retour Personnalisation
+  }
 }
 
 function p11GoTo(n) { p11UpdateStep(n); }
+
+// ─── BIFURCATION MOBILE (Étape 3) ──────────────────────────────────────────────
+function p11ChooseParcours(parcours) {
+  v2Parcours = parcours;
+  ['standard','standard_evo','sur_mesure','hors_gamme'].forEach(p => {
+    const card = document.getElementById('p11-card-' + p);
+    if (card) card.style.borderColor = p === parcours ? '#F5C400' : '#333';
+  });
+  setTimeout(() => { p11UpdateStep(4); }, 150);
+}
+
+// Depuis Évolution / Sur mesure / Hors gamme -> Récap (étape 6)
+function p11GoDevisFromOOD() {
+  if (v2Parcours === 'sur_mesure') {
+    window._v2Message = document.getElementById('p11-mesure-message')?.value || '';
+  } else if (v2Parcours === 'hors_gamme') {
+    window._v2Message = document.getElementById('p11-horsgamme-message')?.value || '';
+  }
+  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+    const input = document.getElementById('p11-evo-gravure-input') || document.getElementById('evo-gravure-input');
+    if (input) { input.style.borderColor = '#e05555'; input.focus(); }
+    return;
+  }
+  p11UpdateStep(6);
+}
+
+// ─── DROPZONE FICHIER MOBILE (tap pour choisir, pas de drag&drop) ──────────────
+function p11FileChange(inputId, dropzoneId) {
+  const input = document.getElementById(inputId);
+  const dz = document.getElementById(dropzoneId);
+  if (!input || !dz || !input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const icon = dz.querySelector('i');
+  const text = dz.querySelector('.p11-dz-text');
+  const hint = dz.querySelector('.p11-dz-hint');
+  dz.style.borderStyle = 'solid';
+  dz.style.borderColor = '#F5C400';
+  if (icon) { icon.className = 'ti ti-file-check'; icon.style.color = '#F5C400'; }
+  if (text) { text.textContent = file.name; text.style.color = '#f2f2f2'; }
+  if (hint) hint.textContent = (file.size / 1024).toFixed(0) + ' Ko — toucher pour changer';
+}
+
+// ─── OPTIONS ÉVOLUTION MOBILE (réutilise EVO_OPTIONS / EVO_INSERTS / evoChecked / evoOrder déjà définis) ──
+let p11EvoActiveContainer = 'p11-evo-options';
+
+function p11EvoRender() {
+  const container = document.getElementById(p11EvoActiveContainer);
+  if (!container) return;
+  const showPrices = p11EvoActiveContainer !== 'p11-mesure-evo-options';
+  const opts = EVO_OPTIONS.filter(o => o.modeles.includes(selModel));
+  const firstId = evoOrder[0];
+
+  container.innerHTML = opts.map(opt => {
+    const checked = evoChecked[opt.id] || false;
+    const priceLabel = evoOptionPrice(opt.id) + ' €';
+    const isGravure = opt.id === 'evo_gravure';
+    const isInserts = opt.id === 'evo_inserts';
+    const iconName = EVO_ICONS[opt.id] || 'ti-adjustments';
+    const gravureText = evoGravureText || '';
+    const gravureError = gravureText.length > 20;
+
+    return `<div style="background:#111;border:0.5px solid ${checked ? '#F5C400' : '#222'};padding:.9rem 1rem;border-radius:8px;">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="p11EvoToggle('${opt.id}')"`}>
+        <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#F5C400' : '#666'};flex-shrink:0;margin-top:1px;"></i>
+        <div style="flex:1;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
+            <span style="font-size:14px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
+            ${(isInserts || !showPrices) ? '' : `<span style="font-size:13px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
+          </div>
+          ${opt.note && !isInserts ? `<div style="font-size:13px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+        </div>
+        ${isInserts ? '' : `<div style="width:18px;height:18px;border-radius:5px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+          ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
+        </div>`}
+      </div>
+      ${isInserts ? p11EvoRenderInsertsSubList(priceLabel, showPrices) : ''}
+      ${isGravure && checked ? `
+      <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
+        <input type="text" id="p11-evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="p11EvoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:10px;font-size:14px;font-family:inherit;text-transform:uppercase;letter-spacing:.03em;border-radius:6px;">
+        <div style="font-size:11px;color:${gravureError ? '#e05555' : '#888'};margin-top:4px;">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML += p11EvoRenderCustomText();
+  p11EvoUpdateTotal();
+}
+
+function p11EvoRenderInsertsSubList(priceLabel, showPrices) {
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] !== 'x');
+  if (items.length === 0) return '';
+  const anyInsertChecked = items.some(i => i.avail[selModel] === 0 && evoInsertsChecked[i.id]);
+  return `<div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;display:flex;flex-direction:column;gap:8px;">` +
+    items.map(item => {
+      const isIncluded = item.avail[selModel] === 1;
+      const isChecked = evoInsertsChecked[item.id] || false;
+      const iName = EVO_ICONS[item.id] || 'ti-plug';
+      if (isIncluded) {
+        return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
+          <i class="ti ${iName}" style="font-size:14px;color:#666;flex-shrink:0;"></i>
+          <span style="font-size:13px;color:#999;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+          <span style="font-size:11px;color:#999;">sur cadre standard</span>
+        </div>`;
+      }
+      return `<div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation();p11EvoToggleInsert('${item.id}')">
+        <i class="ti ${iName}" style="font-size:14px;color:${isChecked ? '#F5C400' : '#666'};flex-shrink:0;"></i>
+        <span style="font-size:13px;color:#f2f2f2;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
+        <div style="width:16px;height:16px;border-radius:5px;border:0.5px solid ${isChecked ? '#F5C400' : '#444'};background:${isChecked ? '#F5C400' : 'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${isChecked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
+        </div>
+      </div>`;
+    }).join('') +
+    (showPrices ? `<div style="display:flex;justify-content:flex-end;margin-top:2px;padding-top:6px;border-top:0.5px solid #1a1a1a;">
+      <span style="font-size:13px;font-weight:500;color:${anyInsertChecked ? '#F5C400' : '#666'};">${priceLabel}</span>
+    </div>` : '') +
+  '</div>';
+}
+
+function p11EvoRenderCustomText() {
+  return `<div style="margin-top:.5rem;padding:1rem;background:#0d0d0d;border:0.5px dashed #333;border-radius:8px;">
+    <div style="font-size:13px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
+    <textarea id="p11-evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#111;border:0.5px solid #333;color:#f2f2f2;padding:10px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5;border-radius:6px;">${evoCustomText}</textarea>
+    <div style="font-size:11px;color:#666;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+  </div>`;
+}
+
+function p11EvoToggleInsert(id) {
+  evoInsertsChecked[id] = !evoInsertsChecked[id];
+  applyInsertExclusivity(id);
+  const items = EVO_INSERTS.filter(i => i.avail[selModel] === 0);
+  const anyChecked = items.some(i => evoInsertsChecked[i.id]);
+  evoChecked['evo_inserts'] = anyChecked;
+  if (anyChecked) { if (!evoOrder.includes('evo_inserts')) evoOrder.push('evo_inserts'); }
+  else { evoOrder = evoOrder.filter(x => x !== 'evo_inserts'); }
+  p11EvoRender();
+  p11UpdateTotal();
+}
+
+function p11EvoToggle(id) {
+  evoChecked[id] = !evoChecked[id];
+  if (evoChecked[id]) { if (!evoOrder.includes(id)) evoOrder.push(id); }
+  else { evoOrder = evoOrder.filter(x => x !== id); }
+  p11EvoRender();
+  p11UpdateTotal();
+}
+
+function p11EvoUpdateGravureText(val) {
+  const upperVal = val.toUpperCase();
+  evoGravureText = upperVal;
+  const input = document.getElementById('p11-evo-gravure-input');
+  const cursorPos = input ? input.selectionStart : null;
+  if (input && input.value !== upperVal) {
+    input.value = upperVal;
+    if (cursorPos !== null) input.setSelectionRange(cursorPos, cursorPos);
+  }
+  const errDiv = input ? input.parentElement.querySelector('div') : null;
+  const isError = upperVal.length > 20;
+  if (input) input.style.borderColor = isError ? '#e05555' : '#333';
+  if (errDiv) {
+    errDiv.style.color = isError ? '#e05555' : '#888';
+    errDiv.textContent = isError ? 'Maximum 20 caractères, espaces compris' : (upperVal.length + ' / 20 caractères');
+  }
+}
+
+function p11EvoUpdateTotal() {
+  const isMesure = p11EvoActiveContainer === 'p11-mesure-evo-options';
+  const isPerso  = p11EvoActiveContainer === 'p11-evo-options-perso';
+  const totalId = isMesure ? 'p11-mesure-evo-total' : isPerso ? 'p11-evo-total-perso' : 'p11-evo-total';
+  const totalEl = document.getElementById(totalId);
+  if (!totalEl) return;
+  if (isMesure) {
+    totalEl.textContent = 'Ces options sont incluses dans le forfait Performance — 300 €';
+    return;
+  }
+  const total = evoTotalPrice();
+  totalEl.innerHTML = total === null
+    ? '<span style="color:#666;">Sélectionnez les options souhaitées</span>'
+    : 'Total options : <strong style="color:#F5C400;">' + total + ' €</strong>';
+}
 
 // Rendu modèles mobile
 function p11RenderModels() {
@@ -2865,7 +4513,7 @@ function p11RenderPresets() {
   bar.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
       '<span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.08em;">3 suggestions de départ</span>' +
-      '<button onclick="p11TogglePresetInfo()" style="background:none;border:none;color:#888;font-size:15px;cursor:pointer;padding:0 4px;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+      '<button onclick="p11TogglePresetInfo()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:0 4px;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
     '</div>' +
     '<div id="p11-preset-info" style="display:none;font-size:12px;color:#aaa;background:#1a1a1a;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
       Object.entries(PRESET_DESCS).reverse().map(([k,v]) =>
@@ -2890,6 +4538,7 @@ function p11LoadPreset(decl) {
   if (!preset) return;
   window._activePreset = decl;
   selOpts = {...preset};
+  syncAllPostDims();
   // Appliquer FORCE_SELECT
   Object.keys(selOpts).forEach(postId => {
     const optId = selOpts[postId];
@@ -2915,7 +4564,7 @@ function p11LoadPreset(decl) {
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
   const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; }
+  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   p11RenderModels();
   p11RenderPresets();
   // Activer bouton next
@@ -2932,7 +4581,7 @@ function p11RenderPosts() {
   const container = document.getElementById('p11-posts-list');
   if (!container || !selModel) return;
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
-  container.innerHTML = POST_META.map(p => {
+  container.innerHTML = renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -2944,19 +4593,14 @@ function p11RenderPosts() {
 
     const optHtml = hasPhotos
       ? '<div class="opt-photo-grid">' + opts.map(o => {
-          const locked = isLocked(o, selModel);
           const sel = selOpts[p.id] === o.id;
           const isDefault = isPresetDefault(p.id, o.id);
           const rec = isRecommended(o, selModel);
-          let diff, pc;
-          if (locked) {
-            diff = curPrice!==0 ? '−'+Math.abs(curPrice).toLocaleString('fr-FR')+' €' : '';
-            pc = curPrice!==0?'neg':'incl';
-          } else {
-            const d = o.price - curPrice;
-            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
-            pc = d<0?'neg':d>0?'pos':'zero';
-          }
+          // Toujours l'écart réel vs le composant actuellement sélectionné (comme sur desktop) —
+          // le statut "locked" de l'option affichée n'a pas à changer ce calcul.
+          const d = o.price - curPrice;
+          const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+          const pc = d<0?'neg':d>0?'pos':'zero';
           const imgHTML = o.image && o.image !== 'assets/no_option.png'
             ? '<img src="' + o.image + '" alt="' + o.name + '" loading="lazy" onerror="this.style.display=\'none\'">'
             : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
@@ -2964,35 +4608,41 @@ function p11RenderPosts() {
             '<div class="opc-check"><i class="ti ti-check"></i></div>' +
             '<div class="opc-img-wrap">' + imgHTML + '</div>' +
             '<div class="opc-body">' +
-              ((rec||isDefault) ? '<div class="opc-badges">' + (isDefault ? '<span class="opc-badge-incl">inclus</span>' : '') + (rec ? '<span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span>' : '') + '</div>' : '') +
+              (rec ? '<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span></div>' : '') +
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
+              (isDefault ? '<span class="incl-preset">inclus</span>' : '') +
               (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
         }).join('') + '</div>'
       : '<div class="opt-list">' + opts.map(o => {
-          const locked = isLocked(o, selModel);
           const sel = selOpts[p.id] === o.id;
           const isDefault = isPresetDefault(p.id, o.id);
-          let diff, diffNeg;
-          if (locked) {
-            diff = curPrice!==0 ? '−'+Math.abs(curPrice).toLocaleString('fr-FR')+' €' : '—';
-            diffNeg = false;
-          } else {
-            const d = o.price - curPrice;
-            diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
-            diffNeg = d < 0;
-          }
+          // Toujours l'écart réel vs le composant actuellement sélectionné (comme sur desktop)
+          const d = o.price - curPrice;
+          const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+          const diffNeg = d < 0;
           return '<div class="opt-item' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
             '<div class="opt-radio"><div class="radio-dot"></div></div>' +
             '<div class="oi-info">' +
-              '<div class="oi-name">' + o.name + (isDefault ? '<span class="incl-badge">inclus</span>' : '') + '</div>' +
+              '<div class="oi-name">' + o.name + '</div>' +
               (o.desc ? '<div class="oi-desc">' + o.desc + '</div>' : '') +
             '</div>' +
-            '<div class="oi-meta"><div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
+            '<div class="oi-meta">' + (isDefault ? '<span class="incl-preset">inclus</span>' : '') + '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
         }).join('') + '</div>';
+
+    // Dimensions dépendantes du composant choisi (plateaux/cassette/section/débattement)
+    let dimsHtmlP11 = '';
+    if (selOpt && selOpt.dims && POST_DIM_FIELDS[p.id]) {
+      POST_DIM_FIELDS[p.id].forEach(key => {
+        const dimOptions = selOpt.dims[key];
+        if (dimOptions && dimOptions.length >= 1) {
+          dimsHtmlP11 += renderComponentDimField(key, DIM_LABELS[key], dimOptions, 'p11RenderPosts', computeDimDefault(key, dimOptions));
+        }
+      });
+    }
 
     const isModified = !!(selOpts[p.id] && window._activePreset && PRESETS[selModel] &&
       PRESETS[selModel][window._activePreset] &&
@@ -3004,7 +4654,7 @@ function p11RenderPosts() {
         (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtmlP11 + '</div>' +
     '</div>';
   }).join('');
   p11UpdateTotal();
@@ -3014,6 +4664,9 @@ function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
   selOpts[postId] = optId;
+
+  // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
+  if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
 
   // Transmission VTT : gestion des freins
   if (postId === 'transmission' && selModel === 'vtt_enduro') {
@@ -3066,8 +4719,10 @@ function p11TogglePost(id) {
 
 function p11UpdateTotal() {
   if (!selModel) return;
-  const {price} = computeTotals(selModel, selOpts);
-  const formatted = price.toLocaleString('fr-FR') + ' €';
+  const {price: bikePriceT} = computeTotals(selModel, selOpts);
+  const { surcharge: oodT, isMin: oodTMin } = computeOodSurcharge();
+  const price = bikePriceT + oodT;
+  const formatted = (oodTMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €';
   const el = document.getElementById('p11-total-val');
   if (el) el.textContent = formatted;
   const strip = document.getElementById('p11-strip-price');
@@ -3118,9 +4773,11 @@ function p11CalcSize() {
 
   if (!selModel || !stature) { main.textContent = 'Veuillez saisir votre taille.'; result.classList.add('show'); return; }
   const tailles = TAILLES_CADRE[selModel] || [];
-  let matches = ejRaw ? tailles.filter(t => ejRaw >= t.ej_min && ejRaw <= t.ej_max) : tailles.filter(t => stature >= t.stature_min && stature <= t.stature_max);
-  if (ejRaw && !matches.length) {
-    const cl = tailles.reduce((a,b) => Math.min(Math.abs(ejRaw-a.ej_min),Math.abs(ejRaw-a.ej_max)) < Math.min(Math.abs(ejRaw-b.ej_min),Math.abs(ejRaw-b.ej_max)) ? a : b);
+  // Priorité à la STATURE (comme sur desktop) — l'entrejambe sert uniquement, ensuite,
+  // à vérifier la cohérence de la taille retenue (voir checkEntrejambeConsistency).
+  let matches = tailles.filter(t => stature >= t.stature_min && stature <= t.stature_max);
+  if (!matches.length) {
+    const cl = tailles.reduce((a,b) => Math.min(Math.abs(stature-a.stature_min),Math.abs(stature-a.stature_max)) < Math.min(Math.abs(stature-b.stature_min),Math.abs(stature-b.stature_max)) ? a : b);
     matches = [cl];
   }
   result.classList.add('show'); overlap.style.display='none';
@@ -3129,7 +4786,7 @@ function p11CalcSize() {
   p11OverlapTailles = null;
   if (!matches.length) { main.textContent = 'Aucune taille trouvée.'; return; }
   if (matches.length === 1) {
-    const t = matches[0];
+    const { taille: t, warning } = checkEntrejambeConsistency(matches[0], tailles, ejRaw);
     window.sizeValidated = true;
     selSize.taille = t.taille;
     // Tous les autres champs sont calculés par p11BuildDimsGrid(), qui valide chaque valeur
@@ -3139,13 +4796,48 @@ function p11CalcSize() {
     main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
     let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
     if (acro && selSize.cintre) info += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    if (warning) info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + warning + '</div>';
     sub.innerHTML = info;
     // Mettre à jour le bouton
     const _nextLbl = document.getElementById('p11-next-label');
     if (_nextLbl) _nextLbl.textContent = 'Ma configuration';
     return;
   }
+  // Chevauchement : l'entrejambe sort-il de la plage combinée des tailles candidates ?
+  const outOfRangeM = checkEntrejambeOutOfCombinedRange(matches, tailles, ejRaw);
+  if (outOfRangeM) {
+    const t = outOfRangeM.taille;
+    window.sizeValidated = true;
+    selSize.taille = t.taille;
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let info = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) info += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    info += '<div style="margin-top:8px;padding:8px 10px;background:#2a1500;border-left:2px solid #e08b3a;color:#e0a370;font-size:12px;line-height:1.5;">' + outOfRangeM.warning + '</div>';
+    sub.innerHTML = info;
+    const _nextLbl2 = document.getElementById('p11-next-label');
+    if (_nextLbl2) _nextLbl2.textContent = 'Ma configuration';
+    return;
+  }
   p11OverlapTailles = matches;
+  const sortedCheckM = [...matches].sort((a,b) => a.stature_min - b.stature_min);
+  if (sortedCheckM[0].taille === sortedCheckM[sortedCheckM.length - 1].taille) {
+    // Sport et confort mèneraient à la même taille : pas la peine de demander.
+    const t = sortedCheckM[0];
+    p11OverlapTailles = null;
+    window.sizeValidated = true;
+    selSize.taille = t.taille;
+    if (typeof p11BuildDimsGrid === 'function') p11BuildDimsGrid();
+    if (acro) calcCintreFromAcro(acro);
+    main.innerHTML = 'Taille recommandée : <span style="color:#F5C400">' + t.taille + '</span>';
+    let infoSame = 'Stature ' + t.stature_min + '–' + t.stature_max + ' cm';
+    if (acro && selSize.cintre) infoSame += ' · Cintre : <span style="color:#F5C400">' + selSize.cintre + ' mm</span>';
+    sub.innerHTML = infoSame;
+    const _nextLbl3 = document.getElementById('p11-next-label');
+    if (_nextLbl3) _nextLbl3.textContent = 'Ma configuration';
+    return;
+  }
   main.innerHTML = 'Deux tailles : <span style="color:#F5C400">' + matches.map(t=>t.taille).join(' ou ') + '</span>';
   sub.innerHTML = '<span style="color:#e8e8e8">Précisez votre usage ↓</span>';
   overlap.style.display = 'block';
@@ -3155,6 +4847,9 @@ function p11ChooseUsage(usage) {
   if (!p11OverlapTailles) return;
   document.getElementById('p11-btn-sport').classList.toggle('sel', usage==='sport');
   document.getElementById('p11-btn-confort').classList.toggle('sel', usage==='confort');
+  // (l'entrejambe a déjà été vérifié en amont, contre la plage combinée des tailles
+  // candidates, avant même de proposer ce choix — voir checkEntrejambeOutOfCombinedRange
+  // dans p11CalcSize() — donc aucun ajustement supplémentaire ici)
   const sorted = [...p11OverlapTailles].sort((a,b)=>a.stature_min-b.stature_min);
   const chosen = usage==='sport' ? sorted[0] : sorted[sorted.length-1];
   window.sizeValidated = true;
@@ -3168,9 +4863,10 @@ function p11ChooseUsage(usage) {
   if (acroRaw) calcCintreFromAcro(Math.round(acroRaw*10));
   document.getElementById('p11-result-main').innerHTML =
     'Taille recommandée : <span style="color:#F5C400">' + chosen.taille + '</span> <span style="font-size:12px;color:#888">(' + (usage==='sport'?'sportif':'confort') + ')</span>';
+  document.getElementById('p11-result-sub').innerHTML = 'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm';
   // Mettre à jour le bouton "Continuer sans taille" → "Voir votre configuration"
   const _nextLbl = document.getElementById('p11-next-label');
-  if (_nextLbl && p11CurrentStep === 3) _nextLbl.textContent = 'Voir votre configuration';
+  if (_nextLbl && p11CurrentStep === 4) _nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
 }
 
 function p11BuildDimsGrid() {
@@ -3187,10 +4883,7 @@ function p11BuildDimsGrid() {
   if (transOpt && transOpt.dims) {
     if (transOpt.dims.manivelle && transOpt.dims.manivelle.length > 1)
       fields.push({id:'p11-dim-manivelle', label:'Longueur manivelle (mm)', options:transOpt.dims.manivelle, key:'manivelle'});
-    if (transOpt.dims.plateaux && transOpt.dims.plateaux.length >= 1)
-      fields.push({id:'p11-dim-plateaux', label:'Plateau(x)', options:transOpt.dims.plateaux, key:'plateaux'});
-    if (transOpt.dims.cassette && transOpt.dims.cassette.length >= 1)
-      fields.push({id:'p11-dim-cassette', label:'Cassette', options:transOpt.dims.cassette, key:'cassette'});
+    // plateaux/cassette : choisis désormais directement sur la page Composants (étape 2)
   }
 
   // Pilotage
@@ -3207,27 +4900,8 @@ function p11BuildDimsGrid() {
     }
   }
 
-  // Pneus
-  const pneuOpt = selOpts.pneus ? ALL_OPTIONS.pneus.find(o=>o.id===selOpts.pneus) : null;
-  if (pneuOpt && pneuOpt.dims && pneuOpt.dims.section && pneuOpt.dims.section.length >= 1) {
-    let sectionOpts = pneuOpt.dims.section;
-    if (selModel === 'gravel_bikepacking') {
-      sectionOpts = sectionOpts.filter(s => { const num = parseFloat(String(s).replace(',','.')); return isNaN(num) || num <= 42; });
-    }
-    if (sectionOpts.length >= 1)
-      fields.push({id:'p11-dim-section', label:'Section pneu', options:sectionOpts, key:'section',
-        });
-  }
-
-  // Fourche VTT
-  const fourcheOpt = selOpts.fourche ? ALL_OPTIONS.fourche.find(o=>o.id===selOpts.fourche) : null;
-  if (fourcheOpt && fourcheOpt.dims && fourcheOpt.dims.debattement && fourcheOpt.dims.debattement.length > 1)
-    fields.push({id:'p11-dim-debattement', label:'Débattement fourche (mm)', options:fourcheOpt.dims.debattement, key:'debattement'});
-
-  // Selle
-  const selleOpt = selOpts.selle ? ALL_OPTIONS.selle.find(o=>o.id===selOpts.selle) : null;
-  if (selleOpt && selleOpt.dims && selleOpt.dims.largeur_selle && selleOpt.dims.largeur_selle.length >= 1)
-    fields.push({id:'p11-dim-largeur-selle', label:'Largeur selle (mm)', options:selleOpt.dims.largeur_selle, key:'largeur_selle'});
+  // Section pneu, débattement fourche, plateaux/cassette et largeur selle :
+  // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
     grid.innerHTML = '<p style="color:#666;font-size:13px;">Sélectionnez d\'abord vos composants à l\'étape 2.</p>';
@@ -3251,28 +4925,27 @@ function p11BuildDimsGrid() {
               best = nums.reduce((a,b) => Math.abs(a-defVal)<=Math.abs(b-defVal)?a:b);
             }
             selSize[f.key] = String(best);
-            selSizeSource[f.key] = 'default';
           } else {
-            if (f.options.includes(String(defVal))) { selSize[f.key] = String(defVal); selSizeSource[f.key] = 'default'; }
+            if (f.options.includes(String(defVal))) selSize[f.key] = String(defVal);
           }
         }
       }
     });
   }
 
-  const P11_SEC = ['plateaux','cassette','section','debattement','largeur_selle'];
+  const P11_SEC = [];
   const p11Primary   = fields.filter(f => !P11_SEC.includes(f.key));
   const p11Secondary = fields.filter(f =>  P11_SEC.includes(f.key));
 
   function p11RenderField(f) {
-    if (f.options.length === 1) { selSize[f.key] = String(f.options[0]); selSizeSource[f.key] = 'default'; }
+    if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
     const optHTML = f.options.map(o =>
       '<option value="' + o + '"' + (selSize[f.key]==o?' selected':'') + '>' + o +
       (['manivelle','potence'].includes(f.key) ? ' mm' : '') + '</option>'
     ).join('');
     const onchangeFn = f.key === 'taille'
-      ? "selSizeSource['" + f.key + "']='user'; selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; selSize.debattement=null; delete selSizeSource.manivelle; delete selSizeSource.cintre; delete selSizeSource.potence; delete selSizeSource.debattement; p11BuildDimsGrid();"
-      : "selSizeSource['" + f.key + "']='user'; selSize['" + f.key + "']=this.value";
+      ? "selSize['" + f.key + "']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; p11BuildDimsGrid();"
+      : "selSize['" + f.key + "']=this.value";
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
       '<option value="">— choisir —</option>' + optHTML +
@@ -3342,7 +5015,7 @@ function p11ValidateDims() {
       p11Summary.innerHTML = '✅ <strong>Dimensions enregistrées :</strong><br>' + lines.join(' · ');
       // Mettre à jour le bouton next
       const nextLbl = document.getElementById('p11-next-label');
-      if (nextLbl && p11CurrentStep === 3) nextLbl.textContent = 'Voir votre configuration';
+      if (nextLbl && p11CurrentStep === 4) nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
     }
     p11Summary.classList.add('show');
   }
@@ -3354,14 +5027,20 @@ function p11RenderFinalRecap() {
   if (!el || !selModel) return;
   const model = MODELS.find(m=>m.id===selModel);
   if (!model) return;
-  const {price, weight} = computeTotals(selModel, selOpts);
+  const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
+  let oodSurcharge = 0, priceIsMin = false;
+  if (v2Parcours === 'standard_evo') { oodSurcharge = evoTotalPrice() || 0; }
+  else if (v2Parcours === 'sur_mesure') { oodSurcharge = 300; }
+  else if (v2Parcours === 'hors_gamme') { oodSurcharge = 720; priceIsMin = true; }
+  const price = bikePrice + oodSurcharge;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
     (model.photo ? '<img src="' + model.photo + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
-      '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + price.toLocaleString('fr-FR') + ' €</div>' +
+      '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
+      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Évolution':v2Parcours==='sur_mesure'?'Performance':'Titanium')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
   POST_META.forEach(p => {
@@ -3384,9 +5063,43 @@ function p11RenderFinalRecap() {
       '<div style="font-size:12px;color:#aaa;line-height:1.8;">' + sizeText.replace(/\n/g,'<br>') + '</div>' +
     '</div>';
   }
+  html += p11RecapBlock();
   el.innerHTML = html;
   // Pré-remplir le modal devis
   syncSelSize();
+}
+
+// Bloc détail du parcours OOD pour le récap mobile — miroir de v2RecapBlock() desktop
+function p11RecapBlock() {
+  if (v2Parcours === 'standard') return '';
+
+  if (v2Parcours === 'standard_evo') {
+    return v2EvoRecapBlockHtml('Options Évolution', true);
+  }
+
+  if (v2Parcours === 'sur_mesure') {
+    const msg = window._v2Message || '';
+    const fileInput = document.getElementById('p11-mesure-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#888;font-style:italic;">Aucune description fournie.</div>') +
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses', false);
+  }
+
+  if (v2Parcours === 'hors_gamme') {
+    const msg = window._v2Message || '';
+    const fileInput = document.getElementById('p11-horsgamme-file');
+    const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
+    return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
+      (msg ? '<div style="font-size:13px;color:#f2f2f2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#888;font-style:italic;">Aucune description fournie.</div>') +
+      (fileName ? '<div style="font-size:12px;color:#F5C400;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
+    '</div>';
+  }
+
+  return '';
 }
 
 
@@ -3400,9 +5113,14 @@ function p11InitStep4Bar() {
   if (!barS4) return;
   // Mettre à jour le prix dans le bandeau
   if (selModel) {
-    const {price} = computeTotals(selModel, selOpts);
+    const {price: bikePriceBar} = computeTotals(selModel, selOpts);
+    let oodSurchargeBar = 0;
+    if (v2Parcours === 'standard_evo') oodSurchargeBar = evoTotalPrice() || 0;
+    else if (v2Parcours === 'sur_mesure') oodSurchargeBar = 300;
+    else if (v2Parcours === 'hors_gamme') oodSurchargeBar = 720;
+    const price = bikePriceBar + oodSurchargeBar;
     const s4price = document.getElementById('p11-s4-price');
-    if (s4price) s4price.textContent = price.toLocaleString('fr-FR') + ' €';
+    if (s4price) s4price.textContent = (v2Parcours === 'hors_gamme' ? 'Dès ' : '') + price.toLocaleString('fr-FR') + ' €';
     if (window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset]) {
       const preset = PRESETS[selModel][window._activePreset];
       let count = 0;
@@ -3454,9 +5172,11 @@ function p11QuickSave() {
 
 function p11Reset() {
   // Tout remettre à zéro — y compris le modèle
-  selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; morphoData = { stature: null, entrejambe: null, epaules: null }; window.sizeValidated = false;
+  selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
   window._activePreset = null;
+  v2Parcours = 'standard'; evoChecked = {}; evoInsertsChecked = {}; evoOrder = [];
+  evoGravureText = ''; evoCustomText = ''; window._v2Message = '';
   // Vider les champs taille
   ['p11-guide-stature','p11-guide-ej','p11-guide-acro'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -3496,8 +5216,8 @@ function p11InitSwipe() {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = Math.abs(e.changedTouches[0].clientY - startY);
     if (Math.abs(dx) < 70 || dy > Math.abs(dx) / 2) return;
-    if (dx < 0 && p11CurrentStep < 4) p11UpdateStep(p11CurrentStep + 1);
-    else if (dx > 0 && p11CurrentStep > 1) p11UpdateStep(p11CurrentStep - 1);
+    if (dx < 0) p11Next();
+    else if (dx > 0) p11Back();
   }, { passive: true });
 }
 
@@ -3521,11 +5241,87 @@ function p11TryInit() {
   }
 }
 
+// ─── HISTORIQUE NAVIGATEUR DESKTOP (bouton/flèche retour du navigateur) ────────
+let dtHistoryReady = false;
+let dtSkipPush = false;
+let dtLastPushedStep = 1;
+
+let dtHistDepth = 0;
+
+function dtInitHistory() {
+  if (dtHistoryReady) return;
+  dtHistoryReady = true;
+  dtLastPushedStep = dtStep;
+  dtHistDepth = 0;
+  history.replaceState({ dtHist: true, depth: 0 }, '', location.href);
+  window.addEventListener('popstate', function(e) {
+    if (window.innerWidth < 768) return;
+    const newDepth = (e.state && typeof e.state.depth === 'number') ? e.state.depth : 0;
+    if (newDepth >= dtHistDepth) {
+      // Tentative d'avancer dans l'historique — action désactivée, on reste sur place
+      history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
+      return;
+    }
+    dtSkipPush = true;
+    dtSmartBack();
+    dtLastPushedStep = dtStep;
+    dtHistDepth = newDepth;
+    dtSkipPush = false;
+  });
+}
+
+function dtPushHistory() {
+  if (window.innerWidth < 768 || !dtHistoryReady || dtSkipPush) return;
+  if (dtStep === dtLastPushedStep) return;
+  dtLastPushedStep = dtStep;
+  dtHistDepth++;
+  history.pushState({ dtHist: true, depth: dtHistDepth }, '', location.href);
+}
+
+// Reproduit exactement l'action du bouton "Retour" déjà affiché à l'écran pour l'étape courante
+function dtSmartBack() {
+  if (dtStep === 1) return;
+  if (dtStep === 2) { dtGo(1); return; }
+  if (dtStep === 3) { dtGo(2); return; }
+  if (dtStep === 4) {
+    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') v2BackFromMesureOrHorsGamme();
+    else v2BackFromTaille();
+    return;
+  }
+  if (dtStep === 5) { v2GoBackToTailleEvo(); return; }
+  if (dtStep === 6) { v2BackFromDevis(); return; }
+}
+
+// Enveloppe les fonctions de navigation existantes pour pousser une entrée d'historique
+// après chaque transition réussie, sans jamais modifier leur comportement d'origine.
+['dtGo','v2NextFromTaille','v2GoDevis','v2BackFromTaille','v2BackFromMesureOrHorsGamme','v2BackFromDevis','v2GoBackToTailleEvo'].forEach(function(fnName) {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  window[fnName] = function() {
+    const result = orig.apply(this, arguments);
+    dtPushHistory();
+    return result;
+  };
+});
+// v2ChooseParcours change dtStep de façon asynchrone (setTimeout 150ms) — on attend un peu plus
+const _origChooseParcours = window.v2ChooseParcours;
+if (typeof _origChooseParcours === 'function') {
+  window.v2ChooseParcours = function() {
+    const result = _origChooseParcours.apply(this, arguments);
+    setTimeout(dtPushHistory, 200);
+    return result;
+  };
+}
+
 // Appel immédiat ET sur DOMContentLoaded pour être sûr
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', p11TryInit);
+  document.addEventListener('DOMContentLoaded', v3InitTitaniumSticky);
+  document.addEventListener('DOMContentLoaded', v3InitTitaniumStickyMobile);
 } else {
   p11TryInit();
+  v3InitTitaniumSticky();
+  v3InitTitaniumStickyMobile();
 }
 
 // Resize : utiliser un debounce et vérifier que la largeur a vraiment changé
