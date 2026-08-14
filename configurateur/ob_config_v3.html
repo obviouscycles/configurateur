@@ -963,6 +963,27 @@
   }
   .size-tooltip.show { display: block; }
 
+  /* Tooltips stature/entrejambe/épaules — #panel-guide (desktop) est réutilisé tel
+     quel dans le bottom sheet mobile (déplacé en JS, voir p11RenderGuideSheet), donc
+     ce même bloc doit s'adapter à un écran étroit : image plus petite, texte réduit,
+     empilé verticalement plutôt que côte à côte. */
+  @media (max-width: 767px) {
+    #panel-guide .size-form-row {
+      flex-direction: column !important; align-items: stretch !important;
+    }
+    #panel-guide .size-field { width: 100% !important; }
+    #stature-tooltip, #ej-tooltip, #acro-tooltip {
+      font-size: 12px !important; padding: 10px 12px !important; line-height: 1.55 !important;
+    }
+    #stature-tooltip strong, #ej-tooltip strong { font-size: 13px !important; }
+    #stature-tooltip > div, #ej-tooltip > div {
+      flex-direction: column !important; gap: 8px !important;
+    }
+    #stature-tooltip img, #ej-tooltip img {
+      width: 70px !important; margin: 0 auto; display: block;
+    }
+  }
+
   /* ── PROTO11 : cartes modèles mobile ── */
   @media (max-width: 767px) {
     .p11-model-card {
@@ -1726,7 +1747,7 @@
         </div>
         <p class="size-note">Vous n'avez pas toutes les informations ? Nous vous recontacterons pour affiner vos cotes.</p>
         <div class="size-panel" id="p11-panel-guide">
-          <div class="size-form-row" style="flex-direction:column;gap:.75rem;">
+          <div class="size-form-row" style="flex-direction:column;flex-wrap:nowrap;gap:.75rem;">
             <div class="size-field" style="width:100%;">
               <label>Votre taille (cm) <span class="lbl-info" onclick="toggleTooltip('p11-tt-stature')">ⓘ</span></label>
               <div class="size-tooltip" id="p11-tt-stature">Dos au mur, pieds joints, tête droite. Livre à plat sur la tête, mesurez sol → dessous du livre.</div>
