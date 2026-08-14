@@ -1735,15 +1735,15 @@
             <div style="display:flex;gap:.75rem;">
               <div class="size-field" style="flex:1;">
                 <label>Entrejambe (cm) <span class="lbl-opt">optionnel</span> <span class="lbl-info" onclick="toggleTooltip('p11-tt-ej')">ⓘ</span></label>
-                <div class="size-tooltip" id="p11-tt-ej">Debout pieds nus, dos au mur. Livre entre les jambes, mesurez sol → dessus du livre.</div>
                 <input type="text" inputmode="decimal" class="size-input" id="p11-guide-ej" placeholder="Ex : 82" min="60" max="110" step="0.5">
               </div>
               <div class="size-field" style="flex:1;">
                 <label>Largeur épaules (cm) <span class="lbl-opt">optionnel</span> <span class="lbl-info" onclick="toggleTooltip('p11-tt-acro')">ⓘ</span></label>
-                <div class="size-tooltip" id="p11-tt-acro">Distance entre les deux pointes osseuses de vos épaules les plus éloignées.</div>
                 <input type="text" inputmode="decimal" class="size-input" id="p11-guide-acro" placeholder="Ex : 40" min="25" max="60" step="0.5">
               </div>
             </div>
+            <div class="size-tooltip" id="p11-tt-ej" style="width:100%;">Debout pieds nus, dos au mur. Livre entre les jambes, mesurez sol → dessus du livre.</div>
+            <div class="size-tooltip" id="p11-tt-acro" style="width:100%;">Distance entre les deux pointes osseuses de vos épaules les plus éloignées.</div>
           </div>
           <button class="size-btn" onclick="p11CalcSize()" style="width:100%;justify-content:center;"><i class="ti ti-calculator"></i> Calculer</button>
           <div class="size-result" id="p11-guide-result" style="margin-top:1rem;">
