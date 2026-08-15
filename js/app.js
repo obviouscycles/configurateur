@@ -3131,6 +3131,27 @@ function v2GoBackToTailleEvo() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadSaved();
 renderModels();
+// ── Lien "Retour au site" — utilise la dernière page visitée (document.referrer)
+// si elle appartient bien au site Obvious, sinon repli sur une URL par défaut.
+// Appliqué aux deux liens (desktop #dt-header-back et mobile #p11-header-back).
+(function setBackToSiteLink() {
+  const FALLBACK_URL = 'https://www.obviouscycles.com/velos-titane/';
+  let backUrl = FALLBACK_URL;
+  try {
+    const ref = document.referrer;
+    if (ref) {
+      const refHost = new URL(ref).hostname;
+      if (refHost === 'www.obviouscycles.com' || refHost === 'obviouscycles.com') {
+        backUrl = ref;
+      }
+    }
+  } catch (e) { /* referrer invalide ou absent -> on garde le repli */ }
+  ['dt-header-back', 'p11-header-back'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.href = backUrl;
+  });
+})();
+
 dtInit();
 loadConfigFromUrl();
 
@@ -3229,13 +3250,23 @@ if (isEmbed) {
   });
 }
 if (modeleParam) {
-  const decoded = decodeURIComponent(modeleParam);
-  const resolvedId = ALIASES[decoded] || ALIASES[modeleParam] || decoded || modeleParam;
-  const modeleAuto = MODELS.find(m => m.id === resolvedId);
-  if (modeleAuto) {
+  // Ce bloc doit s'exécuter APRÈS que tout le script soit chargé (selSize et les
+  // autres variables sont déclarées plus bas avec `let`, donc y accéder trop tôt ici
+  // provoquait un crash JS qui interrompait toute l'initialisation — bug corrigé en
+  // déférant l'exécution). On appelle aussi dtInit()/p11TryInit() nous-mêmes en
+  // premier (idempotent, sans risque si déjà fait) pour garantir que l'interface de
+  // base est prête avant d'appliquer la présélection par-dessus.
+  document.addEventListener('DOMContentLoaded', function() {
+    const decoded = decodeURIComponent(modeleParam);
+    const resolvedId = ALIASES[decoded] || ALIASES[modeleParam] || decoded || modeleParam;
+    const modeleAuto = MODELS.find(m => m.id === resolvedId);
+    if (!modeleAuto) return;
+
+    if (typeof dtInit === 'function') dtInit();
+    if (typeof p11TryInit === 'function') p11TryInit();
+
     window._singleModel = modeleAuto.id;
-    renderModels();
-    selectModel(modeleAuto.id);
+    selModel = modeleAuto.id;
 
     // Pré-charger les postes depuis les paramètres URL
     const postes = ['fourche','roues','pneus','transmission','power','frein','pilotage','selle','tige','pedales'];
@@ -3255,26 +3286,10 @@ if (modeleParam) {
     const presetParam = urlParams.get('preset');
     if (presetParam && PRESETS[modeleAuto.id] && PRESETS[modeleAuto.id][presetParam]) {
       window._v2Parcours = 'standard';
+      v2Parcours = 'standard';
       window._activePreset = presetParam;
       selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
-      // Mobile : masquer grille, afficher composants
-      const step1Wrap = document.getElementById('step1-wrap');
-      const postsSection = document.getElementById('posts-section');
-      if (step1Wrap) step1Wrap.style.display = 'none';
-      if (postsSection) postsSection.style.display = 'block';
-      renderPosts();
-      updateRecap();
-      renderModels();
-      // Desktop : forcer step 2 avec le bon preset APRES que selectModel a tout initialisé
-      if (window.innerWidth >= 768) {
-        setTimeout(() => {
-          window._activePreset = presetParam;
-          selOpts = { ...PRESETS[modeleAuto.id][presetParam] };
-          dtStep = 2;
-          dtRender();
-        }, 50);
-      }
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 10);
+      hasPreset = true;
     }
 
     if (hasPreset) {
@@ -3290,28 +3305,31 @@ if (modeleParam) {
         });
       });
 
-      // Identifier quel preset correspond à la config chargée
-      const modelPresets = PRESETS[modeleAuto.id];
-      if (modelPresets) {
-        const postes = ['fourche','roues','pneus','transmission','power','frein','pilotage','selle','tige','pedales'];
-        for (const [decl, preset] of Object.entries(modelPresets)) {
-          if (postes.every(p => selOpts[p] === preset[p])) {
-            window._activePreset = decl;
-            break;
+      // Identifier quel preset correspond à la config chargée (si pas déjà fixé ci-dessus)
+      if (!window._activePreset) {
+        const modelPresets = PRESETS[modeleAuto.id];
+        if (modelPresets) {
+          for (const [decl, preset] of Object.entries(modelPresets)) {
+            if (postes.every(p => selOpts[p] === preset[p])) {
+              window._activePreset = decl;
+              break;
+            }
           }
         }
       }
-
-      document.getElementById('posts-section').style.display = 'block';
-      renderPosts();
-      updateRecap();
-      renderModels(); // re-render pour afficher bouton actif
     }
 
+    // Appliquer sur la plateforme active — fonctions modernes uniquement
+    if (window.innerWidth >= 768) {
+      dtStep = 2;
+      dtRender();
+    } else {
+      p11CurrentStep = 2;
+      p11UpdateStep(2);
+    }
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 10);
-  }
-};
-;
+  });
+}
 
 // ─── ÊTRE RAPPELÉ (Formspree) ─────────────────────────────────────────────────
 async function sendCallbackSize() {
