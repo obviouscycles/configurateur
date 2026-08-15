@@ -3131,6 +3131,27 @@ function v2GoBackToTailleEvo() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 loadSaved();
 renderModels();
+// ── Lien "Retour au site" — utilise la dernière page visitée (document.referrer)
+// si elle appartient bien au site Obvious, sinon repli sur une URL par défaut.
+// Appliqué aux deux liens (desktop #dt-header-back et mobile #p11-header-back).
+(function setBackToSiteLink() {
+  const FALLBACK_URL = 'https://www.obviouscycles.com/velos-titane/';
+  let backUrl = FALLBACK_URL;
+  try {
+    const ref = document.referrer;
+    if (ref) {
+      const refHost = new URL(ref).hostname;
+      if (refHost === 'www.obviouscycles.com' || refHost === 'obviouscycles.com') {
+        backUrl = ref;
+      }
+    }
+  } catch (e) { /* referrer invalide ou absent -> on garde le repli */ }
+  ['dt-header-back', 'p11-header-back'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.href = backUrl;
+  });
+})();
+
 dtInit();
 loadConfigFromUrl();
 
