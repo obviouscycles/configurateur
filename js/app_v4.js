@@ -1557,17 +1557,31 @@ function dtRenderS1() {
   grid.innerHTML = MODELS.map(m => {
     const sel = m.id === selModel;
     const hasPresets = PRESETS[m.id];
-    return '<div class="model-card' + (sel ? ' sel' : '') + '" onclick="dtSelectModel(\'' + m.id + '\')">' +
+    const isKitSel = sel && window._kitCadre;
+    const isCompletSel = sel && !window._kitCadre;
+    return '<div class="model-card' + (sel ? ' sel' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
         '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
+          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
+          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
+        '</div>' +
       '</div>' +
-      (hasPresets && sel ? dtPresetBar(m.id) : '') +
+      (hasPresets && sel && !window._kitCadre ? dtPresetBar(m.id) : '') +
     '</div>';
   }).join('');
+}
+
+// Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
+// (carte modèle ou bandeau Titanium) et se propage à tout le reste du parcours
+// (Cadre, Sur-mesure, Titanium, Personnalisation) via window._kitCadre.
+function dtSelectModelMode(id, isKit) {
+  window._kitCadre = isKit;
+  dtSelectModel(id);
 }
 
 function dtPresetBar(modelId) {
@@ -1605,7 +1619,8 @@ function dtSelectModel(id) {
   }
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
+  // Les préconfigs (Signature/Ti1/Ti2) ne concernent que les vélos complets
+  const preset = !window._kitCadre && PRESETS[id] && PRESETS[id]['Ti1'];
   if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
@@ -1787,7 +1802,7 @@ function dtRenderS2() {
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
         '<span class="mc-price">à partir de ' + (model.basePrice + (model.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
-      dtPresetBar(model.id);
+      (window._kitCadre ? '' : dtPresetBar(model.id));
   }
   // Right : composants — réutiliser renderPosts vers dt-posts-list
   dtRenderPosts();
@@ -2556,8 +2571,8 @@ function dtReset() {
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
-  // Recharger Ti1 par défaut
-  if (selModel && PRESETS[selModel] && PRESETS[selModel]['Ti1']) {
+  // Recharger Ti1 par défaut (vélo complet uniquement)
+  if (!window._kitCadre && selModel && PRESETS[selModel] && PRESETS[selModel]['Ti1']) {
     window._activePreset = 'Ti1'; selOpts = {...PRESETS[selModel]['Ti1']};
   }
   dtStep = 1; document.body.classList.remove('dt-step-4');
@@ -4508,13 +4523,19 @@ function p11RenderModels() {
   grid.className = 'model-grid';
   grid.innerHTML = MODELS.map(m => {
     const sel = m.id === selModel;
-    return '<div class="p11-model-card' + (sel ? ' sel' : '') + '" onclick="p11SelectModel(\'' + m.id + '\')">' +
+    const isKitSel = sel && window._kitCadre;
+    const isCompletSel = sel && !window._kitCadre;
+    return '<div class="p11-model-card' + (sel ? ' sel' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
         '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
+          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
+          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -4522,11 +4543,17 @@ function p11RenderModels() {
   p11RenderPresets();
 }
 
+// Choix "Vélo complet" / "Kit cadre seul" — mobile
+function p11SelectModelMode(id, isKit) {
+  window._kitCadre = isKit;
+  p11SelectModel(id);
+}
+
 
 
 function p11RenderPresets() {
   const bar = document.getElementById('p11-preset-bar');
-  if (!bar || !selModel || !PRESETS[selModel]) { if(bar) bar.style.display='none'; return; }
+  if (!bar || !selModel || !PRESETS[selModel] || window._kitCadre) { if(bar) bar.style.display='none'; return; }
   bar.style.display = 'block';
   bar.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
@@ -4581,7 +4608,8 @@ function p11LoadPreset(decl) {
 
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
+  // Les préconfigs (Signature/Ti1/Ti2) ne concernent que les vélos complets
+  const preset = !window._kitCadre && PRESETS[id] && PRESETS[id]['Ti1'];
   if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
   p11RenderModels();
   p11RenderPresets();
@@ -5192,7 +5220,7 @@ function p11Reset() {
   // Tout remettre à zéro — y compris le modèle
   selModel = null; selOpts = {}; selSize = {}; selSizeSource = {}; window.sizeValidated = false;
   openPost = null; p11SizeMode = null; p11OverlapTailles = null;
-  window._activePreset = null;
+  window._activePreset = null; window._kitCadre = false;
   v2Parcours = 'standard'; evoChecked = {}; evoInsertsChecked = {}; evoOrder = [];
   evoGravureText = ''; evoCustomText = ''; window._v2Message = '';
   // Vider les champs taille
