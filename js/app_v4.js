@@ -2324,20 +2324,11 @@ function dtRenderS4() {
   const model = MODELS.find(m => m.id === selModel);
   const { price: bikePrice } = computeTotals(selModel, selOpts);
 
-  // Surcoût selon le parcours Obvious On Demand
-  let oodSurcharge = 0;
-  let priceIsMin = false; // "à partir de" pour Titanium
-  if (typeof v2Parcours !== 'undefined') {
-    if (v2Parcours === 'standard_evo') {
-      const evoT = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
-      oodSurcharge = evoT || 0;
-    } else if (v2Parcours === 'sur_mesure') {
-      oodSurcharge = 300;
-    } else if (v2Parcours === 'hors_gamme') {
-      oodSurcharge = 720;
-      priceIsMin = true;
-    }
-  }
+  // Réutilise computeOodSurcharge() (déjà correcte, utilisée par le récap latéral) au lieu
+  // de dupliquer cette logique — la version précédente ne testait que 'standard_evo', une
+  // valeur de v2Parcours jamais utilisée en pratique, ce qui ignorait silencieusement les
+  // options Évolution sur CET écran (vélo complet et kit cadre étaient tous deux affectés).
+  const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
@@ -2352,7 +2343,7 @@ function dtRenderS4() {
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
-        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Options Évolution':v2Parcours==='sur_mesure'?'Niveau Performance':'Niveau Titanium')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -5095,10 +5086,7 @@ function p11RenderFinalRecap() {
   const model = MODELS.find(m=>m.id===selModel);
   if (!model) return;
   const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
-  let oodSurcharge = 0, priceIsMin = false;
-  if (v2Parcours === 'standard_evo') { oodSurcharge = evoTotalPrice() || 0; }
-  else if (v2Parcours === 'sur_mesure') { oodSurcharge = 300; }
-  else if (v2Parcours === 'hors_gamme') { oodSurcharge = 720; priceIsMin = true; }
+  const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
@@ -5107,7 +5095,7 @@ function p11RenderFinalRecap() {
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
       '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
-      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Évolution':v2Parcours==='sur_mesure'?'Performance':'Titanium')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
   POST_META.forEach(p => {
@@ -5181,10 +5169,7 @@ function p11InitStep4Bar() {
   // Mettre à jour le prix dans le bandeau
   if (selModel) {
     const {price: bikePriceBar} = computeTotals(selModel, selOpts);
-    let oodSurchargeBar = 0;
-    if (v2Parcours === 'standard_evo') oodSurchargeBar = evoTotalPrice() || 0;
-    else if (v2Parcours === 'sur_mesure') oodSurchargeBar = 300;
-    else if (v2Parcours === 'hors_gamme') oodSurchargeBar = 720;
+    const { surcharge: oodSurchargeBar } = computeOodSurcharge();
     const price = bikePriceBar + oodSurchargeBar;
     const s4price = document.getElementById('p11-s4-price');
     if (s4price) s4price.textContent = (v2Parcours === 'hors_gamme' ? 'Dès ' : '') + price.toLocaleString('fr-FR') + ' €';
