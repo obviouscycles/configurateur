@@ -1562,16 +1562,26 @@ function dtRenderS1() {
     const hasPresets = PRESETS[m.id];
     const isKitSel = sel && window._kitCadre;
     const isCompletSel = sel && !window._kitCadre;
-    return '<div class="model-card' + (sel ? ' sel' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
+    const completPrice = m.basePrice + (m.assembly||0);
+    const kitPricing = KIT_CADRE_PRICES[m.id];
+    const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
+    return '<div class="model-card' + (sel ? ' sel' : '') + '">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + ((sel && window._kitCadre && KIT_CADRE_PRICES[m.id] ? (KIT_CADRE_PRICES[m.id].basePrice + (KIT_CADRE_PRICES[m.id].assembly||0)) : (m.basePrice + (m.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
-        '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
-          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
-          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
+        '<div class="mc-mode-buttons">' +
+          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
+            '<i class="ti ti-bike"></i>' +
+            '<span class="mc-mode-btn-label">Vélo complet</span>' +
+            '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
+          '</button>' +
+          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', true)">' +
+            '<i class="ti ti-frame"></i>' +
+            '<span class="mc-mode-btn-label">Kit cadre</span>' +
+            (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
+          '</button>' +
         '</div>' +
       '</div>' +
       (hasPresets && sel && !window._kitCadre ? dtPresetBar(m.id) : '') +
@@ -1811,11 +1821,25 @@ function dtRenderS2() {
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
         '<span class="mc-price">à partir de ' + ((window._kitCadre && KIT_CADRE_PRICES[model.id] ? (KIT_CADRE_PRICES[model.id].basePrice + (KIT_CADRE_PRICES[model.id].assembly||0)) : (model.basePrice + (model.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
+        '<div class="mc-switch-mode">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="dtSwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
       '</div>' +
       (window._kitCadre ? '' : dtPresetBar(model.id));
   }
   // Right : composants — réutiliser renderPosts vers dt-posts-list
   dtRenderPosts();
+}
+
+// Bascule Vélo complet <-> Kit cadre SANS repartir de l'étape 1 (filet de rattrapage —
+// le clic large sur la carte modèle ne mène plus qu'au vélo complet par défaut, ce lien
+// permet de corriger le tir directement depuis l'étape Composants).
+function dtSwitchMode() {
+  dtSelectModelMode(selModel, !window._kitCadre);
+}
+
+// Équivalent mobile
+function p11SwitchMode() {
+  p11SelectModelMode(selModel, !window._kitCadre);
+  p11UpdateStep(2); // reste sur Composants (p11SelectModel seul ne raffraîchit pas cette page)
 }
 
 // Rendu des postes dans dt-posts-list — délégation d'événements pour éviter l'escaping
@@ -4534,16 +4558,26 @@ function p11RenderModels() {
     const sel = m.id === selModel;
     const isKitSel = sel && window._kitCadre;
     const isCompletSel = sel && !window._kitCadre;
-    return '<div class="p11-model-card' + (sel ? ' sel' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
+    const completPrice = m.basePrice + (m.assembly||0);
+    const kitPricing = KIT_CADRE_PRICES[m.id];
+    const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
+    return '<div class="p11-model-card' + (sel ? ' sel' : '') + '">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        '<span class="mc-price">à partir de ' + ((sel && window._kitCadre && KIT_CADRE_PRICES[m.id] ? (KIT_CADRE_PRICES[m.id].basePrice + (KIT_CADRE_PRICES[m.id].assembly||0)) : (m.basePrice + (m.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
-        '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
-          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
-          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
+        '<div class="mc-mode-buttons">' +
+          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
+            '<i class="ti ti-bike"></i>' +
+            '<span class="mc-mode-btn-label">Vélo complet</span>' +
+            '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
+          '</button>' +
+          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">' +
+            '<i class="ti ti-frame"></i>' +
+            '<span class="mc-mode-btn-label">Kit cadre</span>' +
+            (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
+          '</button>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -4643,7 +4677,9 @@ function p11RenderPosts() {
   const container = document.getElementById('p11-posts-list');
   if (!container || !selModel) return;
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
-  container.innerHTML = renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
+  container.innerHTML =
+    '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
+    renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','pilotage','tige'].includes(p.id)) return '';
     const opts = optionsFor(p.id, selModel);
