@@ -1667,13 +1667,19 @@
         <div id="p11-preset-bar" style="display:none;margin-bottom:1rem;"></div>
         <div class="model-grid" id="p11-model-grid"></div>
 
-        <div id="p11-titanium-banner-inline" onclick="v3GoTitaniumFromS1()" style="margin:1.25rem 0 1.5rem;background:#1a1a1a;border:1px solid #F5C400;border-radius:10px;padding:1.1rem 1.25rem;display:flex;align-items:center;gap:14px;">
-          <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <i class="ti ti-sparkles" style="font-size:18px;color:#F5C400;"></i>
+        <div id="p11-titanium-banner-inline" style="margin:1.25rem 0 1.5rem;background:#1a1a1a;border:1px solid #F5C400;border-radius:10px;padding:1.1rem 1.25rem;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:.9rem;">
+            <div style="width:40px;height:40px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="ti ti-sparkles" style="font-size:18px;color:#F5C400;"></i>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:13px;color:#f2f2f2;font-weight:500;line-height:1.4;">Envie d'un vélo hors norme, que nous n'avons pas au catalogue ?</div>
+              <div style="font-size:12px;color:#F5C400;margin-top:3px;">Suivez Obvious On Demand — Titanium</div>
+            </div>
           </div>
-          <div style="flex:1;">
-            <div style="font-size:13px;color:#f2f2f2;font-weight:500;line-height:1.4;">Envie d'un vélo hors norme, que nous n'avons pas au catalogue ?</div>
-            <div style="font-size:12px;color:#F5C400;margin-top:3px;">Suivez Obvious On Demand — Titanium →</div>
+          <div style="display:flex;gap:8px;">
+            <button class="mc-mode-btn" onclick="v3GoTitaniumFromS1(false)">Vélo complet</button>
+            <button class="mc-mode-btn" onclick="v3GoTitaniumFromS1(true)">Kit cadre seul</button>
           </div>
         </div>
       </div>
@@ -2349,13 +2355,17 @@
       
         <div class="model-grid" id="dt-model-grid"></div>
 
-        <div id="titanium-banner-inline" onclick="v3GoTitaniumFromS1()" style="margin-top:1.25rem;background:#1a1a1a;border:1px solid #F5C400;border-radius:10px;padding:1.25rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:16px;">
+        <div id="titanium-banner-inline" style="margin-top:1.25rem;background:#1a1a1a;border:1px solid #F5C400;border-radius:10px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:16px;">
           <div style="width:44px;height:44px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-sparkles" style="font-size:20px;color:#F5C400;"></i>
           </div>
           <div style="flex:1;">
             <div style="font-size:14px;color:#f2f2f2;font-weight:500;">Envie d'un vélo hors norme, que nous n'avons pas au catalogue ?</div>
-            <div style="font-size:13px;color:#F5C400;margin-top:2px;">Suivez Obvious On Demand — Titanium →</div>
+            <div style="font-size:13px;color:#F5C400;margin-top:2px;">Suivez Obvious On Demand — Titanium</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button class="mc-mode-btn" style="padding:8px 14px;" onclick="v3GoTitaniumFromS1(false)">Vélo complet →</button>
+            <button class="mc-mode-btn" style="padding:8px 14px;" onclick="v3GoTitaniumFromS1(true)">Kit cadre seul →</button>
           </div>
         </div>
       </div>
