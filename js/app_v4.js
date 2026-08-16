@@ -280,7 +280,9 @@ function autoSelectLocked(modelId) {
 
 function computeTotals(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
-  let price = model.basePrice + (model.assembly || 0), weight = 0;
+  const kitPricing = window._kitCadre && KIT_CADRE_PRICES[modelId];
+  let price = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly || 0)) : (model.basePrice + (model.assembly || 0));
+  let weight = 0;
   POST_META.forEach(p => {
     const allOpts = ALL_OPTIONS[p.id] || [];
     const opt = allOpts.find(o => o.id === opts[p.id]);
@@ -1443,8 +1445,9 @@ function v3InitTitaniumSticky() {
   render(); // état initial : carré replié, aligné à gauche sur le bandeau original
 }
 
-function v3GoTitaniumFromS1() {
+function v3GoTitaniumFromS1(isKit) {
   v2Parcours = 'hors_gamme';
+  window._kitCadre = !!isKit;
   // Réinitialiser l'affichage (au cas où un envoi précédent aurait laissé la confirmation visible)
   const mainContent = document.getElementById('titanium-main-content');
   const confirm = document.getElementById('titanium-confirm');
@@ -1565,7 +1568,7 @@ function dtRenderS1() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + ((sel && window._kitCadre && KIT_CADRE_PRICES[m.id] ? (KIT_CADRE_PRICES[m.id].basePrice + (KIT_CADRE_PRICES[m.id].assembly||0)) : (m.basePrice + (m.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
         '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
           '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
@@ -1619,9 +1622,16 @@ function dtSelectModel(id) {
   }
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
-  // Les préconfigs (Signature/Ti1/Ti2) ne concernent que les vélos complets
-  const preset = !window._kitCadre && PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  // Vélo complet -> preset Ti1 par défaut. Kit cadre -> préconfig kit cadre dédiée
+  // (fourche/pilotage/tige uniquement — vide pour le VTT, le visiteur choisit lui-même).
+  if (window._kitCadre) {
+    window._activePreset = null;
+    const kitPreset = KIT_CADRE_PRESETS[id];
+    if (kitPreset && Object.keys(kitPreset).length) { selOpts = {...kitPreset}; syncAllPostDims(); }
+  } else {
+    const preset = PRESETS[id] && PRESETS[id]['Ti1'];
+    if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1800,7 +1810,7 @@ function dtRenderS2() {
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (model.basePrice + (model.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + ((window._kitCadre && KIT_CADRE_PRICES[model.id] ? (KIT_CADRE_PRICES[model.id].basePrice + (KIT_CADRE_PRICES[model.id].assembly||0)) : (model.basePrice + (model.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
       '</div>' +
       (window._kitCadre ? '' : dtPresetBar(model.id));
   }
@@ -1932,6 +1942,8 @@ function dtRenderPosts() {
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
 
   container.innerHTML = renderCadreCard() + POST_META.map(p => {
+    // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
+    if (window._kitCadre && !['fourche','pilotage','tige'].includes(p.id)) return '';
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -4531,7 +4543,7 @@ function p11RenderModels() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + ((sel && window._kitCadre && KIT_CADRE_PRICES[m.id] ? (KIT_CADRE_PRICES[m.id].basePrice + (KIT_CADRE_PRICES[m.id].assembly||0)) : (m.basePrice + (m.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
         '<div class="mc-mode-buttons" onclick="event.stopPropagation()">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">Vélo complet</button>' +
           '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">Kit cadre seul</button>' +
@@ -4608,9 +4620,16 @@ function p11LoadPreset(decl) {
 
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
-  // Les préconfigs (Signature/Ti1/Ti2) ne concernent que les vélos complets
-  const preset = !window._kitCadre && PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  // Vélo complet -> preset Ti1 par défaut. Kit cadre -> préconfig kit cadre dédiée
+  // (fourche/pilotage/tige uniquement — vide pour le VTT, le visiteur choisit lui-même).
+  if (window._kitCadre) {
+    window._activePreset = null;
+    const kitPreset = KIT_CADRE_PRESETS[id];
+    if (kitPreset && Object.keys(kitPreset).length) { selOpts = {...kitPreset}; syncAllPostDims(); }
+  } else {
+    const preset = PRESETS[id] && PRESETS[id]['Ti1'];
+    if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  }
   p11RenderModels();
   p11RenderPresets();
   // Activer bouton next
@@ -4628,6 +4647,8 @@ function p11RenderPosts() {
   if (!container || !selModel) return;
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
   container.innerHTML = renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
+    // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
+    if (window._kitCadre && !['fourche','pilotage','tige'].includes(p.id)) return '';
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
