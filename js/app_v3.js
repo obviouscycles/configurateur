@@ -3096,9 +3096,13 @@ function v2BackFromDevis() {
   document.body.classList.remove('dt-step-4');
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   if (v2Parcours === 'standard') {
-    dtStep = 4;
-    document.getElementById('dt-s3')?.classList.add('active');
-    v2RenderTaille();
+    // Taille connue -> Personnalisation (dt-s5perso), l'écran réellement utilisé dans le
+    // flux actuel. L'ancien dt-s3 / v2RenderTaille() n'existent plus depuis la
+    // restructuration de la carte Cadre — ce cas renvoyait vers un écran fantôme, vide.
+    dtStep = 5;
+    document.getElementById('dt-s5perso')?.classList.add('active');
+    evoActiveContainer = 'v2-evo-options';
+    evoRender();
   } else if (v2Parcours === 'standard_evo') {
     dtStep = 5;
     document.getElementById('dt-s5evo')?.classList.add('active');
@@ -3114,6 +3118,7 @@ function v2BackFromDevis() {
     document.getElementById('dt-s4horsgamme')?.classList.add('active');
   }
   v2UpdateStepper();
+  dtRenderRecap();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
 }
