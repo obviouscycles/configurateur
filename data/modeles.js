@@ -41,3 +41,18 @@ const PRESET_DESCS = {
   'Ti1':       'Le meilleur équilibre performance / prix de la gamme.',
   'Signature': 'Le haut de gamme — composants haut de gamme, chaque détail compté.'
 };
+
+// ─── KIT CADRE SEUL — prix et préconfig par défaut (fourche + pilotage + tige) ──
+const KIT_CADRE_PRICES = {
+  'route':              { basePrice: 2749, assembly: 0 },
+  'gravel_racing':       { basePrice: 2749, assembly: 0 },
+  'gravel_bikepacking':  { basePrice: 2749, assembly: 0 },
+  'vtt_enduro':          { basePrice: 2549, assembly: 0 },
+};
+
+const KIT_CADRE_PRESETS = {
+  'route':              { fourche: 'fourche_rd_car_00', pilotage: 'pilotage_rd_suz_alu', tige: 'tige_rd_ob_car' },
+  'gravel_racing':       { fourche: 'fourche_gr_car_00', pilotage: 'pilotage_gr_suz_alu', tige: 'tige_rd_ob_car' },
+  'gravel_bikepacking':  { fourche: 'fourche_gr_car_ins', pilotage: 'pilotage_gr_drp_alu', tige: 'tige_rd_ob_car' },
+  'vtt_enduro':          {}, // Pas de présélection — le visiteur choisit les 3 composants lui-même
+};
