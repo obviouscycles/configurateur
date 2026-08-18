@@ -51,8 +51,9 @@ const KIT_CADRE_PRICES = {
 };
 
 const KIT_CADRE_PRESETS = {
-  'route':              { fourche: 'fourche_rd_car_00', pilotage: 'pilotage_rd_suz_alu', tige: 'tige_rd_ob_car' },
-  'gravel_racing':       { fourche: 'fourche_gr_car_00', pilotage: 'pilotage_gr_suz_alu', tige: 'tige_rd_ob_car' },
-  'gravel_bikepacking':  { fourche: 'fourche_gr_car_ins', pilotage: 'pilotage_gr_drp_alu', tige: 'tige_rd_ob_car' },
-  'vtt_enduro':          {}, // Pas de présélection — le visiteur choisit les 3 composants lui-même
+  // '-' dans le xlsx = pas de préconfig, le champ reste vide ("choisir") — donc omis ici.
+  'route':              { fourche: 'fourche_rd_car_00', potence: 'potence_rd_sub', tige: 'tige_rd_ob_car' },
+  'gravel_racing':       { fourche: 'fourche_gr_car_00', potence: 'potence_rd_sub', tige: 'tige_rd_ob_car' },
+  'gravel_bikepacking':  { fourche: 'fourche_gr_car_ins', tige: 'tige_rd_ob_car' },
+  'vtt_enduro':          {}, // Pas de présélection — le visiteur choisit les 4 composants lui-même
 };
