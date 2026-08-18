@@ -77,6 +77,7 @@
   .badge-devis_envoye{background:#1a2a2a;color:#44cccc;border:0.5px solid #226666;}
   .badge-perdu{background:#2a0a0a;color:#cc4444;border:0.5px solid #662222;}
   .badge-gagne{background:#0a2a0a;color:#44cc44;border:0.5px solid #226622;}
+  .badge-sans_objet{background:#1a1a1a;color:#777;border:0.5px solid #444;}
 
   /* DETAIL */
   #detail-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--bg2);border-left:0.5px solid var(--border);overflow-y:auto;z-index:200;padding:1.5rem;}
@@ -180,6 +181,7 @@
           <option value="devis_envoye">Devis envoyé</option>
           <option value="perdu">Perdu</option>
           <option value="gagne">Gagné</option>
+          <option value="sans_objet">Sans objet</option>
         </select>
       </label>
       <label>Modèle
@@ -192,6 +194,9 @@
       </label>
       <label>Date fin
         <input type="date" id="f-date-end" onchange="applyFilters()">
+      </label>
+      <label>Prix min (€)
+        <input type="number" id="f-prix-min" placeholder="Ex : 5000" min="0" step="100" oninput="applyFilters()">
       </label>
       <label>Recherche
         <input type="text" id="f-search" placeholder="Nom, email, ID..." oninput="applyFilters()">
@@ -322,6 +327,7 @@ function applyFilters() {
   const fM  = document.getElementById('f-modele').value;
   const fDS = document.getElementById('f-date-start').value;
   const fDE = document.getElementById('f-date-end').value;
+  const fPrixMin = document.getElementById('f-prix-min').value;
   const fQ  = document.getElementById('f-search').value.toLowerCase();
 
   filtered = allConfigs.filter(c => {
@@ -330,6 +336,7 @@ function applyFilters() {
     if (fM  && c.modele !== fM) return false;
     if (fDS && c.created_at < fDS) return false;
     if (fDE && c.created_at > fDE + 'T23:59:59') return false;
+    if (fPrixMin && (c.prix||0) < Number(fPrixMin)) return false;
     if (fQ  && !JSON.stringify(c).toLowerCase().includes(fQ)) return false;
     return true;
   });
@@ -338,7 +345,7 @@ function applyFilters() {
 
 function resetFilters() {
   ['f-statut','f-statut-com','f-modele'].forEach(id => document.getElementById(id).value = '');
-  ['f-date-start','f-date-end','f-search'].forEach(id => document.getElementById(id).value = '');
+  ['f-date-start','f-date-end','f-prix-min','f-search'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
@@ -363,8 +370,8 @@ function renderTable() {
   const noRes = document.getElementById('no-results');
   if (!filtered.length) { tbody.innerHTML=''; noRes.style.display='block'; return; }
   noRes.style.display='none';
-  const scBadge = { nouveau:'badge-nouveau', discussion:'badge-discussion', devis_envoye:'badge-devis_envoye', perdu:'badge-perdu', gagne:'badge-gagne' };
-  const scLabel = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné' };
+  const scBadge = { nouveau:'badge-nouveau', discussion:'badge-discussion', devis_envoye:'badge-devis_envoye', perdu:'badge-perdu', gagne:'badge-gagne', sans_objet:'badge-sans_objet' };
+  const scLabel = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné', sans_objet:'Sans objet' };
   tbody.innerHTML = '';
   filtered.forEach(c => {
     const tr = document.createElement('tr');
@@ -397,11 +404,14 @@ function renderTable() {
   });
 }
 function renderStats() {
-  const total  = filtered.length;
-  const devis  = filtered.filter(c=>c.statut==='devis').length;
-  const saved  = filtered.filter(c=>c.statut==='sauvegarde').length;
-  const cmd    = filtered.filter(c=>c.statut_commercial==='gagne').length;
-  const avgP   = total ? Math.round(filtered.reduce((s,c)=>s+(c.prix||0),0)/total) : 0;
+  // Les configs "Sans objet" (tests internes, doublons visiteurs) ne comptent pas
+  // dans les statistiques — elles restent visibles dans le tableau si sélectionnées.
+  const statsBase = filtered.filter(c => c.statut_commercial !== 'sans_objet');
+  const total  = statsBase.length;
+  const devis  = statsBase.filter(c=>c.statut==='devis').length;
+  const saved  = statsBase.filter(c=>c.statut==='sauvegarde').length;
+  const cmd    = statsBase.filter(c=>c.statut_commercial==='gagne').length;
+  const avgP   = total ? Math.round(statsBase.reduce((s,c)=>s+(c.prix||0),0)/total) : 0;
   const conv   = saved ? Math.round(devis/saved*100) : 0;
   document.getElementById('stats-cards').innerHTML =
     stat(total,'Configs total')+stat(devis,'Devis demandés')+stat(saved,'Sauvegardées')+
@@ -534,8 +544,8 @@ function openDetail(configId) {
   const dims = c.config_json?.dimensions || {};
   const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=' + c.config_id;
   const sc = c.statut_commercial || 'nouveau';
-  const scLabels = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné' };
-  const scKeys = ['nouveau','discussion','devis_envoye','perdu','gagne'];
+  const scLabels = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné', sans_objet:'Sans objet' };
+  const scKeys = ['nouveau','discussion','devis_envoye','perdu','gagne','sans_objet'];
 
   let html = '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">' + c.config_id + '</h2>';
 
