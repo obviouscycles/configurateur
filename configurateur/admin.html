@@ -73,9 +73,10 @@
   .badge-sauvegarde{background:var(--bg4);color:var(--text3);border:0.5px solid var(--border2);}
   .badge-titanium{background:#2a1a00;color:#e0a370;border:0.5px solid #e08b3a;}
   .badge-nouveau{background:#1a1a2a;color:#8888ff;border:0.5px solid #444;}
-  .badge-en_cours{background:#2a1a00;color:#ffaa00;border:0.5px solid #665500;}
-  .badge-commande{background:#0a2a0a;color:#44cc44;border:0.5px solid #226622;}
-  .badge-annule{background:#2a0a0a;color:#cc4444;border:0.5px solid #662222;}
+  .badge-discussion{background:#2a1a00;color:#ffaa00;border:0.5px solid #665500;}
+  .badge-devis_envoye{background:#1a2a2a;color:#44cccc;border:0.5px solid #226666;}
+  .badge-perdu{background:#2a0a0a;color:#cc4444;border:0.5px solid #662222;}
+  .badge-gagne{background:#0a2a0a;color:#44cc44;border:0.5px solid #226622;}
 
   /* DETAIL */
   #detail-panel{display:none;position:fixed;top:0;right:0;bottom:0;width:500px;background:var(--bg2);border-left:0.5px solid var(--border);overflow-y:auto;z-index:200;padding:1.5rem;}
@@ -95,6 +96,7 @@
   textarea.notes-input{width:100%;background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:8px;font-size:13px;font-family:var(--font);resize:vertical;min-height:80px;outline:none;}
   textarea.notes-input:focus{border-color:var(--yellow);}
   select.status-select{width:100%;background:var(--bg4);border:0.5px solid var(--border2);color:var(--text);padding:8px;font-size:13px;font-family:var(--font);outline:none;margin-bottom:.5rem;}
+  select.status-select-inline{font-size:11px;font-weight:600;padding:3px 6px;border-radius:2px;cursor:pointer;font-family:var(--font);outline:none;}
 
   /* COMP STATS */
   .comp-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:1rem;}
@@ -174,9 +176,10 @@
         <select id="f-statut-com" onchange="applyFilters()">
           <option value="">Tous</option>
           <option value="nouveau">Nouveau</option>
-          <option value="en_cours">En cours</option>
-          <option value="commande">Commandé</option>
-          <option value="annule">Annulé</option>
+          <option value="discussion">Discussion</option>
+          <option value="devis_envoye">Devis envoyé</option>
+          <option value="perdu">Perdu</option>
+          <option value="gagne">Gagné</option>
         </select>
       </label>
       <label>Modèle
@@ -360,8 +363,8 @@ function renderTable() {
   const noRes = document.getElementById('no-results');
   if (!filtered.length) { tbody.innerHTML=''; noRes.style.display='block'; return; }
   noRes.style.display='none';
-  const scBadge = { nouveau:'badge-nouveau', en_cours:'badge-en_cours', commande:'badge-commande', annule:'badge-annule' };
-  const scLabel = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
+  const scBadge = { nouveau:'badge-nouveau', discussion:'badge-discussion', devis_envoye:'badge-devis_envoye', perdu:'badge-perdu', gagne:'badge-gagne' };
+  const scLabel = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné' };
   tbody.innerHTML = '';
   filtered.forEach(c => {
     const tr = document.createElement('tr');
@@ -380,7 +383,16 @@ function renderTable() {
       '<td>' + taille + '</td>' +
       '<td style="text-align:center">' + (c.nb_consultations||0) + '</td>' +
       '<td><span class="badge ' + (c.statut==='devis'?'badge-devis':c.statut==='projet_titanium'?'badge-titanium':'badge-sauvegarde') + '">' + (c.statut==='devis'?'Devis':c.statut==='projet_titanium'?'Titanium':'Sauvegardé') + '</span></td>' +
-      '<td><span class="badge ' + scBadge[sc] + '">' + scLabel[sc] + '</span></td>';
+      '<td><select class="status-select-inline ' + scBadge[sc] + '" id="sc-inline-' + c.config_id + '">' +
+        Object.keys(scLabel).map(k => '<option value="' + k + '"' + (k===sc?' selected':'') + '>' + scLabel[k] + '</option>').join('') +
+      '</select></td>';
+    const scInlineSel = tr.querySelector('#sc-inline-' + c.config_id);
+    scInlineSel.addEventListener('click', e => e.stopPropagation());
+    scInlineSel.addEventListener('change', e => {
+      e.stopPropagation();
+      scInlineSel.className = 'status-select-inline ' + scBadge[e.target.value];
+      updateStatutCom(c.config_id, e.target.value);
+    });
     tbody.appendChild(tr);
   });
 }
@@ -388,12 +400,12 @@ function renderStats() {
   const total  = filtered.length;
   const devis  = filtered.filter(c=>c.statut==='devis').length;
   const saved  = filtered.filter(c=>c.statut==='sauvegarde').length;
-  const cmd    = filtered.filter(c=>c.statut_commercial==='commande').length;
+  const cmd    = filtered.filter(c=>c.statut_commercial==='gagne').length;
   const avgP   = total ? Math.round(filtered.reduce((s,c)=>s+(c.prix||0),0)/total) : 0;
   const conv   = saved ? Math.round(devis/saved*100) : 0;
   document.getElementById('stats-cards').innerHTML =
     stat(total,'Configs total')+stat(devis,'Devis demandés')+stat(saved,'Sauvegardées')+
-    stat(cmd,'Commandées')+stat(avgP.toLocaleString('fr-FR')+' €','Prix moyen')+stat(conv+'%','Taux conversion');
+    stat(cmd,'Gagnées')+stat(avgP.toLocaleString('fr-FR')+' €','Prix moyen')+stat(conv+'%','Taux conversion');
 }
 function stat(v,l) { return '<div class="stat-card"><div class="stat-val">'+v+'</div><div class="stat-lbl">'+l+'</div></div>'; }
 
@@ -522,8 +534,8 @@ function openDetail(configId) {
   const dims = c.config_json?.dimensions || {};
   const shareUrl = 'https://obviouscycles.github.io/configurateur/configurateur/proto14.html?config=' + c.config_id;
   const sc = c.statut_commercial || 'nouveau';
-  const scLabels = { nouveau:'Nouveau', en_cours:'En cours', commande:'Commandé', annule:'Annulé' };
-  const scKeys = ['nouveau','en_cours','commande','annule'];
+  const scLabels = { nouveau:'Nouveau', discussion:'Discussion', devis_envoye:'Devis envoyé', perdu:'Perdu', gagne:'Gagné' };
+  const scKeys = ['nouveau','discussion','devis_envoye','perdu','gagne'];
 
   let html = '<h2 style="font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--yellow)">' + c.config_id + '</h2>';
 
