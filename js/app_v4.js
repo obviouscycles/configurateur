@@ -1445,9 +1445,11 @@ function v3InitTitaniumSticky() {
   render(); // état initial : carré replié, aligné à gauche sur le bandeau original
 }
 
-function v3GoTitaniumFromS1(isKit) {
+function v3GoTitaniumFromS1() {
   v2Parcours = 'hors_gamme';
-  window._kitCadre = !!isKit;
+  // Titanium n'a pas de distinction vélo complet / kit cadre — le visiteur décrit
+  // son projet librement dans le message, qu'il s'agisse d'un vélo ou d'un cadre seul.
+  window._kitCadre = false;
   // Réinitialiser l'affichage (au cas où un envoi précédent aurait laissé la confirmation visible)
   const mainContent = document.getElementById('titanium-main-content');
   const confirm = document.getElementById('titanium-confirm');
@@ -1573,12 +1575,10 @@ function dtRenderS1() {
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
         '<div class="mc-mode-buttons">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
-            '<i class="ti ti-bike"></i>' +
             '<span class="mc-mode-btn-label">Vélo complet</span>' +
             '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
           '</button>' +
           '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', true)">' +
-            '<i class="ti ti-frame"></i>' +
             '<span class="mc-mode-btn-label">Kit cadre</span>' +
             (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
           '</button>' +
@@ -4569,12 +4569,10 @@ function p11RenderModels() {
         '<span class="mc-desc">' + m.desc + '</span>' +
         '<div class="mc-mode-buttons">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
-            '<i class="ti ti-bike"></i>' +
             '<span class="mc-mode-btn-label">Vélo complet</span>' +
             '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
           '</button>' +
           '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">' +
-            '<i class="ti ti-frame"></i>' +
             '<span class="mc-mode-btn-label">Kit cadre</span>' +
             (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
           '</button>' +
