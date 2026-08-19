@@ -253,7 +253,7 @@ function isPresetDefault(postId, optId) {
 
 function getIncompatFromSelections(excludePostId) {
   let blocked = [];
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     if (p.id === excludePostId) return;
     const selId = selOpts[p.id];
     if (!selId) return;
@@ -270,7 +270,7 @@ function isRecommended(opt, modelId) {
 }
 
 function autoSelectLocked(modelId) {
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     if (selOpts[p.id]) return;
     const opts = optionsFor(p.id, modelId);
     const toSelect = opts.find(o => isLocked(o, modelId));
@@ -278,12 +278,23 @@ function autoSelectLocked(modelId) {
   });
 }
 
+// Potence/Cintre n'existent QUE pour le Kit cadre — jamais ajoutés à POST_META
+// (fichier partagé avec proto14/V2/V3, qui l'itèrent pour TOUS les vélos). Cette
+// liste locale à V4 s'ajoute uniquement quand window._kitCadre est actif.
+const KIT_CADRE_EXTRA_POSTS = [
+  { id: 'potence', name: 'Potence', icon: 'ti-adjustments-horizontal' },
+  { id: 'cintre',  name: 'Cintre',  icon: 'ti-arrows-horizontal' },
+];
+function activePostMeta() {
+  return window._kitCadre ? POST_META.concat(KIT_CADRE_EXTRA_POSTS) : POST_META;
+}
+
 function computeTotals(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const kitPricing = window._kitCadre && KIT_CADRE_PRICES[modelId];
   let price = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly || 0)) : (model.basePrice + (model.assembly || 0));
   let weight = 0;
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     const allOpts = ALL_OPTIONS[p.id] || [];
     const opt = allOpts.find(o => o.id === opts[p.id]);
     // En kit cadre, le prix de base n'inclut aucun composant spécifique — le statut
@@ -298,7 +309,7 @@ function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const { price, weight } = computeTotals(modelId, opts);
   let lines = ['Modèle : ' + model.name];
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     const allOpts = ALL_OPTIONS[p.id] || [];
     const opt = allOpts.find(o => o.id === opts[p.id]);
     if (opt) lines.push(p.name + ' : ' + opt.name + (isLocked(opt, modelId) ? ' (inclus)' : (opt.price >= 0 ? ' (+' + opt.price.toLocaleString('fr-FR') + ' €)' : ' (' + opt.price.toLocaleString('fr-FR') + ' €)')));
@@ -842,7 +853,7 @@ function doSave(inputId, toastId) {
   const model = MODELS.find(m => m.id === selModel);
   if (!model) return;
   const { price, weight } = computeTotals(selModel, selOpts);
-  const details = POST_META.map(p => {
+  const details = activePostMeta().map(p => {
     const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
     return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
   });
@@ -1968,7 +1979,7 @@ function dtRenderPosts() {
   if (!container || !selModel) return;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
 
-  container.innerHTML = renderCadreCard() + POST_META.map(p => {
+  container.innerHTML = renderCadreCard() + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
     const opts = optionsFor(p.id, selModel);
@@ -2383,7 +2394,7 @@ function dtRenderS4() {
       // Colonne droite : composants
       '<div>' +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;">Votre configuration</div>' +
-        POST_META.map(p => {
+        activePostMeta().map(p => {
           const opt = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id].find(o => o.id === selOpts[p.id]) : null;
           if (!opt) return '';
           const isModified = !!(window._activePreset && preset && Object.keys(preset).length && preset[p.id] !== selOpts[p.id]);
@@ -2536,7 +2547,7 @@ function dtRenderRecap() {
     '<span class="dtr-lbl"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '><i class="ti ti-frame" style="font-size:8px;margin-right:3px;"></i>Cadre</span>' +
     '<span class="dtr-val"' + (cadreSurMesure ? ' style="color:#F5C400;font-weight:600;"' : '') + '>' + cadreVal + '</span>' +
   '</div>';
-  rows.innerHTML = cadreRowHtml + POST_META.map(p => {
+  rows.innerHTML = cadreRowHtml + activePostMeta().map(p => {
     const opts = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id] : [];
     const opt = opts.find(o => o.id === selOpts[p.id]);
     if (!opt) return '';
@@ -4680,7 +4691,7 @@ function p11RenderPosts() {
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
   container.innerHTML =
     '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
-    renderCadreCard('p11-cadre-taille-select') + POST_META.map(p => {
+    renderCadreCard('p11-cadre-taille-select') + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
     const opts = optionsFor(p.id, selModel);
@@ -4799,10 +4810,10 @@ function p11SelectOpt(postId, optId) {
   });
 
   // Effacer les sélections incompatibles dans les autres postes
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     if (p.id === postId) return;
     if (!selOpts[p.id]) return;
-    const allIncompat = POST_META.reduce((acc, pp) => {
+    const allIncompat = activePostMeta().reduce((acc, pp) => {
       if (!selOpts[pp.id]) return acc;
       const o = ALL_OPTIONS[pp.id]?.find(x => x.id === selOpts[pp.id]);
       return o ? acc.concat(o.incompat) : acc;
@@ -5141,7 +5152,7 @@ function p11RenderFinalRecap() {
       (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
-  POST_META.forEach(p => {
+  activePostMeta().forEach(p => {
     const opt = optionsFor(p.id, selModel).find(o=>o.id===selOpts[p.id]);
     if (!opt) return;
     const locked = isLocked(opt, selModel);
