@@ -289,6 +289,18 @@ function activePostMeta() {
   return window._kitCadre ? POST_META.concat(KIT_CADRE_EXTRA_POSTS) : POST_META;
 }
 
+// Combo (ex: Deda Alanera = potence + cintre en une seule pièce) — si une option
+// actuellement sélectionnée "absorbe" le poste demandé (via comboWithPost dans
+// composants.js), ce poste doit s'afficher verrouillé avec le message dédié au
+// lieu d'un vrai choix.
+function findComboLock(postId) {
+  for (const pid in selOpts) {
+    const opt = (ALL_OPTIONS[pid] || []).find(o => o.id === selOpts[pid]);
+    if (opt && opt.comboWithPost === postId) return opt;
+  }
+  return null;
+}
+
 function computeTotals(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const kitPricing = window._kitCadre && KIT_CADRE_PRICES[modelId];
@@ -1982,6 +1994,19 @@ function dtRenderPosts() {
   container.innerHTML = renderCadreCard() + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
+
+    // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
+    const comboLock = findComboLock(p.id);
+    if (comboLock) {
+      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+        '<div class="post-hdr" style="cursor:default;">' +
+          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<span class="ph-name">' + p.name + '</span>' +
+          '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -2064,6 +2089,9 @@ function dtSelectOpt(postId, optId) {
   if (!opt) return;
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
+  // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
+  // s'affichera verrouillé au prochain rendu, pas de valeur fantôme à conserver.
+  if (opt.comboWithPost) delete selOpts[opt.comboWithPost];
   // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
   if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
   // FORCE_SELECT
@@ -4694,6 +4722,19 @@ function p11RenderPosts() {
     renderCadreCard('p11-cadre-taille-select') + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
+
+    // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
+    const comboLock = findComboLock(p.id);
+    if (comboLock) {
+      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+        '<div class="post-hdr" style="cursor:default;">' +
+          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<span class="ph-name">' + p.name + '</span>' +
+          '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -4776,6 +4817,9 @@ function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
   selOpts[postId] = optId;
+  // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
+  // s'affichera verrouillé au prochain rendu, pas de valeur fantôme à conserver.
+  if (opt.comboWithPost) delete selOpts[opt.comboWithPost];
 
   // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
   if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
