@@ -229,6 +229,12 @@ function optionsFor(postId, modelId) {
       opts = opts.filter(o => o.id === 'pwr_all');
     }
   }
+  // Kit cadre : le cintre ne se débloque qu'une fois une VRAIE potence choisie
+  // (pas juste "Sans potence") — tant que ce n'est pas fait, seul "Sans cintre" est proposé.
+  if (postId === 'cintre' && window._kitCadre) {
+    const hasRealPotence = selOpts['potence'] && selOpts['potence'] !== 'potence_no';
+    if (!hasRealPotence) opts = opts.filter(o => o.id === 'cintre_no');
+  }
   return opts.sort((a, b) => {
     const aRec = isRecommended(a, modelId) ? 0 : 1;
     const bRec = isRecommended(b, modelId) ? 0 : 1;
