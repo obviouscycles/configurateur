@@ -113,7 +113,7 @@ const ALL_OPTIONS = {
   potence: [
     { id: 'potence_rd_sub', name: 'Potence Deda Superbox DCR', desc: 'Potence aluminium, intégration complete', price: 30, weight: 0, lockedFor: ['route', 'gravel_racing'], compat: [{mid:'route',rec:false}, {mid:'gravel_racing',rec:false}], incompat: [], dims: {}, image: '/configurateur/assets/potence/potence_rd_sub.png' },
     { id: 'potence_rd_ze100', name: 'Potence Deda Zero100', desc: 'Potence aluminiumlegère et polyvalente', price: 0, weight: 0, lockedFor: [], compat: [{mid:'gravel_bikepacking',rec:false}], incompat: [], dims: {}, image: '/configurateur/assets/potence/potence_rd_ze100.png' },
-    { id: 'pilotage_rd_ala', name: 'Combo Deda Alanera DCR', desc: 'Ensemble combiné carbone', price: 395, weight: 0, lockedFor: [], compat: [{mid:'route',rec:false}], incompat: [], dims: {}, image: '/configurateur/assets/pilotage/pilotage_rd_ala.png' },
+    { id: 'pilotage_rd_ala', name: 'Combo Deda Alanera DCR', desc: 'Ensemble combiné carbone', price: 525, weight: 0, lockedFor: [], compat: [{mid:'route',rec:false}], incompat: [], dims: {}, image: '/configurateur/assets/pilotage/pilotage_rd_ala.png', comboWithPost: 'cintre', comboWithLabel: 'Inclus avec le combo Deda Alanera DCR' },
   ],
   cintre: [
     { id: 'cintre_rd_suz_car', name: 'Cintre Deda SuperZero RS Carbon', desc: 'Cintre route carbone profilé', price: 260, weight: 0, lockedFor: [], compat: [{mid:'route',rec:false}], incompat: [], dims: {}, image: '/configurateur/assets/cintre/cintre_rd_suz_car.png' },
