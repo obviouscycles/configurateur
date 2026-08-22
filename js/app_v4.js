@@ -231,8 +231,8 @@ function optionsFor(postId, modelId) {
   }
   // Kit cadre : le cintre ne se débloque qu'une fois une VRAIE potence choisie
   // (pas juste "Sans potence") — tant que ce n'est pas fait, seul "Sans cintre" est proposé.
-  if (postId === 'cintre' && window._kitCadre) {
-    const hasRealPotence = selOpts['potence'] && selOpts['potence'] !== 'potence_no';
+  if (postId === 'cintre_kit' && window._kitCadre) {
+    const hasRealPotence = selOpts['potence_kit'] && selOpts['potence_kit'] !== 'potence_no';
     if (!hasRealPotence) opts = opts.filter(o => o.id === 'cintre_no');
   }
   return opts.sort((a, b) => {
@@ -284,15 +284,19 @@ function autoSelectLocked(modelId) {
   });
 }
 
-// Potence/Cintre n'existent QUE pour le Kit cadre — jamais ajoutés à POST_META
-// (fichier partagé avec proto14/V2/V3, qui l'itèrent pour TOUS les vélos). Cette
-// liste locale à V4 s'ajoute uniquement quand window._kitCadre est actif.
-const KIT_CADRE_EXTRA_POSTS = [
-  { id: 'potence', name: 'Potence', icon: 'ti-adjustments-horizontal' },
-  { id: 'cintre',  name: 'Cintre',  icon: 'ti-arrows-horizontal' },
+// Fourche/Potence/Cintre/Tige "kit" n'existent QUE pour le Kit cadre — jamais
+// ajoutés à POST_META (fichier partagé avec proto14/V2/V3, qui l'itèrent pour
+// TOUS les vélos). Cette liste locale à V4 remplace entièrement POST_META
+// quand window._kitCadre est actif — plus besoin de filtre d'exclusion, ces
+// 4 postes sont autonomes, jamais mélangés avec fourche/pilotage/tige (vélo complet).
+const KIT_CADRE_POST_META = [
+  { id: 'fourche_kit', name: 'Fourche',       icon: 'ti-git-fork' },
+  { id: 'potence_kit', name: 'Potence',       icon: 'ti-adjustments-horizontal' },
+  { id: 'cintre_kit',  name: 'Cintre',        icon: 'ti-arrows-horizontal' },
+  { id: 'tige_kit',    name: 'Tige de selle', icon: 'ti-arrows-vertical' },
 ];
 function activePostMeta() {
-  return window._kitCadre ? POST_META.concat(KIT_CADRE_EXTRA_POSTS) : POST_META;
+  return window._kitCadre ? KIT_CADRE_POST_META : POST_META;
 }
 
 // Combo (ex: Deda Alanera = potence + cintre en une seule pièce) — si une option
@@ -447,7 +451,7 @@ function selectModel(id) {
 
 // ─── RENDU POSTES ─────────────────────────────────────────────────────────────
 // ─── DIMENSIONS DE COMPOSANTS CHOISIES EN ÉTAPE 2 (plateaux/cassette/section/débattement) ──
-const POST_DIM_FIELDS = { transmission: ['plateaux','cassette','manivelle'], pneus: ['section'], fourche: ['debattement'], pilotage: ['cintre','potence'], selle: ['largeur_selle'] };
+const POST_DIM_FIELDS = { transmission: ['plateaux','cassette','manivelle'], pneus: ['section'], fourche: ['debattement'], pilotage: ['cintre','potence'], selle: ['largeur_selle'], fourche_kit: ['debattement'], potence_kit: ['potence'], cintre_kit: ['cintre'] };
 const DIM_LABELS = { plateaux: 'Plateau(x)', cassette: 'Cassette', section: 'Section pneu', debattement: 'Débattement', largeur_selle: 'Largeur selle', manivelle: 'Longueur manivelle', cintre: 'Largeur cintre (ext/ext)', potence: 'Longueur potence' };
 const DIM_UNITS  = { plateaux: '', cassette: '', section: 'mm', debattement: 'mm', largeur_selle: 'mm', manivelle: 'mm', cintre: 'mm', potence: 'mm' };
 // Champs "morphologiques" : sans taille de cadre connue (JNSP ou sur-mesure), ils affichent "choisir" (pas de défaut forcé)
@@ -1995,12 +1999,9 @@ function selectCadreTaille(value) {
 function dtRenderPosts() {
   const container = document.getElementById('dt-posts-list');
   if (!container || !selModel) return;
-  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
+  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
 
   container.innerHTML = renderCadreCard() + activePostMeta().map(p => {
-    // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
-    if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
-
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
@@ -2406,7 +2407,7 @@ function dtRenderS4() {
   const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
-  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
+  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   const mc = dtModifCount();
 
   inner.innerHTML =
@@ -2582,7 +2583,7 @@ function dtRenderRecap() {
   }
 
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
-  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
+  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   const rows = get('dtr-rows');
   if (!rows) return;
   const cadreSurMesure = v2Parcours === 'sur_mesure';
@@ -4739,13 +4740,10 @@ function p11SelectModel(id) {
 function p11RenderPosts() {
   const container = document.getElementById('p11-posts-list');
   if (!container || !selModel) return;
-  const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise' };
+  const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise', fourche_kit:'ti-git-fork', potence_kit:'ti-adjustments-horizontal', cintre_kit:'ti-arrows-horizontal', tige_kit:'ti-arrows-vertical' };
   container.innerHTML =
     '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
     renderCadreCard('p11-cadre-taille-select') + activePostMeta().map(p => {
-    // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
-    if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
-
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
@@ -5212,7 +5210,7 @@ function p11RenderFinalRecap() {
   const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
   const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
-  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
+  const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
     (model.photo ? '<img src="' + model.photo + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
     '<div style="flex:1;min-width:0;">' +
