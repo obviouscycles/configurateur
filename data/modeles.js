@@ -51,11 +51,12 @@ const KIT_CADRE_PRICES = {
 };
 
 const KIT_CADRE_PRESETS = {
+  // Postes dédiés kit cadre : fourche_kit/potence_kit/cintre_kit/tige_kit — jamais
+  // fourche/tige/pilotage (postes du vélo complet, POST_META partagé).
   // Cintre par défaut "sans" sur les 4 modèles — les vrais cintres ne se
   // débloquent qu'une fois une potence réelle sélectionnée (voir app_v4.js).
-  // '-' dans le xlsx = pas de préconfig du tout (fourche/tige VTT : le visiteur choisit).
-  'route':              { fourche: 'fourche_rd_car_00', potence: 'potence_rd_sub', cintre: 'cintre_no', tige: 'tige_rd_ob_car' },
-  'gravel_racing':       { fourche: 'fourche_gr_car_00', potence: 'potence_rd_sub', cintre: 'cintre_no', tige: 'tige_rd_ob_car' },
-  'gravel_bikepacking':  { fourche: 'fourche_gr_car_ins', potence: 'potence_no', cintre: 'cintre_no', tige: 'tige_rd_ob_car' },
-  'vtt_enduro':          { potence: 'potence_no', cintre: 'cintre_no' }, // fourche/tige restent à choisir
+  'route':              { fourche_kit: 'fourche_rd_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
+  'gravel_racing':       { fourche_kit: 'fourche_gr_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
+  'gravel_bikepacking':  { fourche_kit: 'fourche_gr_car_ins', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
+  'vtt_enduro':          { potence_kit: 'potence_no', cintre_kit: 'cintre_no' }, // fourche_kit/tige_kit restent à choisir
 };
