@@ -58,5 +58,5 @@ const KIT_CADRE_PRESETS = {
   'route':              { fourche_kit: 'fourche_rd_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
   'gravel_racing':       { fourche_kit: 'fourche_gr_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
   'gravel_bikepacking':  { fourche_kit: 'fourche_gr_car_ins', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
-  'vtt_enduro':          { potence_kit: 'potence_no', cintre_kit: 'cintre_no' }, // fourche_kit/tige_kit restent à choisir
+  'vtt_enduro':          { fourche_kit: 'fourche-no', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_no' },
 };
