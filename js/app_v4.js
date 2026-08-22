@@ -2019,7 +2019,10 @@ function dtRenderPosts() {
     if (p.id === 'power' && opts.length <= 1) return '';
     const selOpt = opts.find(o => o.id === selOpts[p.id]);
     const isOpen = openPost === p.id;
-    const curPrice = selOpt && !isLocked(selOpt, selModel) ? selOpt.price : 0;
+    // En kit cadre, aucun composant n'est "déjà compris" dans le prix de base — le statut
+    // locked (recommandé par défaut) ne doit donc jamais annuler son prix dans le calcul
+    // du delta affiché sur les autres options, contrairement au vélo complet.
+    const curPrice = selOpt && (window._kitCadre || !isLocked(selOpt, selModel)) ? selOpt.price : 0;
     const hasPhotos = opts.some(o => o.image && o.image.length > 0 && o.image !== 'assets/no_option.png');
 
     function buildOpt(o) {
@@ -4761,7 +4764,10 @@ function p11RenderPosts() {
     if (p.id === 'power' && opts.length <= 1) return '';
     const selOpt = opts.find(o => o.id === selOpts[p.id]);
     const isOpen = openPost === p.id;
-    const curPrice = selOpt && !isLocked(selOpt, selModel) ? selOpt.price : 0;
+    // En kit cadre, aucun composant n'est "déjà compris" dans le prix de base — le statut
+    // locked (recommandé par défaut) ne doit donc jamais annuler son prix dans le calcul
+    // du delta affiché sur les autres options, contrairement au vélo complet.
+    const curPrice = selOpt && (window._kitCadre || !isLocked(selOpt, selModel)) ? selOpt.price : 0;
     const hasPhotos = opts.some(o => o.image && o.image.length > 0 && o.image !== 'assets/no_option.png');
 
     const optHtml = hasPhotos
