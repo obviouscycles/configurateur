@@ -229,6 +229,12 @@ function optionsFor(postId, modelId) {
       opts = opts.filter(o => o.id === 'pwr_all');
     }
   }
+  // Kit cadre : le cintre ne se débloque qu'une fois une VRAIE potence choisie
+  // (pas juste "Sans potence") — tant que ce n'est pas fait, seul "Sans cintre" est proposé.
+  if (postId === 'cintre' && window._kitCadre) {
+    const hasRealPotence = selOpts['potence'] && selOpts['potence'] !== 'potence_no';
+    if (!hasRealPotence) opts = opts.filter(o => o.id === 'cintre_no');
+  }
   return opts.sort((a, b) => {
     const aRec = isRecommended(a, modelId) ? 0 : 1;
     const bRec = isRecommended(b, modelId) ? 0 : 1;
@@ -287,6 +293,18 @@ const KIT_CADRE_EXTRA_POSTS = [
 ];
 function activePostMeta() {
   return window._kitCadre ? POST_META.concat(KIT_CADRE_EXTRA_POSTS) : POST_META;
+}
+
+// Combo (ex: Deda Alanera = potence + cintre en une seule pièce) — si une option
+// actuellement sélectionnée "absorbe" le poste demandé (via comboWithPost dans
+// composants.js), ce poste doit s'afficher verrouillé avec le message dédié au
+// lieu d'un vrai choix.
+function findComboLock(postId) {
+  for (const pid in selOpts) {
+    const opt = (ALL_OPTIONS[pid] || []).find(o => o.id === selOpts[pid]);
+    if (opt && opt.comboWithPost === postId) return opt;
+  }
+  return null;
 }
 
 function computeTotals(modelId, opts) {
@@ -1982,6 +2000,19 @@ function dtRenderPosts() {
   container.innerHTML = renderCadreCard() + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
+
+    // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
+    const comboLock = findComboLock(p.id);
+    if (comboLock) {
+      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+        '<div class="post-hdr" style="cursor:default;">' +
+          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<span class="ph-name">' + p.name + '</span>' +
+          '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -2064,6 +2095,9 @@ function dtSelectOpt(postId, optId) {
   if (!opt) return;
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
+  // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
+  // s'affichera verrouillé au prochain rendu, pas de valeur fantôme à conserver.
+  if (opt.comboWithPost) delete selOpts[opt.comboWithPost];
   // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
   if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
   // FORCE_SELECT
@@ -2395,6 +2429,13 @@ function dtRenderS4() {
       '<div>' +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;">Votre configuration</div>' +
         activePostMeta().map(p => {
+          const comboLock = findComboLock(p.id);
+          if (comboLock) {
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #1e1e1e;">' +
+              '<div style="font-size:13px;color:#666;display:flex;align-items:center;gap:8px;"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:11px;color:#F5C400;"></i>' + p.name + '</div>' +
+              '<div style="font-size:13px;font-style:italic;color:#777;">' + comboLock.comboWithLabel + '</div>' +
+            '</div>';
+          }
           const opt = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id].find(o => o.id === selOpts[p.id]) : null;
           if (!opt) return '';
           const isModified = !!(window._activePreset && preset && Object.keys(preset).length && preset[p.id] !== selOpts[p.id]);
@@ -2548,6 +2589,13 @@ function dtRenderRecap() {
     '<span class="dtr-val"' + (cadreSurMesure ? ' style="color:#F5C400;font-weight:600;"' : '') + '>' + cadreVal + '</span>' +
   '</div>';
   rows.innerHTML = cadreRowHtml + activePostMeta().map(p => {
+    const comboLock = findComboLock(p.id);
+    if (comboLock) {
+      return '<div class="dtr-row">' +
+        '<span class="dtr-lbl"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:8px;margin-right:3px;"></i>'+p.name+'</span>' +
+        '<span class="dtr-val" style="color:#888;font-style:italic;">'+comboLock.comboWithLabel+'</span>' +
+      '</div>';
+    }
     const opts = (typeof ALL_OPTIONS !== 'undefined' && ALL_OPTIONS[p.id]) ? ALL_OPTIONS[p.id] : [];
     const opt = opts.find(o => o.id === selOpts[p.id]);
     if (!opt) return '';
@@ -4694,6 +4742,19 @@ function p11RenderPosts() {
     renderCadreCard('p11-cadre-taille-select') + activePostMeta().map(p => {
     // Kit cadre seul : uniquement Fourche, Poste de pilotage et Tige de selle
     if (window._kitCadre && !['fourche','potence','cintre','tige'].includes(p.id)) return '';
+
+    // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
+    const comboLock = findComboLock(p.id);
+    if (comboLock) {
+      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+        '<div class="post-hdr" style="cursor:default;">' +
+          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<span class="ph-name">' + p.name + '</span>' +
+          '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
+        '</div>' +
+      '</div>';
+    }
+
     const opts = optionsFor(p.id, selModel);
     if (!opts.length) return '';
     // Masquer "mesure de puissance" si une seule option (= non disponible)
@@ -4776,6 +4837,9 @@ function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
   selOpts[postId] = optId;
+  // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
+  // s'affichera verrouillé au prochain rendu, pas de valeur fantôme à conserver.
+  if (opt.comboWithPost) delete selOpts[opt.comboWithPost];
 
   // Synchroniser les dimensions dépendantes (plateaux/cassette/section/débattement)
   if (POST_DIM_FIELDS[postId]) syncPostDims(postId, opt);
