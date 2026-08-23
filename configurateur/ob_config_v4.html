@@ -1318,6 +1318,18 @@
       background: #2a2a2a !important;
       border: 2px solid #F5C400 !important;
     }
+    /* Mise en évidence au clic sur la vignette (hors boutons) — purement visuel,
+       ne choisit ni Vélo complet ni Kit cadre. Distinct du jaune de .sel pour ne
+       pas laisser penser qu'un choix a été fait. */
+    #dt-s1 .model-card.highlighted {
+      background: #232323 !important;
+      border: 2px solid #888 !important;
+    }
+    /* La vraie sélection (jaune) l'emporte toujours sur la simple mise en évidence */
+    #dt-s1 .model-card.sel.highlighted {
+      background: #2a2a2a !important;
+      border: 2px solid #F5C400 !important;
+    }
     #dt-s1 .mc-photo { background: #1e1e1e; }
     #dt-s1 .mc-badge { color: #888 !important; }
     #dt-s1 .mc-name { color: #f2f2f2 !important; }
