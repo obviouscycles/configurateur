@@ -130,16 +130,18 @@
   .mc-mode-buttons { display: flex; gap: 8px; margin-top: 10px; }
   .mc-mode-btn {
     flex: 1; padding: 12px 8px; text-align: center;
-    background: #0a0a0a; border: 2px solid #F5C400; color: #F5C400;
+    background: #0a0a0a; border: 1.5px solid #F5C400; color: #F5C400;
     cursor: pointer; font-family: var(--font); transition: color .15s, border-color .15s, background .15s, border-width .15s;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
   }
   .mc-mode-btn-label { font-size: 13px; font-weight: 700; color: inherit; }
   .mc-mode-btn-price { font-size: 11px; color: #b89b1f; }
   .mc-mode-btn:hover { border-color: #fff4c2; color: #fff4c2; }
-  .mc-mode-btn.active { border-width: 2px; border-color: #F5C400; background: #1a1a00; color: #f2f2f2; }
-  .mc-mode-btn.active:hover { border-color: #F5C400; color: #f2f2f2; }
-  .mc-mode-btn.active .mc-mode-btn-price { color: #d4b84a; }
+  /* Sélectionné = remplissage plein (comme les autres éléments actifs du site) — le
+     contour jaune seul ne se distinguait pas assez du non-sélectionné. */
+  .mc-mode-btn.active { border-width: 1.5px; border-color: #F5C400; background: #F5C400; color: #1a1a00; }
+  .mc-mode-btn.active:hover { border-color: #F5C400; background: #F5C400; color: #1a1a00; }
+  .mc-mode-btn.active .mc-mode-btn-price { color: #1a1a00; opacity: .75; }
   .mc-switch-mode { font-size: 12px; color: #777; margin-top: 16px; padding-top: 10px; border-top: 0.5px solid #333; }
   .mc-switch-mode strong { color: #ccc; }
   .mc-switch-mode a { color: #F5C400; cursor: pointer; text-decoration: underline; }
@@ -580,6 +582,9 @@
   }
   /* Mobile : barre pleine largeur */
   @media (max-width: 767px) {
+    /* Accordéon mobile : une seule colonne, pour que les boutons dépliés aient
+       toute la largeur nécessaire (sinon le texte retombe sur 2 lignes). */
+    #p11-model-grid { grid-template-columns: 1fr !important; }
     #floating-price {
       display: block;
       left: 0;
@@ -1020,6 +1025,25 @@
     .p11-model-card .mc-photo { width:100%; height:110px; object-fit:cover; display:block; }
     .p11-model-card .mc-text { padding:10px 12px; display:flex; flex-direction:column; gap:3px; }
     .p11-model-card .mc-badge { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:.06em; }
+    /* Accordéon mobile — carte repliée : prix indicatif + CTA discret */
+    .p11-model-card .mc-price-range { font-size:13px; color:#999; margin-top:2px; }
+    .p11-model-card .mc-choose-btn {
+      width:100%; margin-top:8px; padding:11px; text-align:center;
+      background:transparent; border:1.5px solid #F5C400; color:#F5C400;
+      font-size:13px; font-weight:600; font-family:var(--font); cursor:pointer;
+    }
+    /* Accordéon mobile — carte dépliée : boutons empilés pleine largeur, même
+       hiérarchie active/inactive que desktop (plein = choisi, contour = disponible) */
+    .mc-mode-buttons-stack { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .mc-mode-btn-stack {
+      width:100%; padding:13px 14px; display:flex; justify-content:space-between; align-items:center;
+      background:#0a0a0a; border:1.5px solid #F5C400; color:#F5C400;
+      font-family:var(--font); cursor:pointer; transition: background .15s, color .15s;
+    }
+    .mc-mode-btn-stack .mc-mode-btn-label { font-size:14px; font-weight:700; }
+    .mc-mode-btn-stack .mc-mode-btn-price { font-size:13px; color:#b89b1f; }
+    .mc-mode-btn-stack.active { background:#F5C400; color:#1a1a00; }
+    .mc-mode-btn-stack.active .mc-mode-btn-price { color:#1a1a00; opacity:.75; }
     .p11-model-card .mc-name { font-size:14px; font-weight:500; color:#f2f2f2; }
     .p11-model-card.sel .mc-name { color:#FFF8D6; }
     .p11-model-card .mc-desc { font-size:11px; color:#aaa; line-height:1.35; margin-top:2px; }
