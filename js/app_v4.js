@@ -1598,12 +1598,16 @@ function dtRenderS1() {
   grid.innerHTML = MODELS.map(m => {
     const sel = m.id === selModel;
     const hasPresets = PRESETS[m.id];
-    const isKitSel = sel && window._kitCadre;
-    const isCompletSel = sel && !window._kitCadre;
+    // window._kitCadre est maintenant à 3 états : null (focus sans choix), true (kit
+    // cadre), false (vélo complet) — distinct de "juste focus" pour savoir si un des
+    // 2 boutons doit apparaître actif.
+    const isKitSel = sel && window._kitCadre === true;
+    const isCompletSel = sel && window._kitCadre === false;
+    const isFocusedOnly = sel && (window._kitCadre === null || window._kitCadre === undefined);
     const completPrice = m.basePrice + (m.assembly||0);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
-    return '<div class="model-card' + (sel ? ' sel' : '') + '" onclick="dtHighlightCard(event, this)">' +
+    return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
@@ -1620,7 +1624,7 @@ function dtRenderS1() {
           '</button>' +
         '</div>' +
       '</div>' +
-      (hasPresets && sel && !window._kitCadre ? dtPresetBar(m.id) : '') +
+      (hasPresets && isCompletSel ? dtPresetBar(m.id) : '') +
     '</div>';
   }).join('');
 }
@@ -1628,15 +1632,18 @@ function dtRenderS1() {
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
 // (carte modèle ou bandeau Titanium) et se propage à tout le reste du parcours
 // (Cadre, Sur-mesure, Titanium, Personnalisation) via window._kitCadre.
-// Clic sur la vignette (hors boutons) : simple mise en évidence visuelle,
-// aucune conséquence sur le choix Vélo complet / Kit cadre — ce choix reste
-// exclusivement décidé par les 2 boutons dédiés.
-function dtHighlightCard(e, cardEl) {
+// Clic sur la vignette (hors boutons) : met ce modèle "au focus" (mise en évidence),
+// SANS choisir de mode. Un seul modèle peut être au focus à la fois — cliquer sur
+// une vignette différente de celle déjà au focus fait perdre à l'ancienne son focus
+// ET son bouton actif s'il y en avait un. Cliquer sur la vignette déjà au focus ne
+// change rien (qu'un bouton soit actif ou non).
+function dtHighlightCard(e, cardEl, modelId) {
   if (e.target.closest('.mc-mode-btn')) return; // laisser les boutons gérer leur propre clic
-  document.querySelectorAll('.model-card.highlighted').forEach(el => {
-    if (el !== cardEl) el.classList.remove('highlighted');
-  });
-  cardEl.classList.toggle('highlighted');
+  if (selModel === modelId) return; // déjà au focus (bouton actif ou non) -> rien ne change
+
+  selModel = modelId;
+  window._kitCadre = null; // focus sans choix de mode
+  dtRenderS1(); // reconstruction complète : l'ancien modèle perd focus + bouton actif
 }
 
 function dtSelectModelMode(id, isKit) {
