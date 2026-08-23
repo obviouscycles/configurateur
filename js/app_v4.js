@@ -879,7 +879,7 @@ function doSave(inputId, toastId) {
     const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
     return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
   });
-  const entry = { id: Date.now(), name, modelName: model.name, modelBadge: model.badge, date: new Date().toLocaleDateString('fr-FR'), price, weight, details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize } };
+  const entry = { id: Date.now(), name, modelName: model.name, modelBadge: model.badge, date: new Date().toLocaleDateString('fr-FR'), price, weight, details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize }, kitCadre: !!window._kitCadre };
   savedConfigs.unshift(entry);
   persistSaved();
   updateSavedCount();
@@ -1798,9 +1798,11 @@ function dtShowSaved() {
         // Assigner un id si manquant (anciennes configs)
         if (!c.id) { c.id = 'cfg_' + idx + '_' + Date.now(); savedConfigs[idx] = c; persistSaved(); }
         const model = MODELS.find(m => m.id === (c.selModel || c.model));
+        const kitPricing = c.kitCadre && model && KIT_CADRE_PRICES[model.id];
+        const photo = (kitPricing && kitPricing.photo) ? kitPricing.photo : (model ? model.photo : '');
         const cid = String(c.id).replace(/'/g, "\\'");
         return '<div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;margin-bottom:8px;">' +
-          (model && model.photo ? '<img src="' + model.photo + '" style="width:60px;height:40px;object-fit:cover;flex-shrink:0;border:0.5px solid #222;">' : '') +
+          (photo ? '<img src="' + photo + '" style="width:60px;height:40px;object-fit:cover;flex-shrink:0;border:0.5px solid #222;">' : '') +
           '<div style="flex:1;min-width:0;">' +
             '<div style="font-size:14px;font-weight:500;color:#f2f2f2;margin-bottom:2px;">' + c.name + '</div>' +
             '<div style="font-size:11px;color:#666;">' + (model ? model.name : '') + (c.preset ? ' · ' + c.preset : '') + (c.date ? ' · ' + c.date : '') + '</div>' +
@@ -1835,6 +1837,7 @@ function dtLoadSaved(id) {
   selModel = cfg.selModel || cfg.model;
   selOpts = {...(cfg.selOpts || cfg.opts || {})};
   selSize = {...(cfg.selSize || cfg.size || {})};
+  window._kitCadre = !!cfg.kitCadre; // configs sauvegardées avant ce correctif -> false (vélo complet), comportement historique
   window._activePreset = cfg.preset || null;
   window._singleModel = selModel;
   window.sizeValidated = !!(cfg.selSize && Object.keys(cfg.selSize || {}).length > 0);
@@ -1868,8 +1871,10 @@ function dtRenderS2() {
   const left = document.getElementById('dt-s2-left');
   const model = MODELS.find(m => m.id === selModel);
   if (left && model) {
+    const kitPricing = window._kitCadre && KIT_CADRE_PRICES[model.id];
+    const photo = (kitPricing && kitPricing.photo) ? kitPricing.photo : model.photo;
     left.innerHTML =
-      '<img class="mc-photo" src="' + (model.photo||'') + '" alt="' + model.name + '" loading="lazy">' +
+      '<img class="mc-photo" src="' + (photo||'') + '" alt="' + model.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
@@ -2417,6 +2422,8 @@ function dtRenderS4() {
   if (!inner || !selModel) return;
   const model = MODELS.find(m => m.id === selModel);
   const { price: bikePrice } = computeTotals(selModel, selOpts);
+  const kitPricingS4 = window._kitCadre && KIT_CADRE_PRICES[selModel];
+  const photoS4 = (kitPricingS4 && kitPricingS4.photo) ? kitPricingS4.photo : model.photo;
 
   // Réutilise computeOodSurcharge() (déjà correcte, utilisée par le récap latéral) au lieu
   // de dupliquer cette logique — la version précédente ne testait que 'standard_evo', une
@@ -2432,7 +2439,7 @@ function dtRenderS4() {
     '<div style="display:grid;grid-template-columns:'+(document.body.classList.contains('config-shared-mode')?'340px':'280px')+' 1fr;gap:2rem;align-items:start;">' +
       // Colonne gauche : photo + infos
       '<div>' +
-        (model.photo ? '<img src="'+model.photo+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
+        (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
@@ -2584,7 +2591,11 @@ function dtRenderRecap() {
     const mod = get('dtr-modif'); if (mod) mod.classList.remove('show');
     return;
   }
-  if (get('dtr-thumb')) { get('dtr-thumb').src = model.photo||''; get('dtr-thumb').style.display = model.photo?'block':'none'; }
+  if (get('dtr-thumb')) {
+    const kitPricingRecap = window._kitCadre && KIT_CADRE_PRICES[model.id];
+    const photoRecap = (kitPricingRecap && kitPricingRecap.photo) ? kitPricingRecap.photo : model.photo;
+    get('dtr-thumb').src = photoRecap||''; get('dtr-thumb').style.display = photoRecap?'block':'none';
+  }
   if (get('dtr-model')) { get('dtr-model').textContent = model.name; get('dtr-model').style.display = 'block'; }
   if (get('dtr-preset')) get('dtr-preset').textContent = window._activePreset || '';
   const {price: bikePriceR} = computeTotals(selModel, selOpts);
@@ -5228,9 +5239,11 @@ function p11RenderFinalRecap() {
   const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
   const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
+  const kitPricingP11 = window._kitCadre && KIT_CADRE_PRICES[model.id];
+  const photoP11 = (kitPricingP11 && kitPricingP11.photo) ? kitPricingP11.photo : model.photo;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
-    (model.photo ? '<img src="' + model.photo + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
+    (photoP11 ? '<img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
