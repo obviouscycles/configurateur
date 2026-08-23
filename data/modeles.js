@@ -44,10 +44,10 @@ const PRESET_DESCS = {
 
 // ─── KIT CADRE SEUL — prix et préconfig par défaut (fourche + pilotage + tige) ──
 const KIT_CADRE_PRICES = {
-  'route':              { basePrice: 2749, assembly: 0 },
-  'gravel_racing':       { basePrice: 2749, assembly: 0 },
-  'gravel_bikepacking':  { basePrice: 2749, assembly: 0 },
-  'vtt_enduro':          { basePrice: 2549, assembly: 0 },
+  'route':              { basePrice: 2749, assembly: 0, photo: '/configurateur/assets/kits/kit_ON.webp' },
+  'gravel_racing':       { basePrice: 2749, assembly: 0, photo: '/configurateur/assets/kits/kit_ONOFF.webp' },
+  'gravel_bikepacking':  { basePrice: 2749, assembly: 0, photo: '/configurateur/assets/kits/kit_OUTQUEST.webp' },
+  'vtt_enduro':          { basePrice: 2549, assembly: 0, photo: '/configurateur/assets/kits/kit_OFF.webp' },
 };
 
 const KIT_CADRE_PRESETS = {
