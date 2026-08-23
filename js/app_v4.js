@@ -1603,7 +1603,7 @@ function dtRenderS1() {
     const completPrice = m.basePrice + (m.assembly||0);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
-    return '<div class="model-card' + (sel ? ' sel' : '') + '">' +
+    return '<div class="model-card' + (sel ? ' sel' : '') + '" onclick="dtHighlightCard(event, this)">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
@@ -1628,6 +1628,17 @@ function dtRenderS1() {
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
 // (carte modèle ou bandeau Titanium) et se propage à tout le reste du parcours
 // (Cadre, Sur-mesure, Titanium, Personnalisation) via window._kitCadre.
+// Clic sur la vignette (hors boutons) : simple mise en évidence visuelle,
+// aucune conséquence sur le choix Vélo complet / Kit cadre — ce choix reste
+// exclusivement décidé par les 2 boutons dédiés.
+function dtHighlightCard(e, cardEl) {
+  if (e.target.closest('.mc-mode-btn')) return; // laisser les boutons gérer leur propre clic
+  document.querySelectorAll('.model-card.highlighted').forEach(el => {
+    if (el !== cardEl) el.classList.remove('highlighted');
+  });
+  cardEl.classList.toggle('highlighted');
+}
+
 function dtSelectModelMode(id, isKit) {
   window._kitCadre = isKit;
   dtSelectModel(id);
