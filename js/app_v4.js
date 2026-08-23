@@ -4667,7 +4667,30 @@ function p11RenderModels() {
     // Accordéon : un seul modèle déplié à la fois (celui déjà sélectionné, ou celui
     // tapé explicitement) — évite d'afficher 8 boutons d'un coup sur un petit écran.
     const isExpanded = window._p11ExpandedModel === m.id || sel;
-    return '<div class="p11-model-card' + (sel ? ' sel' : '') + (isExpanded ? ' expanded' : '') + '">' +
+    // Préconfigs (Signature/Ti1/Ti2) intégrées DANS la carte dépliée, juste sous les
+    // boutons — jamais dans une barre flottante séparée en haut de page, sans lien
+    // visuel avec le modèle concerné (source de confusion signalée par Damien).
+    const hasPresets = PRESETS[m.id];
+    const presetHtml = (isExpanded && isCompletSel && hasPresets) ?
+      '<div class="mc-preset-inline">' +
+        '<div class="mc-preset-inline-hdr">' +
+          '<span>3 suggestions de départ</span>' +
+          '<button onclick="event.stopPropagation();p11TogglePresetInfo()" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
+        '</div>' +
+        '<div id="p11-preset-info" style="display:none;font-size:12px;color:#aaa;background:#1a1a1a;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
+          Object.entries(PRESET_DESCS).reverse().map(([k,v]) =>
+            '<div><span style="color:#F5C400;font-weight:600;">' + k + '</span> — ' + v + '</div>'
+          ).join('') +
+          '<div style="margin-top:6px;color:#666;font-size:11px;">Tout reste modifiable après sélection.</div>' +
+        '</div>' +
+        '<div class="preset-btns">' +
+          ['Signature','Ti1','Ti2'].map(decl =>
+            '<button class="preset-btn' + (window._activePreset===decl?' active':'') + '" onclick="p11LoadPreset(\'' + decl + '\')">' + decl + '</button>'
+          ).join('') +
+        '</div>' +
+      '</div>' : '';
+    return '<div class="p11-model-card' + (sel ? ' sel' : '') + (isExpanded ? ' expanded' : '') + '"' +
+      (isExpanded ? '' : ' onclick="p11ToggleModelCard(\'' + m.id + '\')"') + '>' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
@@ -4683,16 +4706,19 @@ function p11RenderModels() {
               '<span class="mc-mode-btn-label">Kit cadre</span>' +
               (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
             '</button>' +
-          '</div>'
+          '</div>' +
+          presetHtml
         :
           '<div class="mc-price-range">à partir de ' + minPrice.toLocaleString('fr-FR') + ' €</div>' +
-          '<button class="mc-choose-btn" onclick="p11ToggleModelCard(\'' + m.id + '\')">Choisir ce modèle ↓</button>'
+          '<button class="mc-choose-btn" onclick="event.stopPropagation();p11ToggleModelCard(\'' + m.id + '\')">Choisir ce modèle ↓</button>'
         ) +
       '</div>' +
     '</div>';
   }).join('');
-  // Presets bar
-  p11RenderPresets();
+  // Ancienne barre de préconfigs (hors carte) — conservée cachée pour compatibilité,
+  // les préconfigs vivent maintenant dans la carte dépliée elle-même (voir presetHtml).
+  const oldBar = document.getElementById('p11-preset-bar');
+  if (oldBar) oldBar.style.display = 'none';
 }
 
 // Choix "Vélo complet" / "Kit cadre seul" — mobile
@@ -4703,26 +4729,12 @@ function p11SelectModelMode(id, isKit) {
 
 
 
+// Les préconfigs vivent maintenant directement dans la carte modèle dépliée
+// (voir p11RenderModels/presetHtml) — cette fonction ne fait plus que garder
+// l'ancienne barre séparée masquée, pour ne pas casser ses appelants existants.
 function p11RenderPresets() {
   const bar = document.getElementById('p11-preset-bar');
-  if (!bar || !selModel || !PRESETS[selModel] || window._kitCadre) { if(bar) bar.style.display='none'; return; }
-  bar.style.display = 'block';
-  bar.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
-      '<span style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.08em;">3 suggestions de départ</span>' +
-      '<button onclick="p11TogglePresetInfo()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:0 4px;line-height:1;" title="En savoir plus"><i class="ti ti-info-circle"></i></button>' +
-    '</div>' +
-    '<div id="p11-preset-info" style="display:none;font-size:12px;color:#aaa;background:#1a1a1a;border:0.5px solid #333;padding:10px 12px;margin-bottom:10px;line-height:1.7;">' +
-      Object.entries(PRESET_DESCS).reverse().map(([k,v]) =>
-        '<div><span style="color:#F5C400;font-weight:600;">' + k + '</span> — ' + v + '</div>'
-      ).join('') +
-      '<div style="margin-top:6px;color:#666;font-size:11px;">Tout reste modifiable après sélection.</div>' +
-    '</div>' +
-    '<div class="preset-btns">' +
-      ['Signature','Ti1','Ti2'].map(decl =>
-        '<button class="preset-btn' + (window._activePreset===decl?' active':'') + '" onclick="p11LoadPreset(\'' + decl + '\')">' + decl + '</button>'
-      ).join('') +
-    '</div>';
+  if (bar) bar.style.display = 'none';
 }
 
 function p11TogglePresetInfo() {
