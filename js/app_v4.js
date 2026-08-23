@@ -4645,6 +4645,13 @@ function p11EvoUpdateTotal() {
 }
 
 // Rendu modèles mobile
+// Accordéon mobile : ouvre/ferme une carte modèle (referme automatiquement les
+// autres, une seule carte dépliée à la fois — voir p11RenderModels()).
+function p11ToggleModelCard(modelId) {
+  window._p11ExpandedModel = (window._p11ExpandedModel === modelId) ? null : modelId;
+  p11RenderModels();
+}
+
 function p11RenderModels() {
   const grid = document.getElementById('p11-model-grid');
   if (!grid) return;
@@ -4656,22 +4663,31 @@ function p11RenderModels() {
     const completPrice = m.basePrice + (m.assembly||0);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
-    return '<div class="p11-model-card' + (sel ? ' sel' : '') + '">' +
+    const minPrice = kitPrice !== null ? Math.min(completPrice, kitPrice) : completPrice;
+    // Accordéon : un seul modèle déplié à la fois (celui déjà sélectionné, ou celui
+    // tapé explicitement) — évite d'afficher 8 boutons d'un coup sur un petit écran.
+    const isExpanded = window._p11ExpandedModel === m.id || sel;
+    return '<div class="p11-model-card' + (sel ? ' sel' : '') + (isExpanded ? ' expanded' : '') + '">' +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        '<div class="mc-mode-buttons">' +
-          '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
-            '<span class="mc-mode-btn-label">Vélo complet</span>' +
-            '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
-          '</button>' +
-          '<button class="mc-mode-btn' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">' +
-            '<span class="mc-mode-btn-label">Kit cadre</span>' +
-            (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
-          '</button>' +
-        '</div>' +
+        (isExpanded ?
+          '<div class="mc-mode-buttons-stack">' +
+            '<button class="mc-mode-btn-stack' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
+              '<span class="mc-mode-btn-label">Vélo complet</span>' +
+              '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
+            '</button>' +
+            '<button class="mc-mode-btn-stack' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">' +
+              '<span class="mc-mode-btn-label">Kit cadre</span>' +
+              (kitPrice !== null ? '<span class="mc-mode-btn-price">' + kitPrice.toLocaleString('fr-FR') + ' €</span>' : '') +
+            '</button>' +
+          '</div>'
+        :
+          '<div class="mc-price-range">à partir de ' + minPrice.toLocaleString('fr-FR') + ' €</div>' +
+          '<button class="mc-choose-btn" onclick="p11ToggleModelCard(\'' + m.id + '\')">Choisir ce modèle ↓</button>'
+        ) +
       '</div>' +
     '</div>';
   }).join('');
