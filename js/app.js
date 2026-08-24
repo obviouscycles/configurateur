@@ -3276,13 +3276,27 @@ if (isEmbed) {
   // déplacent des blocs DOM entiers avant de s'ouvrir, ce qui peut faire perdre la
   // référence au bouton si on la cherche trop tard (document.activeElement).
   let lastClickY = null;
+  let lastDocHeight = null;
   document.addEventListener('click', function(e) {
     const clickedEl = e.target.closest('button, a, [onclick]');
-    if (clickedEl) lastClickY = clickedEl.getBoundingClientRect().top;
+    if (clickedEl) {
+      lastClickY = clickedEl.getBoundingClientRect().top;
+      // Capturée AVANT toute ouverture de popup — une fois ouverte, sa propre présence
+      // dans le DOM (position:absolute, 700px de haut) fausserait cette mesure.
+      lastDocHeight = document.body.scrollHeight;
+    }
   }, true);
 
   function repositionOpenModal(overlay) {
-    const topPx = (lastClickY !== null) ? Math.max(20, lastClickY - 40) : 80;
+    const MODAL_HEIGHT = 700;
+    let topPx = (lastClickY !== null) ? Math.max(20, lastClickY - 40) : 80;
+    // Point critique : la popup ne doit JAMAIS être positionnée plus bas que ce que la
+    // page peut réellement contenir — sinon, une fois la hauteur correctement ajustée
+    // au contenu (plus de "coussin" vide en dessous), le bas de la popup devient
+    // inatteignable, même en scrollant (calculer, saisir, fermer = impossibles).
+    const docHeight = lastDocHeight !== null ? lastDocHeight : document.body.scrollHeight;
+    const maxTop = Math.max(20, docHeight - MODAL_HEIGHT - 20);
+    topPx = Math.min(topPx, maxTop);
     overlay.style.top = topPx + 'px';
     overlay.style.left = '0';
     overlay.style.right = '0';
