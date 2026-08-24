@@ -3275,15 +3275,20 @@ if (isEmbed) {
   document.head.appendChild(style);
 
   // Repositionne toute popup nouvellement ouverte pour qu'elle apparaisse au niveau
-  // du bouton qui vient d'être cliqué (document.activeElement — un bouton cliqué
-  // devient automatiquement l'élément actif, comportement standard du navigateur).
+  // du bouton qui vient d'être cliqué. Important : on capture la position du clic
+  // TOUT DE SUITE (au clic lui-même, en phase de capture — avant tout autre code),
+  // pas au moment où la popup s'ouvre — certaines popups (ex: "Déterminer ma taille")
+  // déclenchent entre-temps des manipulations DOM (déplacement de blocs entiers via
+  // appendChild) qui peuvent faire perdre document.activeElement. Mémoriser la
+  // position dès le clic évite ce problème, quelle que soit la popup concernée.
+  let lastClickY = null;
+  document.addEventListener('click', function(e) {
+    const clickedEl = e.target.closest('button, a, [onclick]');
+    if (clickedEl) lastClickY = clickedEl.getBoundingClientRect().top;
+  }, true);
+
   function repositionOpenModal(overlay) {
-    const trigger = document.activeElement;
-    let topPx = 80; // repli raisonnable si jamais aucun élément actif détecté
-    if (trigger && trigger !== document.body) {
-      const rect = trigger.getBoundingClientRect();
-      topPx = Math.max(20, rect.top - 40); // juste au-dessus du bouton cliqué
-    }
+    const topPx = (lastClickY !== null) ? Math.max(20, lastClickY - 40) : 80;
     overlay.style.top = topPx + 'px';
     overlay.style.left = '0';
     overlay.style.right = '0';
