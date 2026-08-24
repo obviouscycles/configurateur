@@ -3299,10 +3299,17 @@ if (isEmbed) {
   // popup (.modal-overlay.open) est actuellement affichée : la mesurer à ce moment
   // gonflerait la hauteur envoyée (le fond assombri de la popup couvre tout l'écran),
   // et cette hauteur excessive resterait figée sur l'iframe même après la fermeture
-  // de la popup — c'est la cause du grand vide constaté sous le configurateur.
+  // de la popup — c'est une des causes du grand vide constaté sous le configurateur.
+  //
+  // Second point important : on utilise UNIQUEMENT document.body.scrollHeight, jamais
+  // document.documentElement.scrollHeight — ce dernier ne peut techniquement jamais
+  // être inférieur à la fenêtre/iframe ACTUELLE (comportement standard des navigateurs
+  // pour l'élément racine), donc une fois l'iframe agrandie une première fois, il reste
+  // bloqué à cette taille pour toujours, même en revenant sur une étape plus courte —
+  // c'est la cause principale du grand vide observé, indépendamment des popups.
   function sendHeight() {
     if (document.querySelector('.modal-overlay.open')) return;
-    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    const h = document.body.scrollHeight;
     window.parent.postMessage({ type: 'obv-height', height: h }, '*');
   }
 
