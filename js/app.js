@@ -3324,8 +3324,15 @@ if (isEmbed) {
   function sendHeight() {
     if (document.querySelector('.modal-overlay.open')) return;
     const h = document.body.scrollHeight;
+    // N'envoyer que si la hauteur a réellement changé (marge de 3px, arrondis) — sinon
+    // chaque petite mise à jour de l'interface (case cochée, liste rafraîchie...) fait
+    // redimensionner l'iframe pour rien, ce qui secoue la mise en page de la page
+    // WordPress et oblige à re-scroller sans arrêt pour se replacer.
+    if (lastSentHeight !== null && Math.abs(h - lastSentHeight) < 3) return;
+    lastSentHeight = h;
     window.parent.postMessage({ type: 'obv-height', height: h }, '*');
   }
+  let lastSentHeight = null;
 
   // Envoyer au chargement
   window.addEventListener('load', function() {
@@ -3333,9 +3340,14 @@ if (isEmbed) {
     setTimeout(sendHeight, 1000);
   });
 
-  // Envoyer à chaque mutation du DOM (changement de step, ouverture accordéon...)
+  // Envoyer à chaque mutation du DOM (changement de step, ouverture accordéon...) —
+  // vrai anti-rebond : chaque nouvelle mutation ANNULE l'envoi précédent encore en
+  // attente, au lieu de s'empiler par-dessus (l'ancien code pouvait déclencher
+  // plusieurs redimensionnements d'affilée pour une seule interaction du visiteur).
+  let sendHeightTimer = null;
   new MutationObserver(function() {
-    setTimeout(sendHeight, 100);
+    clearTimeout(sendHeightTimer);
+    sendHeightTimer = setTimeout(sendHeight, 200);
   }).observe(document.body, { childList: true, subtree: true });
 
   // Répondre aux demandes explicites du parent
