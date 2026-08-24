@@ -2934,7 +2934,7 @@ function evoRender() {
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
-        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_desk.webp" alt="Exemple de gravure sur tube supérieur" style="width:84px;height:56px;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;">` : ''}
+        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_desk.webp" alt="Exemple de gravure sur tube supérieur" style="width:164px;height:112px;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;">` : ''}
         ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
         </div>`}
