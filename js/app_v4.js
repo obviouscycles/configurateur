@@ -2908,6 +2908,15 @@ const EVO_ICONS = {
   ins_gardeboue: 'ti-umbrella'
 };
 
+// Popup photo gravure (desktop) — fermeture par X ou clic à côté (voir onclick
+// sur l'overlay lui-même, qui vérifie que le clic vient bien du fond, pas de l'image).
+function openGravurePhotoModal() {
+  document.getElementById('gravure-photo-modal')?.classList.add('open');
+}
+function closeGravurePhotoModal() {
+  document.getElementById('gravure-photo-modal')?.classList.remove('open');
+}
+
 function evoRender() {
   const container = document.getElementById(evoActiveContainer);
   if (!container) return;
@@ -2934,7 +2943,7 @@ function evoRender() {
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
-        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" style="height:112px;width:auto;aspect-ratio:3/1;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;">` : ''}
+        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" onclick="event.stopPropagation();openGravurePhotoModal()" style="height:112px;width:auto;aspect-ratio:3/1;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;cursor:pointer;">` : ''}
         ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
         </div>`}
