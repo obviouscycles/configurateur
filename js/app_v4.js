@@ -330,11 +330,22 @@ function computeTotals(modelId, opts) {
 function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const { price, weight } = computeTotals(modelId, opts);
+  // Écart affiché = vs le point de départ (Signature/Ti1/Ti2) pour CE poste précis —
+  // pas un delta abstrait vs une référence Ti2 générale. Sans objet en Kit cadre
+  // (pas de preset de départ), le calcul retombe alors sur le prix brut de l'option.
+  const preset = (window._activePreset && PRESETS[modelId]) ? PRESETS[modelId][window._activePreset] : null;
   let lines = ['Modèle : ' + model.name];
   activePostMeta().forEach(p => {
     const allOpts = ALL_OPTIONS[p.id] || [];
     const opt = allOpts.find(o => o.id === opts[p.id]);
-    if (opt) lines.push(p.name + ' : ' + opt.name + (isLocked(opt, modelId) ? ' (inclus)' : (opt.price >= 0 ? ' (+' + opt.price.toLocaleString('fr-FR') + ' €)' : ' (' + opt.price.toLocaleString('fr-FR') + ' €)')));
+    if (opt) {
+      const presetOptId = preset ? preset[p.id] : null;
+      const presetOpt = presetOptId ? allOpts.find(o => o.id === presetOptId) : null;
+      const refPrice = presetOpt ? presetOpt.price : 0;
+      const delta = opt.price - refPrice;
+      const priceLabel = delta === 0 ? ' (inclus)' : (delta > 0 ? ' (+' + delta.toLocaleString('fr-FR') + ' €)' : ' (' + delta.toLocaleString('fr-FR') + ' €)');
+      lines.push(p.name + ' : ' + opt.name + priceLabel);
+    }
   });
   if (model.assembly) lines.push('Assemblage & mise en route : ' + model.assembly.toLocaleString('fr-FR') + ' €');
   lines.push('Prix total : ' + price.toLocaleString('fr-FR') + ' €');
