@@ -3274,13 +3274,12 @@ if (isEmbed) {
   `;
   document.head.appendChild(style);
 
-  // Repositionne toute popup nouvellement ouverte pour qu'elle apparaisse au niveau
-  // du bouton qui vient d'être cliqué. Important : on capture la position du clic
-  // TOUT DE SUITE (au clic lui-même, en phase de capture — avant tout autre code),
-  // pas au moment où la popup s'ouvre — certaines popups (ex: "Déterminer ma taille")
-  // déclenchent entre-temps des manipulations DOM (déplacement de blocs entiers via
-  // appendChild) qui peuvent faire perdre document.activeElement. Mémoriser la
-  // position dès le clic évite ce problème, quelle que soit la popup concernée.
+  // Repositionne toute popup nouvellement ouverte. Stratégie : on tente d'abord une
+  // estimation (position du dernier clic), PUIS on VÉRIFIE après coup si la popup est
+  // réellement dans l'écran visible (requestAnimationFrame, une fois le rendu terminé)
+  // — si ce n'est pas le cas, on la force à une position garantie visible. C'est cette
+  // vérification après coup qui rend le mécanisme fiable, indépendamment de savoir si
+  // le calcul initial était juste ou non dans ce contexte d'iframe inhabituel.
   let lastClickY = null;
   document.addEventListener('click', function(e) {
     const clickedEl = e.target.closest('button, a, [onclick]');
@@ -3294,6 +3293,19 @@ if (isEmbed) {
     overlay.style.right = '0';
     overlay.style.bottom = '0';
     overlay.style.height = 'auto';
+
+    // Vérification après coup : si le contenu réel de la popup (.modal ou l'image
+    // dans le cas de la popup photo) ne tombe pas dans la zone [0, hauteur visible],
+    // on force une position sûre — garantie visible, quel que soit le contexte.
+    requestAnimationFrame(() => {
+      const inner = overlay.querySelector('.modal, img');
+      if (!inner) return;
+      const rect = inner.getBoundingClientRect();
+      const visible = rect.top < window.innerHeight && rect.bottom > 0 && rect.top >= -50;
+      if (!visible) {
+        overlay.style.top = '20px';
+      }
+    });
   }
   new MutationObserver(mutations => {
     mutations.forEach(m => {
