@@ -3256,8 +3256,47 @@ if (isEmbed) {
     }
     .dt-step-body { overflow: visible !important; }
     .dtr-rows { overflow: visible !important; }
+
+    /* Embed mode — les popups (.modal-overlay) utilisent position:fixed, qui devient
+       peu fiable une fois que overflow:visible est forcé ci-dessus pour laisser la
+       page grandir naturellement (l'iframe elle-même n'a plus de défilement interne
+       propre, scrolling="no" — c'est la page WordPress parente qui défile). Résultat
+       sans ce correctif : popup affichée au mauvais endroit, potentiellement hors de
+       l'écran visible. On bascule en position:absolute, repositionnée en JS juste
+       avant l'ouverture (voir plus bas), par rapport au bouton réellement cliqué —
+       fiable car il reflète toujours la position réelle dans le document, sans avoir
+       besoin de connaître le scroll de la page WordPress parente (inaccessible en JS
+       pour des raisons de sécurité si domaines différents).
+       IMPORTANT : n'affecte QUE l'affichage plein écran de la popup (fond assombri +
+       centrage) — n'importe où le bouton se trouve dans la page, la popup reste bien
+       centrée sur lui, pas sur un point fixe arbitraire. */
+    .modal-overlay { position: absolute !important; align-items: flex-start !important; }
   `;
   document.head.appendChild(style);
+
+  // Repositionne toute popup nouvellement ouverte pour qu'elle apparaisse au niveau
+  // du bouton qui vient d'être cliqué (document.activeElement — un bouton cliqué
+  // devient automatiquement l'élément actif, comportement standard du navigateur).
+  function repositionOpenModal(overlay) {
+    const trigger = document.activeElement;
+    let topPx = 80; // repli raisonnable si jamais aucun élément actif détecté
+    if (trigger && trigger !== document.body) {
+      const rect = trigger.getBoundingClientRect();
+      topPx = Math.max(20, rect.top - 40); // juste au-dessus du bouton cliqué
+    }
+    overlay.style.top = topPx + 'px';
+    overlay.style.left = '0';
+    overlay.style.right = '0';
+    overlay.style.bottom = '0';
+    overlay.style.height = 'auto';
+  }
+  new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      if (m.attributeName === 'class' && m.target.classList.contains('modal-overlay') && m.target.classList.contains('open')) {
+        repositionOpenModal(m.target);
+      }
+    });
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
 
   // Envoyer la hauteur au parent Wordpress pour ajustement dynamique
   function sendHeight() {
