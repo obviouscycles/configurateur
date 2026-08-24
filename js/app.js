@@ -3257,29 +3257,24 @@ if (isEmbed) {
     .dt-step-body { overflow: visible !important; }
     .dtr-rows { overflow: visible !important; }
 
-    /* Embed mode — les popups (.modal-overlay) utilisent position:fixed, qui devient
-       peu fiable une fois que overflow:visible est forcé ci-dessus pour laisser la
-       page grandir naturellement (l'iframe elle-même n'a plus de défilement interne
-       propre, scrolling="no" — c'est la page WordPress parente qui défile). Résultat
-       sans ce correctif : popup affichée au mauvais endroit, potentiellement hors de
-       l'écran visible. On bascule en position:absolute, repositionnée en JS juste
-       avant l'ouverture (voir plus bas), par rapport au bouton réellement cliqué —
-       fiable car il reflète toujours la position réelle dans le document, sans avoir
-       besoin de connaître le scroll de la page WordPress parente (inaccessible en JS
-       pour des raisons de sécurité si domaines différents).
-       IMPORTANT : n'affecte QUE l'affichage plein écran de la popup (fond assombri +
-       centrage) — n'importe où le bouton se trouve dans la page, la popup reste bien
-       centrée sur lui, pas sur un point fixe arbitraire. */
-    .modal-overlay { position: absolute !important; align-items: flex-start !important; }
+    /* Embed mode — dans ce contexte d'iframe (overflow:visible forcé plus haut, sans
+       défilement interne propre), la "hauteur de viewport" de l'iframe correspond à
+       la hauteur TOTALE du document (pas à ce que le visiteur voit réellement sur la
+       page WordPress). Une popup en position:fixed;inset:0 se centre donc au milieu
+       de TOUT le document, potentiellement loin en dessous de ce qui est visible à
+       l'écran. On bascule en position:absolute, positionnée en JS près du bouton
+       cliqué (voir plus bas) — avec une HAUTEUR EXPLICITE plutôt que bottom:0, pour
+       éviter toute dépendance circulaire avec la hauteur du document (bottom:0 sur un
+       document en hauteur "auto" peut fausser la mesure de scrollHeight, gonflant
+       artificiellement la taille envoyée au parent WordPress). */
+    .modal-overlay { position: absolute !important; align-items: flex-start !important; height: 700px !important; }
   `;
   document.head.appendChild(style);
 
-  // Repositionne toute popup nouvellement ouverte. Stratégie : on tente d'abord une
-  // estimation (position du dernier clic), PUIS on VÉRIFIE après coup si la popup est
-  // réellement dans l'écran visible (requestAnimationFrame, une fois le rendu terminé)
-  // — si ce n'est pas le cas, on la force à une position garantie visible. C'est cette
-  // vérification après coup qui rend le mécanisme fiable, indépendamment de savoir si
-  // le calcul initial était juste ou non dans ce contexte d'iframe inhabituel.
+  // Positionne la popup près du bouton réellement cliqué — capturé dès le clic lui-
+  // même (phase de capture, avant tout autre code), pas après coup : certaines popups
+  // déplacent des blocs DOM entiers avant de s'ouvrir, ce qui peut faire perdre la
+  // référence au bouton si on la cherche trop tard (document.activeElement).
   let lastClickY = null;
   document.addEventListener('click', function(e) {
     const clickedEl = e.target.closest('button, a, [onclick]');
@@ -3291,21 +3286,6 @@ if (isEmbed) {
     overlay.style.top = topPx + 'px';
     overlay.style.left = '0';
     overlay.style.right = '0';
-    overlay.style.bottom = '0';
-    overlay.style.height = 'auto';
-
-    // Vérification après coup : si le contenu réel de la popup (.modal ou l'image
-    // dans le cas de la popup photo) ne tombe pas dans la zone [0, hauteur visible],
-    // on force une position sûre — garantie visible, quel que soit le contexte.
-    requestAnimationFrame(() => {
-      const inner = overlay.querySelector('.modal, img');
-      if (!inner) return;
-      const rect = inner.getBoundingClientRect();
-      const visible = rect.top < window.innerHeight && rect.bottom > 0 && rect.top >= -50;
-      if (!visible) {
-        overlay.style.top = '20px';
-      }
-    });
   }
   new MutationObserver(mutations => {
     mutations.forEach(m => {
@@ -3315,8 +3295,13 @@ if (isEmbed) {
     });
   }).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
 
-  // Envoyer la hauteur au parent Wordpress pour ajustement dynamique
+  // Envoyer la hauteur au parent Wordpress pour ajustement dynamique — SAUF si une
+  // popup (.modal-overlay.open) est actuellement affichée : la mesurer à ce moment
+  // gonflerait la hauteur envoyée (le fond assombri de la popup couvre tout l'écran),
+  // et cette hauteur excessive resterait figée sur l'iframe même après la fermeture
+  // de la popup — c'est la cause du grand vide constaté sous le configurateur.
   function sendHeight() {
+    if (document.querySelector('.modal-overlay.open')) return;
     const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
     window.parent.postMessage({ type: 'obv-height', height: h }, '*');
   }
