@@ -4658,8 +4658,15 @@ function p11EvoUpdateTotal() {
 // Rendu modèles mobile
 // Accordéon mobile : ouvre/ferme une carte modèle (referme automatiquement les
 // autres, une seule carte dépliée à la fois — voir p11RenderModels()).
+// Accordéon mobile : tap sur une vignette différente de celle actuellement active
+// (déjà sélectionnée ou juste dépliée) fait perdre à l'ancienne son focus ET son
+// bouton actif s'il y en avait un, et déplie la nouvelle SANS choisir de mode —
+// exactement la même logique que dtHighlightCard() côté desktop (cohérence totale).
+// Tap sur la vignette déjà active : ne change rien.
 function p11ToggleModelCard(modelId) {
-  window._p11ExpandedModel = (window._p11ExpandedModel === modelId) ? null : modelId;
+  if (selModel === modelId) return;
+  selModel = modelId;
+  window._kitCadre = null; // focus sans choix de mode
   p11RenderModels();
 }
 
@@ -4669,15 +4676,18 @@ function p11RenderModels() {
   grid.className = 'model-grid';
   grid.innerHTML = MODELS.map(m => {
     const sel = m.id === selModel;
-    const isKitSel = sel && window._kitCadre;
-    const isCompletSel = sel && !window._kitCadre;
+    // window._kitCadre est à 3 états : null (focus sans choix), true (kit cadre),
+    // false (vélo complet) — même logique que desktop, pour un comportement identique.
+    const isKitSel = sel && window._kitCadre === true;
+    const isCompletSel = sel && window._kitCadre === false;
     const completPrice = m.basePrice + (m.assembly||0);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
     const minPrice = kitPrice !== null ? Math.min(completPrice, kitPrice) : completPrice;
-    // Accordéon : un seul modèle déplié à la fois (celui déjà sélectionné, ou celui
-    // tapé explicitement) — évite d'afficher 8 boutons d'un coup sur un petit écran.
-    const isExpanded = window._p11ExpandedModel === m.id || sel;
+    // Accordéon : un seul modèle déplié à la fois — celui qui a le focus (sel),
+    // qu'un mode ait déjà été choisi ou non. Un seul état à suivre désormais
+    // (selModel), plus de variable séparée pour l'expansion.
+    const isExpanded = sel;
     // Préconfigs (Signature/Ti1/Ti2) intégrées DANS la carte dépliée, juste sous les
     // boutons — jamais dans une barre flottante séparée en haut de page, sans lien
     // visuel avec le modèle concerné (source de confusion signalée par Damien).
