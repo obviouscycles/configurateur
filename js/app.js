@@ -3267,7 +3267,7 @@ if (isEmbed) {
        éviter toute dépendance circulaire avec la hauteur du document (bottom:0 sur un
        document en hauteur "auto" peut fausser la mesure de scrollHeight, gonflant
        artificiellement la taille envoyée au parent WordPress). */
-    .modal-overlay { position: absolute !important; align-items: flex-start !important; height: 700px !important; }
+    .modal-overlay { position: absolute !important; align-items: flex-start !important; }
   `;
   document.head.appendChild(style);
 
@@ -3290,16 +3290,22 @@ if (isEmbed) {
   function repositionOpenModal(overlay) {
     const MODAL_HEIGHT = 700;
     let topPx = (lastClickY !== null) ? Math.max(20, lastClickY - 40) : 80;
-    // Point critique : la popup ne doit JAMAIS être positionnée plus bas que ce que la
-    // page peut réellement contenir — sinon, une fois la hauteur correctement ajustée
-    // au contenu (plus de "coussin" vide en dessous), le bas de la popup devient
-    // inatteignable, même en scrollant (calculer, saisir, fermer = impossibles).
+    // Point critique : le CONTENU de la popup ne doit jamais être poussé plus bas que
+    // ce que la page peut réellement contenir — sinon son bas devient inatteignable,
+    // même en scrollant (calculer, saisir, fermer = impossibles).
     const docHeight = lastDocHeight !== null ? lastDocHeight : document.body.scrollHeight;
     const maxTop = Math.max(20, docHeight - MODAL_HEIGHT - 20);
     topPx = Math.min(topPx, maxTop);
-    overlay.style.top = topPx + 'px';
+    // Le FOND ASSOMBRI (l'overlay lui-même) commence toujours à top:0 et couvre toute
+    // la page — sinon la partie au-dessus du contenu pousé vers le bas laisse voir la
+    // page d'origine non assombrie, ce qui est moche et donne l'impression que la
+    // popup est mal découpée. Seul le CONTENU (via padding-top) est poussé vers le bas,
+    // près du bouton cliqué — le fond, lui, reste intact et complet du haut jusqu'en bas.
+    overlay.style.top = '0';
     overlay.style.left = '0';
     overlay.style.right = '0';
+    overlay.style.height = Math.max(docHeight, topPx + MODAL_HEIGHT) + 'px';
+    overlay.style.paddingTop = topPx + 'px';
   }
   new MutationObserver(mutations => {
     mutations.forEach(m => {
