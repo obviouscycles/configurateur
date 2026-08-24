@@ -2760,6 +2760,15 @@ const EVO_ICONS = {
   ins_gardeboue: 'ti-umbrella'
 };
 
+// Popup photo gravure (desktop) — fermeture par X ou clic à côté (voir onclick
+// sur l'overlay lui-même, qui vérifie que le clic vient bien du fond, pas de l'image).
+function openGravurePhotoModal() {
+  document.getElementById('gravure-photo-modal')?.classList.add('open');
+}
+function closeGravurePhotoModal() {
+  document.getElementById('gravure-photo-modal')?.classList.remove('open');
+}
+
 function evoRender() {
   const container = document.getElementById(evoActiveContainer);
   if (!container) return;
@@ -2782,17 +2791,21 @@ function evoRender() {
         <div style="flex:1;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;">
             <span style="font-size:13px;font-weight:500;color:#f2f2f2;">${opt.label}</span>
-            ${(isInserts || !showPrices) ? '' : `<span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
+            ${(isInserts || isGravure || !showPrices) ? '' : `<span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
+        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" onclick="event.stopPropagation();openGravurePhotoModal()" style="height:112px;width:auto;aspect-ratio:3/1;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;cursor:pointer;">` : ''}
         ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#1a1a00;"></i>' : ''}
         </div>`}
       </div>
+      ${(isGravure && showPrices) ? `<div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;display:flex;justify-content:flex-end;">
+        <span style="font-size:12px;font-weight:500;color:${checked ? '#F5C400' : '#666'};">${priceLabel}</span>
+      </div>` : ''}
       ${isInserts ? evoRenderInsertsSubList(checked, priceLabel, showPrices) : ''}
       ${isGravure && checked ? `
-      <div style="margin-top:.75rem;padding-top:.75rem;border-top:0.5px solid #222;" onclick="event.stopPropagation()">
+      <div style="margin-top:.75rem;" onclick="event.stopPropagation()">
         <input type="text" id="evo-gravure-input" maxlength="30" value="${gravureText.replace(/"/g,'&quot;')}" placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureText(this.value)" style="width:100%;box-sizing:border-box;background:#0d0d0d;border:0.5px solid ${gravureError ? '#e05555' : '#333'};color:#f2f2f2;padding:8px 10px;font-size:13px;font-family:var(--font);text-transform:uppercase;letter-spacing:.03em;">
         <div style="display:flex;justify-content:space-between;margin-top:4px;">
           <span style="font-size:11px;color:${gravureError ? '#e05555' : '#555'};">${gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')}</span>
@@ -4396,6 +4409,7 @@ function p11EvoRender() {
             ${(isInserts || !showPrices) ? '' : `<span style="font-size:13px;font-weight:500;color:${checked ? '#F5C400' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:13px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
+          ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" style="width:100%;aspect-ratio:3/1;object-fit:cover;border-radius:4px;margin-top:8px;border:0.5px solid #333;display:block;">` : ''}
         </div>
         ${isInserts ? '' : `<div style="width:18px;height:18px;border-radius:5px;border:0.5px solid ${checked ? '#F5C400' : '#444'};background:${checked ? '#F5C400' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#1a1a00;"></i>' : ''}
