@@ -3166,15 +3166,32 @@ renderModels();
 // ── Lien "Retour au site" — utilise la dernière page visitée (document.referrer)
 // si elle appartient bien au site Obvious, sinon repli sur une URL par défaut.
 // Appliqué aux deux liens (desktop #dt-header-back et mobile #p11-header-back).
+// Priorité : 1) paramètre ?backref= transmis par le script d'intégration WordPress
+// (seul moyen fiable de connaître la page réellement visitée par le visiteur AVANT
+// d'arriver sur le site — document.referrer, lu depuis l'intérieur d'une iframe, ne
+// renvoie jamais que la page qui contient l'iframe elle-même, jamais ce qu'il y a
+// avant) ; 2) document.referrer (utile en accès direct, mobile notamment, qui
+// contourne l'iframe) ; 3) repli sur la page d'accueil du site.
 (function setBackToSiteLink() {
-  const FALLBACK_URL = 'https://www.obviouscycles.com/velos-titane/';
+  const FALLBACK_URL = 'https://www.obviouscycles.com/';
   let backUrl = FALLBACK_URL;
   try {
-    const ref = document.referrer;
-    if (ref) {
-      const refHost = new URL(ref).hostname;
+    // Lecture indépendante des paramètres d'URL — ne pas dépendre de la variable
+    // globale `urlParams`, définie plus bas dans le script (ordre d'exécution).
+    const localParams = new URLSearchParams(window.location.search);
+    const backref = localParams.get('backref');
+    if (backref) {
+      const refHost = new URL(backref).hostname;
       if (refHost === 'www.obviouscycles.com' || refHost === 'obviouscycles.com') {
-        backUrl = ref;
+        backUrl = backref;
+      }
+    } else {
+      const ref = document.referrer;
+      if (ref) {
+        const refHost = new URL(ref).hostname;
+        if (refHost === 'www.obviouscycles.com' || refHost === 'obviouscycles.com') {
+          backUrl = ref;
+        }
       }
     }
   } catch (e) { /* referrer invalide ou absent -> on garde le repli */ }
