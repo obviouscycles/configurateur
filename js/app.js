@@ -2370,7 +2370,7 @@ function dtRenderS4() {
     // Dimensions si validées
     '<div style="margin-top:1.5rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
-      ((!window.sizeValidated || !Object.keys(selSize).some(k => selSize[k])) ?
+      ((!Object.keys(selSize).some(k => selSize[k])) ?
         '<div style="font-size:13px;color:#555;font-style:italic;">Non renseignées — nous vous contacterons pour affiner et valider vos cotes.</div>' :
         (() => {
           const parts = [];

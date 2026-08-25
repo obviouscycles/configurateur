@@ -2493,7 +2493,7 @@ function dtRenderS4() {
     // Dimensions si validées
     '<div style="margin-top:1.5rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
       '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
-      ((!window.sizeValidated || !Object.keys(selSize).some(k => selSize[k])) ?
+      ((!Object.keys(selSize).some(k => selSize[k])) ?
         '<div style="font-size:13px;color:#555;font-style:italic;">Non renseignées — nous vous contacterons pour affiner et valider vos cotes.</div>' :
         (() => {
           const parts = [];
@@ -3391,14 +3391,85 @@ if (isEmbed) {
     }
     .dt-step-body { overflow: visible !important; }
     .dtr-rows { overflow: visible !important; }
+
+    /* Embed mode — dans ce contexte d'iframe (overflow:visible forcé plus haut, sans
+       défilement interne propre), la "hauteur de viewport" de l'iframe correspond à
+       la hauteur TOTALE du document (pas à ce que le visiteur voit réellement sur la
+       page WordPress). Une popup en position:fixed;inset:0 se centre donc au milieu
+       de TOUT le document, potentiellement loin en dessous de ce qui est visible à
+       l'écran. On bascule en position:absolute, positionnée en JS près du bouton
+       cliqué (voir plus bas). */
+    .modal-overlay { position: absolute !important; align-items: flex-start !important; }
   `;
   document.head.appendChild(style);
 
-  // Envoyer la hauteur au parent Wordpress pour ajustement dynamique
+  // Positionne la popup près du bouton réellement cliqué — capturé dès le clic lui-
+  // même (phase de capture, avant tout autre code), pas après coup : certaines popups
+  // déplacent des blocs DOM entiers avant de s'ouvrir, ce qui peut faire perdre la
+  // référence au bouton si on la cherche trop tard (document.activeElement).
+  let lastClickY = null;
+  let lastDocHeight = null;
+  document.addEventListener('click', function(e) {
+    const clickedEl = e.target.closest('button, a, [onclick]');
+    if (clickedEl) {
+      lastClickY = clickedEl.getBoundingClientRect().top;
+      // Capturée AVANT toute ouverture de popup — une fois ouverte, sa propre présence
+      // dans le DOM (position:absolute, 700px de haut) fausserait cette mesure.
+      lastDocHeight = document.body.scrollHeight;
+    }
+  }, true);
+
+  function repositionOpenModal(overlay) {
+    const MODAL_HEIGHT = 700;
+    let topPx = (lastClickY !== null) ? Math.max(20, lastClickY - 40) : 80;
+    // Point critique : le CONTENU de la popup ne doit jamais être poussé plus bas que
+    // ce que la page peut réellement contenir — sinon son bas devient inatteignable,
+    // même en scrollant (calculer, saisir, fermer = impossibles).
+    const docHeight = lastDocHeight !== null ? lastDocHeight : document.body.scrollHeight;
+    const maxTop = Math.max(20, docHeight - MODAL_HEIGHT - 20);
+    topPx = Math.min(topPx, maxTop);
+    // Le FOND ASSOMBRI (l'overlay lui-même) commence toujours à top:0 et couvre toute
+    // la page — sinon la partie au-dessus du contenu poussé vers le bas laisse voir la
+    // page d'origine non assombrie (moche, popup qui semble mal découpée). Seul le
+    // CONTENU (via padding-top) est poussé vers le bas, près du bouton cliqué.
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.right = '0';
+    overlay.style.height = Math.max(docHeight, topPx + MODAL_HEIGHT) + 'px';
+    overlay.style.paddingTop = topPx + 'px';
+  }
+  new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      if (m.attributeName === 'class' && m.target.classList.contains('modal-overlay') && m.target.classList.contains('open')) {
+        repositionOpenModal(m.target);
+      }
+    });
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+
+  // Envoyer la hauteur au parent Wordpress pour ajustement dynamique — SAUF si une
+  // popup (.modal-overlay.open) est actuellement affichée : la mesurer à ce moment
+  // gonflerait la hauteur envoyée (le fond assombri de la popup couvre tout l'écran),
+  // et cette hauteur excessive resterait figée sur l'iframe même après la fermeture
+  // de la popup.
+  //
+  // Second point important : on utilise UNIQUEMENT document.body.scrollHeight, jamais
+  // document.documentElement.scrollHeight — ce dernier ne peut techniquement jamais
+  // être inférieur à la fenêtre/iframe ACTUELLE (comportement standard des navigateurs
+  // pour l'élément racine), donc une fois l'iframe agrandie une première fois, il reste
+  // bloqué à cette taille pour toujours, même en revenant sur une étape plus courte —
+  // c'est la cause principale du grand vide observé sous le configurateur.
   function sendHeight() {
-    const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+    if (document.querySelector('.modal-overlay.open')) return;
+    const h = document.body.scrollHeight;
+    // N'envoyer que si la hauteur a réellement changé (marge de 3px, arrondis) — sinon
+    // chaque petite mise à jour de l'interface (case cochée, liste rafraîchie...) fait
+    // redimensionner l'iframe pour rien, ce qui secoue la mise en page de la page
+    // WordPress et oblige à re-scroller sans arrêt pour se replacer.
+    if (lastSentHeight !== null && Math.abs(h - lastSentHeight) < 3) return;
+    lastSentHeight = h;
     window.parent.postMessage({ type: 'obv-height', height: h }, '*');
   }
+  let lastSentHeight = null;
 
   // Envoyer au chargement
   window.addEventListener('load', function() {
@@ -3406,9 +3477,14 @@ if (isEmbed) {
     setTimeout(sendHeight, 1000);
   });
 
-  // Envoyer à chaque mutation du DOM (changement de step, ouverture accordéon...)
+  // Envoyer à chaque mutation du DOM (changement de step, ouverture accordéon...) —
+  // vrai anti-rebond : chaque nouvelle mutation ANNULE l'envoi précédent encore en
+  // attente, au lieu de s'empiler par-dessus (l'ancien code pouvait déclencher
+  // plusieurs redimensionnements d'affilée pour une seule interaction du visiteur).
+  let sendHeightTimer = null;
   new MutationObserver(function() {
-    setTimeout(sendHeight, 100);
+    clearTimeout(sendHeightTimer);
+    sendHeightTimer = setTimeout(sendHeight, 200);
   }).observe(document.body, { childList: true, subtree: true });
 
   // Répondre aux demandes explicites du parent
