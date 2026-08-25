@@ -2327,6 +2327,9 @@
       <button id="dt-saved-btn" onclick="dtShowSaved()" style="width:100%;background:none;border:0.5px solid #333;color:#666;padding:8px;font-size:11px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s;" onmouseover="this.style.color='#aaa';this.style.borderColor='#555'" onmouseout="this.style.color='#666';this.style.borderColor='#333'">
         <i class="ti ti-bookmark" style="font-size:13px;"></i> Mes configurations <span id="dt-saved-count" style="background:#F5C400;color:#1a1a00;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;display:none;"></span>
       </button>
+      <a id="dt-sidebar-back-site" href="https://www.obviouscycles.com/velos-titane/" style="display:none;width:100%;box-sizing:border-box;background:none;border:0.5px solid #333;color:#666;padding:8px;font-size:11px;text-decoration:none;font-family:var(--font);align-items:center;justify-content:center;gap:6px;transition:border-color .15s,color .15s;margin-top:6px;" onmouseover="this.style.color='#aaa';this.style.borderColor='#555'" onmouseout="this.style.color='#666';this.style.borderColor='#333'">
+        <i class="ti ti-arrow-left" style="font-size:13px;"></i> Retour au site
+      </a>
     </div>
   </nav>
 
@@ -2439,7 +2442,7 @@
     <!-- "Laissez-vous guider" est maintenant une popup (pas un changement de page) : la page
          Composants reste visible/préservée en dessous, ce qui rassure le visiteur — revenir en
          arrière ne fait jamais perdre ce qu'il a déjà rempli. -->
-    <div class="modal-overlay" id="taille-guide-modal">
+    <div class="modal-overlay" id="taille-guide-modal" onclick="if(event.target===this) v3SortirSansReport()">
       <div class="modal" style="max-width:1200px;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;">
           <div style="width:36px;height:36px;border-radius:50%;background:#1a1a00;border:1px solid #F5C400;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
