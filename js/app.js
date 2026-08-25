@@ -3252,8 +3252,13 @@ const isEmbed = urlParams.get('embed') === '1';
 if (isEmbed) {
   const style = document.createElement('style');
   style.textContent = `
-    /* Embed mode — masquer tout le header */
-    header { display: none !important; }
+    /* Embed mode — l'en-tête du configurateur (logo, "Retour au site", plein écran)
+       reste VISIBLE, volontairement — le thème WordPress réserve un espace fixe pour
+       un bandeau en haut de page (indépendamment de ce qui s'y trouve). Le masquer
+       laissait cet espace vide (bandeau noir vide constaté sur le site). Comme le
+       header DU SITE lui-même est déjà caché par le CSS personnalisé WordPress, plus
+       aucun risque de doublon — l'en-tête du configurateur remplit maintenant cet
+       espace avec quelque chose d'utile, "Retour au site" y compris. */
 
     /* Embed mode — désactiver le défilement interne, laisser la page grandir
        naturellement afin que la hauteur envoyée au parent Wordpress soit exacte */
