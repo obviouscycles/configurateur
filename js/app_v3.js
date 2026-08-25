@@ -1484,12 +1484,6 @@ function dtGo(n) {
 function dtRender() {
   if (window.innerWidth < 768) return;
   const n = dtStep;
-  // "Retour au site" dans la barre latérale : uniquement à l'étape 1 (choix du
-  // modèle) — sur les autres étapes, le bouton "Retour" existant (étape précédente
-  // du parcours) reste inchangé, celui-ci ne doit pas s'y ajouter. Voir aussi
-  // v2UpdateStepper(), qui gère ce même affichage pour l'autre chemin de navigation.
-  const backSite = document.getElementById('dt-sidebar-back-site');
-  if (backSite) backSite.style.display = (n === 1) ? 'flex' : 'none';
   // Activer "Nouvelle configuration" dès qu'un modèle est sélectionné
   const resetBtn = document.getElementById('dtr-btn-reset');
   if (resetBtn) {
@@ -3062,11 +3056,6 @@ function v2GoDevis() {
 
 function v2UpdateStepper() {
   const n = dtStep;
-  // "Retour au site" en barre latérale : uniquement page 1 (Modèle) — les étapes
-  // suivantes ont déjà leur propre bouton "Retour" (navigation interne au parcours,
-  // volontairement laissé tel quel).
-  const backSite = document.getElementById('dt-sidebar-back-site');
-  if (backSite) backSite.style.display = (n === 1) ? 'flex' : 'none';
   for (let i = 1; i <= 6; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
@@ -3175,7 +3164,7 @@ renderModels();
       }
     }
   } catch (e) { /* referrer invalide ou absent -> on garde le repli */ }
-  ['dt-header-back', 'p11-header-back', 'dt-sidebar-back-site'].forEach(id => {
+  ['dt-header-back', 'p11-header-back'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.href = backUrl;
   });
@@ -3238,8 +3227,13 @@ const isEmbed = urlParams.get('embed') === '1';
 if (isEmbed) {
   const style = document.createElement('style');
   style.textContent = `
-    /* Embed mode — masquer tout le header */
-    header { display: none !important; }
+    /* Embed mode — l'en-tête du configurateur (logo, "Retour au site", plein écran)
+       reste VISIBLE, volontairement — le thème WordPress réserve un espace fixe pour
+       un bandeau en haut de page (indépendamment de ce qui s'y trouve). Le masquer
+       laissait cet espace vide (bandeau noir vide constaté sur le site). Comme le
+       header DU SITE lui-même est déjà caché par le CSS personnalisé WordPress, plus
+       aucun risque de doublon — l'en-tête du configurateur remplit maintenant cet
+       espace avec quelque chose d'utile, "Retour au site" y compris. */
 
     /* Embed mode — désactiver le défilement interne, laisser la page grandir
        naturellement afin que la hauteur envoyée au parent Wordpress soit exacte */
