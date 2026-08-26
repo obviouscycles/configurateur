@@ -1370,6 +1370,19 @@ function v3InitTitaniumSticky() {
   // Un seul élément change de forme : carré replié <-> bandeau complet déplié.
   // Ni les deux affichés en même temps, ni jamais visible quand le bandeau original l'est déjà.
   function render() {
+    // Mode embed (iframe Wordpress) : la version flottante ("carré" qui suit le
+    // défilement) repose sur position:fixed, qui s'ancre à la hauteur TOTALE de la
+    // page une fois que l'iframe grandit pour englober tout le contenu (voir plus
+    // bas dans ce fichier) — pas à ce que le visiteur voit réellement à l'écran. Le
+    // carré finit invisible en usage normal (il faudrait scroller jusqu'au vrai bas
+    // de la page pour l'atteindre). Le bandeau original, lui, est en flux normal et
+    // n'a aucun souci — on le laisse simplement toujours visible, sans jamais
+    // basculer vers la version flottante, qui n'a de sens que hors iframe.
+    if (window.location.search.indexOf('embed=1') !== -1) {
+      morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
+      if (text) text.style.opacity = '0';
+      return;
+    }
     // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
     // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
     const bannerR = inline.getBoundingClientRect();
