@@ -45,7 +45,11 @@ async function loadConfigFromUrl() {
 
     // Charger selon contexte desktop ou mobile
     if (window.innerWidth >= 768) {
-      dtStep = 4; dtRender();
+      // v2GoRecap() active le bon conteneur (dt-s6devis) ET génère le récapitulatif —
+      // l'ancien "dtStep = 4; dtRender()" activait l'écran Taille/Options (vide dans ce
+      // contexte), pas l'écran final, laissant la page centrale visuellement vide alors
+      // que le récap était bien généré, juste dans un conteneur resté caché.
+      v2GoRecap();
     } else {
       renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
     }
@@ -53,8 +57,9 @@ async function loadConfigFromUrl() {
     // ── Mode "config partagée" : adapter l'interface ──────────────────
     // Marquer le body pour le CSS
     document.body.classList.add('config-shared-mode');
-    if (typeof dtRenderS4 === 'function') dtRenderS4();
-    if (typeof dtRenderS4 === 'function') dtRenderS4();
+    // v2GoRecap() (desktop, ci-dessus) a déjà généré le récapitulatif — plus besoin
+    // de rappeler dtRenderS4() ici (l'ancien code le faisait, en double, avant même
+    // que le bon écran soit activé, ce qui ne réglait de toute façon pas le problème).
 
     // Masquer les boutons inutiles — desktop (récap droit) et mobile (étape 4)
     setTimeout(() => {
@@ -1205,6 +1210,30 @@ async function sendOrder() {
 
     if (response.ok) {
       closeOrderModal();
+      // Ajouter automatiquement cette config à "Mes configurations" du visiteur, avec
+      // un repère visuel (devisSent) indiquant qu'une demande a bien été envoyée pour
+      // celle-ci — même structure complète que doSave() (personnalisations incluses).
+      {
+        const model = MODELS.find(m => m.id === selModel);
+        const details = POST_META.map(p => {
+          const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
+          return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
+        });
+        const devisEntry = {
+          id: Date.now(), name: name, modelName: model ? model.name : '', modelBadge: model ? model.badge : '',
+          date: new Date().toLocaleDateString('fr-FR'), price, weight: computeTotals(selModel, selOpts).weight,
+          details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize },
+          v2Parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+          evoChecked: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+          evoInsertsChecked: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+          evoGravureText: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+          evoCustomText: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+          devisSent: true, devisConfigId: configId,
+        };
+        savedConfigs.unshift(devisEntry);
+        persistSaved();
+        updateSavedCount();
+      }
       ['order-name','order-email','order-phone','order-address','order-msg'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
@@ -1824,10 +1853,14 @@ function dtShowSaved() {
         if (!c.id) { c.id = 'cfg_' + idx + '_' + Date.now(); savedConfigs[idx] = c; persistSaved(); }
         const model = MODELS.find(m => m.id === (c.selModel || c.model));
         const cid = String(c.id).replace(/'/g, "\\'");
-        return '<div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;margin-bottom:8px;">' +
+        // Grigri : indique qu'une demande de devis a bien été envoyée pour cette config.
+        const devisBadge = c.devisSent
+          ? '<span title="Devis envoyé le ' + (c.date || '') + '" style="display:inline-flex;align-items:center;gap:4px;background:#3D3000;color:#F5C400;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:8px;white-space:nowrap;"><i class="ti ti-send" style="font-size:11px;"></i>Devis envoyé</span>'
+          : '';
+        return '<div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid ' + (c.devisSent ? '#F5C400' : '#333') + ';margin-bottom:8px;">' +
           (model && model.photo ? '<img src="' + model.photo + '" style="width:60px;height:40px;object-fit:cover;flex-shrink:0;border:0.5px solid #222;">' : '') +
           '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:14px;font-weight:500;color:#f2f2f2;margin-bottom:2px;">' + c.name + '</div>' +
+            '<div style="font-size:14px;font-weight:500;color:#f2f2f2;margin-bottom:2px;display:flex;align-items:center;">' + c.name + devisBadge + '</div>' +
             '<div style="font-size:11px;color:#666;">' + (model ? model.name : '') + (c.preset ? ' · ' + c.preset : '') + (c.date ? ' · ' + c.date : '') + '</div>' +
           '</div>' +
           '<button onclick="dtLoadSaved(\'' + cid + '\')" style="background:#F5C400;border:none;color:#1a1a00;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">Charger</button>' +
