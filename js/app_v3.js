@@ -35,6 +35,15 @@ async function loadConfigFromUrl() {
     selSize  = json.dimensions || {};
     window._activePreset = json.preset || null;
     window._singleModel  = selModel;
+    // Personnalisations (gravure, inserts, demande particulière) — bien enregistrées
+    // dans configJson par sendOrder(), mais jamais relues ici jusqu'à présent : la
+    // config s'ouvrait donc incomplète (récap ET prix final sans les personnalisations),
+    // alors que ton email, lui, était généré à partir de la session live du visiteur.
+    v2Parcours = json.parcours || 'standard';
+    evoChecked = { ...(json.personnalisations || {}) };
+    evoInsertsChecked = { ...(json.inserts || {}) };
+    evoGravureText = json.texte_gravure || '';
+    evoCustomText = json.demande_particuliere || '';
 
     // Afficher l'info dans le header principal (badge proto)
     const protoBadge = document.getElementById('proto-badge');
@@ -45,7 +54,11 @@ async function loadConfigFromUrl() {
 
     // Charger selon contexte desktop ou mobile
     if (window.innerWidth >= 768) {
-      dtStep = 4; dtRender();
+      // v2GoRecap() active le bon conteneur (dt-s6devis) ET génère le récapitulatif —
+      // l'ancien "dtStep = 4; dtRender()" activait l'écran Taille/Options (vide dans ce
+      // contexte), pas l'écran final, laissant la page centrale visuellement vide alors
+      // que le récap était bien généré, juste dans un conteneur resté caché.
+      v2GoRecap();
     } else {
       renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
     }
@@ -53,8 +66,9 @@ async function loadConfigFromUrl() {
     // ── Mode "config partagée" : adapter l'interface ──────────────────
     // Marquer le body pour le CSS
     document.body.classList.add('config-shared-mode');
-    if (typeof dtRenderS4 === 'function') dtRenderS4();
-    if (typeof dtRenderS4 === 'function') dtRenderS4();
+    // v2GoRecap() (desktop, ci-dessus) a déjà généré le récapitulatif — plus besoin
+    // de rappeler dtRenderS4() ici (l'ancien code le faisait, en double, avant même
+    // que le bon écran soit activé, ce qui ne réglait de toute façon pas le problème).
 
     // Masquer les boutons inutiles — desktop (récap droit) et mobile (étape 4)
     setTimeout(() => {
@@ -108,14 +122,14 @@ async function loadConfigFromUrl() {
 
 
 // ─── MAIL VISITEUR — via Supabase Edge Function (clé Brevo sécurisée côté serveur)
-async function sendBrevoEmail({ toEmail, toName, configId, shareUrl, modeleNom, prix }) {
+async function sendBrevoEmail({ toEmail, toName, configId, shareUrl, modeleNom, prix, configuration }) {
   const res = await fetch(SUPABASE_URL + '/functions/v1/send-config-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + SUPABASE_KEY,
     },
-    body: JSON.stringify({ toEmail, toName, configId, shareUrl, modeleNom, prix })
+    body: JSON.stringify({ toEmail, toName, configId, shareUrl, modeleNom, prix, configuration })
   });
   if (!res.ok) {
     const err = await res.text();
@@ -302,7 +316,11 @@ function tiMinPrice(modelId) {
 
 function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
-  const { price, weight } = computeTotals(modelId, opts);
+  const { price: bikePrice, weight } = computeTotals(modelId, opts);
+  // Prix total = vélo + surcoût des personnalisations (gravure, inserts...) — même
+  // source de vérité que l'écran final (computeOodSurcharge), jamais un calcul à part.
+  const { surcharge: oodSurcharge } = computeOodSurcharge();
+  const price = bikePrice + oodSurcharge;
   let lines = ['Modèle : ' + model.name];
   POST_META.forEach(p => {
     const allOpts = ALL_OPTIONS[p.id] || [];
@@ -310,6 +328,31 @@ function buildConfigText(modelId, opts) {
     if (opt) lines.push(p.name + ' : ' + opt.name + (isLocked(opt, modelId) ? ' (inclus)' : (opt.price >= 0 ? ' (+' + opt.price.toLocaleString('fr-FR') + ' €)' : ' (' + opt.price.toLocaleString('fr-FR') + ' €)')));
   });
   if (model.assembly) lines.push('Assemblage & mise en route : ' + model.assembly.toLocaleString('fr-FR') + ' €');
+  // Personnalisations du cadre (inserts, gravure, demande particulière) — jamais
+  // affichées auparavant dans cet email, alors qu'elles étaient bien comptées dans
+  // le prix total. Même source de données que l'écran final (v2EvoRecapBlockHtml).
+  if (typeof EVO_OPTIONS !== 'undefined') {
+    const checkedEvo = EVO_OPTIONS.filter(o => evoChecked[o.id]);
+    if (checkedEvo.length || (typeof evoCustomText !== 'undefined' && evoCustomText)) {
+      lines.push('');
+      lines.push('— Personnalisation du cadre —');
+      checkedEvo.forEach(o => {
+        if (o.id === 'evo_gravure') {
+          lines.push(o.label + (evoGravureText ? ' : « ' + evoGravureText + ' »' : ''));
+        } else if (o.id === 'evo_inserts') {
+          const selectedInserts = (typeof EVO_INSERTS !== 'undefined')
+            ? EVO_INSERTS.filter(i => evoInsertsChecked[i.id]).map(i => i.label)
+            : [];
+          lines.push(o.label + (selectedInserts.length ? ' : ' + selectedInserts.join(', ') : ''));
+        } else {
+          lines.push(o.label);
+        }
+      });
+      if (typeof evoCustomText !== 'undefined' && evoCustomText) {
+        lines.push('Demande particulière : ' + evoCustomText);
+      }
+    }
+  }
   lines.push('Prix total : ' + price.toLocaleString('fr-FR') + ' €');
 
   return lines.join('\n');
@@ -847,12 +890,28 @@ function doSave(inputId, toastId) {
   if (!name) return;
   const model = MODELS.find(m => m.id === selModel);
   if (!model) return;
-  const { price, weight } = computeTotals(selModel, selOpts);
+  const { price: bikePrice, weight } = computeTotals(selModel, selOpts);
+  // Prix total = vélo + surcoût des personnalisations (gravure, inserts...) — même
+  // source de vérité que l'écran final, jamais un calcul dupliqué à part.
+  const { surcharge: oodSurcharge } = computeOodSurcharge();
+  const price = bikePrice + oodSurcharge;
   const details = POST_META.map(p => {
     const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
     return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
   });
-  const entry = { id: Date.now(), name, modelName: model.name, modelBadge: model.badge, date: new Date().toLocaleDateString('fr-FR'), price, weight, details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize } };
+  const entry = {
+    id: Date.now(), name, modelName: model.name, modelBadge: model.badge,
+    date: new Date().toLocaleDateString('fr-FR'), price, weight, details,
+    selModel, selOpts: { ...selOpts }, selSize: { ...selSize },
+    // Personnalisations (étapes Cadre + Personnalisation) — auparavant jamais
+    // sauvegardées : recharger une config perdait gravure/inserts/demande
+    // particulière, même si le prix affiché les incluait déjà.
+    v2Parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+    evoChecked: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+    evoInsertsChecked: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+    evoGravureText: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+    evoCustomText: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+  };
   savedConfigs.unshift(entry);
   persistSaved();
   updateSavedCount();
@@ -1085,7 +1144,11 @@ async function sendOrder() {
 
     // 2. Construire le JSON de config
     const model = MODELS.find(m => m.id === selModel);
-    const { price } = computeTotals(selModel, selOpts);
+    const { price: bikePrice } = computeTotals(selModel, selOpts);
+    // Prix total = vélo + surcoût des personnalisations (gravure, inserts...) —
+    // sauvegardé, envoyé au visiteur ET à nous, jamais recalculé séparément.
+    const { surcharge: oodSurcharge } = computeOodSurcharge();
+    const price = bikePrice + oodSurcharge;
     const configJson = {
       config_id: configId,
       modele: selModel,
@@ -1097,6 +1160,13 @@ async function sendOrder() {
       nom_client: name,
       email_client: email,
       adresse_postale: address,
+      // Personnalisations (gravure, inserts, demande particulière) — auparavant
+      // absentes de l'enregistrement Supabase, alors que le prix les incluait déjà.
+      parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+      personnalisations: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+      inserts: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+      texte_gravure: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+      demande_particuliere: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
     };
 
     // 3. Sauvegarder dans Supabase
@@ -1135,6 +1205,30 @@ async function sendOrder() {
 
     if (response.ok) {
       closeOrderModal();
+      // Ajouter automatiquement cette config à "Mes configurations" du visiteur, avec
+      // un repère visuel (devisSent) indiquant qu'une demande a bien été envoyée pour
+      // celle-ci — même structure complète que doSave() (personnalisations incluses).
+      {
+        const model = MODELS.find(m => m.id === selModel);
+        const details = POST_META.map(p => {
+          const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
+          return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
+        });
+        const devisEntry = {
+          id: Date.now(), name: name, modelName: model ? model.name : '', modelBadge: model ? model.badge : '',
+          date: new Date().toLocaleDateString('fr-FR'), price, weight: computeTotals(selModel, selOpts).weight,
+          details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize },
+          v2Parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+          evoChecked: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+          evoInsertsChecked: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+          evoGravureText: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+          evoCustomText: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+          devisSent: true, devisConfigId: configId,
+        };
+        savedConfigs.unshift(devisEntry);
+        persistSaved();
+        updateSavedCount();
+      }
       ['order-name','order-email','order-phone','order-address','order-msg'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
@@ -1143,7 +1237,9 @@ async function sendOrder() {
       if (email) {
         try {
           const model = MODELS.find(m => m.id === selModel);
-          const { price } = computeTotals(selModel, selOpts);
+          const { price: bikePriceMail } = computeTotals(selModel, selOpts);
+          const { surcharge: oodSurchargeMail } = computeOodSurcharge();
+          const price = bikePriceMail + oodSurchargeMail;
           await sendBrevoEmail({
             toEmail: email,
             toName: name,
@@ -1151,6 +1247,11 @@ async function sendOrder() {
             shareUrl,
             modeleNom: model ? model.name : selModel,
             prix: price,
+            // Détail complet (composants + personnalisations gravure/inserts) — transmis
+            // au cas où le modèle d'email côté serveur (fonction Supabase) puisse
+            // l'exploiter. Je ne peux pas vérifier depuis ici si le modèle d'email
+            // affiche réellement ce champ.
+            configuration: config,
           });
         } catch(e) {
           console.warn('Mail visiteur non envoyé:', e);
@@ -1734,10 +1835,14 @@ function dtShowSaved() {
         if (!c.id) { c.id = 'cfg_' + idx + '_' + Date.now(); savedConfigs[idx] = c; persistSaved(); }
         const model = MODELS.find(m => m.id === (c.selModel || c.model));
         const cid = String(c.id).replace(/'/g, "\\'");
-        return '<div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;margin-bottom:8px;">' +
+        // Grigri : indique qu'une demande de devis a bien été envoyée pour cette config.
+        const devisBadge = c.devisSent
+          ? '<span title="Devis envoyé le ' + (c.date || '') + '" style="display:inline-flex;align-items:center;gap:4px;background:#3D3000;color:#F5C400;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:8px;white-space:nowrap;"><i class="ti ti-send" style="font-size:11px;"></i>Devis envoyé</span>'
+          : '';
+        return '<div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid ' + (c.devisSent ? '#F5C400' : '#333') + ';margin-bottom:8px;">' +
           (model && model.photo ? '<img src="' + model.photo + '" style="width:60px;height:40px;object-fit:cover;flex-shrink:0;border:0.5px solid #222;">' : '') +
           '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:14px;font-weight:500;color:#f2f2f2;margin-bottom:2px;">' + c.name + '</div>' +
+            '<div style="font-size:14px;font-weight:500;color:#f2f2f2;margin-bottom:2px;display:flex;align-items:center;">' + c.name + devisBadge + '</div>' +
             '<div style="font-size:11px;color:#666;">' + (model ? model.name : '') + (c.preset ? ' · ' + c.preset : '') + (c.date ? ' · ' + c.date : '') + '</div>' +
           '</div>' +
           '<button onclick="dtLoadSaved(\'' + cid + '\')" style="background:#F5C400;border:none;color:#1a1a00;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">Charger</button>' +
@@ -1745,9 +1850,11 @@ function dtShowSaved() {
         '</div>';
       }).join('');
   }
-  // Activer dt-s4 (afficher le contenu)
+  // Activer dt-s6devis (le vrai conteneur qui contient dt-s6devis-inner, rempli
+  // juste au-dessus) — "dt-s4" n'existe pas dans le HTML, cet appel ne faisait
+  // donc jamais rien, laissant l'écran précédent affiché (fenêtre vide en pratique).
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  const s4el = document.getElementById('dt-s4');
+  const s4el = document.getElementById('dt-s6devis');
   if (s4el) s4el.classList.add('active');
   // Mettre à jour stepper
   for (let i = 1; i <= 4; i++) {
@@ -1773,6 +1880,13 @@ function dtLoadSaved(id) {
   window._activePreset = cfg.preset || null;
   window._singleModel = selModel;
   window.sizeValidated = !!(cfg.selSize && Object.keys(cfg.selSize || {}).length > 0);
+  // Personnalisations (étapes Cadre + Personnalisation) — repli sur un état vide pour
+  // les anciennes configs sauvegardées avant ce correctif (n'avaient pas ces champs).
+  v2Parcours = cfg.v2Parcours || 'standard';
+  evoChecked = { ...(cfg.evoChecked || {}) };
+  evoInsertsChecked = { ...(cfg.evoInsertsChecked || {}) };
+  evoGravureText = cfg.evoGravureText || '';
+  evoCustomText = cfg.evoCustomText || '';
   // Retirer dt-step-4 AVANT dtRender pour que dt-main soit visible
   document.body.classList.remove('dt-step-4');
   // Activer les boutons du récap
@@ -1780,7 +1894,8 @@ function dtLoadSaved(id) {
     const el = document.getElementById(id2);
     if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
   });
-  dtStep = 2; dtRender();
+  // Aller directement à l'écran final récapitulatif — pas à l'étape Composants.
+  v2GoRecap();
 }
 
 function dtDeleteSaved(id) {
@@ -2321,20 +2436,11 @@ function dtRenderS4() {
   const model = MODELS.find(m => m.id === selModel);
   const { price: bikePrice } = computeTotals(selModel, selOpts);
 
-  // Surcoût selon le parcours Obvious On Demand
-  let oodSurcharge = 0;
-  let priceIsMin = false; // "à partir de" pour Titanium
-  if (typeof v2Parcours !== 'undefined') {
-    if (v2Parcours === 'standard_evo') {
-      const evoT = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
-      oodSurcharge = evoT || 0;
-    } else if (v2Parcours === 'sur_mesure') {
-      oodSurcharge = 300;
-    } else if (v2Parcours === 'hors_gamme') {
-      oodSurcharge = 720;
-      priceIsMin = true;
-    }
-  }
+  // Surcoût selon le parcours Obvious On Demand — TOUJOURS via computeOodSurcharge(),
+  // la source de vérité unique. Ne jamais recalculer ici : une logique dupliquée avait
+  // déjà fait ignorer les options Évolution au prix total affiché (v2Parcours==='standard_evo'
+  // n'est en pratique jamais vrai, contrairement à ce que cette section supposait).
+  const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
   const preset = (window._activePreset && PRESETS[selModel]) ? PRESETS[selModel][window._activePreset] : {};
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
@@ -2349,7 +2455,7 @@ function dtRenderS4() {
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
-        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Options Évolution':v2Parcours==='sur_mesure'?'Niveau Performance':'Niveau Titanium')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -3071,7 +3177,7 @@ function v2GoRecap() {
 
 function v2GoDevis() {
   // Blocage si gravure trop longue
-  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+  if (evoChecked['evo_gravure'] && evoGravureText.length > 20) {
     const input = document.getElementById('evo-gravure-input');
     if (input) { input.style.borderColor = '#e05555'; input.focus(); }
     return;
@@ -4493,7 +4599,7 @@ function p11GoDevisFromOOD() {
   } else if (v2Parcours === 'hors_gamme') {
     window._v2Message = document.getElementById('p11-horsgamme-message')?.value || '';
   }
-  if (v2Parcours === 'standard_evo' && evoChecked['evo_gravure'] && evoGravureText.length > 20) {
+  if (evoChecked['evo_gravure'] && evoGravureText.length > 20) {
     const input = document.getElementById('p11-evo-gravure-input') || document.getElementById('evo-gravure-input');
     if (input) { input.style.borderColor = '#e05555'; input.focus(); }
     return;
@@ -5201,10 +5307,10 @@ function p11RenderFinalRecap() {
   const model = MODELS.find(m=>m.id===selModel);
   if (!model) return;
   const {price: bikePrice, weight} = computeTotals(selModel, selOpts);
-  let oodSurcharge = 0, priceIsMin = false;
-  if (v2Parcours === 'standard_evo') { oodSurcharge = evoTotalPrice() || 0; }
-  else if (v2Parcours === 'sur_mesure') { oodSurcharge = 300; }
-  else if (v2Parcours === 'hors_gamme') { oodSurcharge = 720; priceIsMin = true; }
+  // Surcoût selon le parcours Obvious On Demand — TOUJOURS via computeOodSurcharge(),
+  // même correctif que dtRenderS4() (desktop) : v2Parcours==='standard_evo' n'est en
+  // pratique jamais vrai, cette logique dupliquée faisait ignorer les options Évolution.
+  const { surcharge: oodSurcharge, isMin: priceIsMin } = computeOodSurcharge();
   const price = bikePrice + oodSurcharge;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
@@ -5213,7 +5319,7 @@ function p11RenderFinalRecap() {
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
       '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
-      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='standard_evo'?'Évolution':v2Parcours==='sur_mesure'?'Performance':'Titanium')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+      (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
   POST_META.forEach(p => {
@@ -5293,10 +5399,7 @@ function p11InitStep4Bar() {
   // Mettre à jour le prix dans le bandeau
   if (selModel) {
     const {price: bikePriceBar} = computeTotals(selModel, selOpts);
-    let oodSurchargeBar = 0;
-    if (v2Parcours === 'standard_evo') oodSurchargeBar = evoTotalPrice() || 0;
-    else if (v2Parcours === 'sur_mesure') oodSurchargeBar = 300;
-    else if (v2Parcours === 'hors_gamme') oodSurchargeBar = 720;
+    const { surcharge: oodSurchargeBar } = computeOodSurcharge();
     const price = bikePriceBar + oodSurchargeBar;
     const s4price = document.getElementById('p11-s4-price');
     if (s4price) s4price.textContent = (v2Parcours === 'hors_gamme' ? 'Dès ' : '') + price.toLocaleString('fr-FR') + ' €';
