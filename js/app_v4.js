@@ -2534,6 +2534,7 @@ function dtRenderS4() {
           if (selSize.potence)       parts.push('<span><strong>Potence :</strong> ' + selSize.potence + ' mm</span>');
           if (selSize.cintre)        parts.push('<span><strong>Cintre :</strong> ' + selSize.cintre + ' mm</span>');
           if (selSize.plateaux)      parts.push('<span><strong>Plateau(x) :</strong> ' + selSize.plateaux + '</span>');
+          if (selSize.cassette)      parts.push('<span><strong>Cassette :</strong> ' + selSize.cassette + '</span>');
           if (selSize.section)       parts.push('<span><strong>Section pneu :</strong> ' + selSize.section + '</span>');
           if (selSize.debattement)   parts.push('<span><strong>Débattement :</strong> ' + selSize.debattement + ' mm</span>');
           if (selSize.largeur_selle) parts.push('<span><strong>Largeur selle :</strong> ' + selSize.largeur_selle + ' mm</span>');
@@ -2583,7 +2584,13 @@ function v2RecapBlock() {
   if (typeof v2Parcours === 'undefined') return '';
 
   if (v2Parcours === 'standard') {
-    return ''; // rien à afficher — le parcours standard est déjà couvert par Dimensions
+    // La condition "standard_evo" n'est en pratique jamais vraie (parcours réellement
+    // emprunté par les visiteurs = toujours "standard", même quand ils ont ajouté des
+    // inserts/gravure en étape Cadre) — se fier à ça masquait ces personnalisations
+    // sur l'écran final pour la quasi-totalité des visiteurs. On se base désormais sur
+    // la présence réelle de données (case cochée ou texte de gravure saisi).
+    const hasEvo = (typeof evoChecked !== 'undefined' && Object.values(evoChecked).some(v => v)) || (typeof evoCustomText !== 'undefined' && evoCustomText);
+    return hasEvo ? v2EvoRecapBlockHtml('Personnalisation du cadre', true) : '';
   }
 
   if (v2Parcours === 'standard_evo') {
@@ -5471,7 +5478,13 @@ function p11RenderFinalRecap() {
 
 // Bloc détail du parcours OOD pour le récap mobile — miroir de v2RecapBlock() desktop
 function p11RecapBlock() {
-  if (v2Parcours === 'standard') return '';
+  if (v2Parcours === 'standard') {
+    // Même correctif que v2RecapBlock() (desktop) — "standard_evo" n'est en pratique
+    // jamais vrai, se fier à ça masquait inserts/gravure pour la quasi-totalité des
+    // visiteurs. On se base désormais sur la présence réelle de données.
+    const hasEvo = (typeof evoChecked !== 'undefined' && Object.values(evoChecked).some(v => v)) || (typeof evoCustomText !== 'undefined' && evoCustomText);
+    return hasEvo ? v2EvoRecapBlockHtml('Personnalisation du cadre', true) : '';
+  }
 
   if (v2Parcours === 'standard_evo') {
     return v2EvoRecapBlockHtml('Options Évolution', true);
