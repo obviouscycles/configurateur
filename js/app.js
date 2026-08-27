@@ -108,14 +108,14 @@ async function loadConfigFromUrl() {
 
 
 // ─── MAIL VISITEUR — via Supabase Edge Function (clé Brevo sécurisée côté serveur)
-async function sendBrevoEmail({ toEmail, toName, configId, shareUrl, modeleNom, prix }) {
+async function sendBrevoEmail({ toEmail, toName, configId, shareUrl, modeleNom, prix, configuration }) {
   const res = await fetch(SUPABASE_URL + '/functions/v1/send-config-email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + SUPABASE_KEY,
     },
-    body: JSON.stringify({ toEmail, toName, configId, shareUrl, modeleNom, prix })
+    body: JSON.stringify({ toEmail, toName, configId, shareUrl, modeleNom, prix, configuration })
   });
   if (!res.ok) {
     const err = await res.text();
@@ -899,7 +899,19 @@ function doSave(inputId, toastId) {
     const opt = optionsFor(p.id, selModel).find(o => o.id === selOpts[p.id]);
     return { post: p.name, option: opt ? opt.name : '—', locked: opt ? !!opt.locked : false, price: opt && !opt.locked ? opt.price : 0 };
   });
-  const entry = { id: Date.now(), name, modelName: model.name, modelBadge: model.badge, date: new Date().toLocaleDateString('fr-FR'), price, weight, details, selModel, selOpts: { ...selOpts }, selSize: { ...selSize } };
+  const entry = {
+    id: Date.now(), name, modelName: model.name, modelBadge: model.badge,
+    date: new Date().toLocaleDateString('fr-FR'), price, weight, details,
+    selModel, selOpts: { ...selOpts }, selSize: { ...selSize },
+    // Personnalisations (étapes Cadre + Personnalisation) — auparavant jamais
+    // sauvegardées : recharger une config perdait gravure/inserts/demande
+    // particulière, même si le prix affiché les incluait déjà.
+    v2Parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+    evoChecked: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+    evoInsertsChecked: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+    evoGravureText: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+    evoCustomText: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+  };
   savedConfigs.unshift(entry);
   persistSaved();
   updateSavedCount();
@@ -1148,6 +1160,13 @@ async function sendOrder() {
       nom_client: name,
       email_client: email,
       adresse_postale: address,
+      // Personnalisations (gravure, inserts, demande particulière) — auparavant
+      // absentes de l'enregistrement Supabase, alors que le prix les incluait déjà.
+      parcours: (typeof v2Parcours !== 'undefined') ? v2Parcours : 'standard',
+      personnalisations: (typeof evoChecked !== 'undefined') ? { ...evoChecked } : {},
+      inserts: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
+      texte_gravure: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
+      demande_particuliere: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
     };
 
     // 3. Sauvegarder dans Supabase
@@ -1204,6 +1223,11 @@ async function sendOrder() {
             shareUrl,
             modeleNom: model ? model.name : selModel,
             prix: price,
+            // Détail complet (composants + personnalisations gravure/inserts) — transmis
+            // au cas où le modèle d'email côté serveur (fonction Supabase) puisse
+            // l'exploiter. Voir remarque : je ne peux pas vérifier depuis ici si le
+            // modèle d'email affiche réellement ce champ.
+            configuration: config,
           });
         } catch(e) {
           console.warn('Mail visiteur non envoyé:', e);
@@ -1841,6 +1865,13 @@ function dtLoadSaved(id) {
   window._activePreset = cfg.preset || null;
   window._singleModel = selModel;
   window.sizeValidated = !!(cfg.selSize && Object.keys(cfg.selSize || {}).length > 0);
+  // Personnalisations (étapes Cadre + Personnalisation) — repli sur un état vide pour
+  // les anciennes configs sauvegardées avant ce correctif (n'avaient pas ces champs).
+  v2Parcours = cfg.v2Parcours || 'standard';
+  evoChecked = { ...(cfg.evoChecked || {}) };
+  evoInsertsChecked = { ...(cfg.evoInsertsChecked || {}) };
+  evoGravureText = cfg.evoGravureText || '';
+  evoCustomText = cfg.evoCustomText || '';
   // Retirer dt-step-4 AVANT dtRender pour que dt-main soit visible
   document.body.classList.remove('dt-step-4');
   // Activer les boutons du récap
@@ -1848,7 +1879,8 @@ function dtLoadSaved(id) {
     const el = document.getElementById(id2);
     if (el) { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; }
   });
-  dtStep = 2; dtRender();
+  // Aller directement à l'écran final récapitulatif — pas à l'étape Composants.
+  v2GoRecap();
 }
 
 function dtDeleteSaved(id) {
