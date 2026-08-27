@@ -35,6 +35,15 @@ async function loadConfigFromUrl() {
     selSize  = json.dimensions || {};
     window._activePreset = json.preset || null;
     window._singleModel  = selModel;
+    // Personnalisations (gravure, inserts, demande particulière) — bien enregistrées
+    // dans configJson par sendOrder(), mais jamais relues ici jusqu'à présent : la
+    // config s'ouvrait donc incomplète (récap ET prix final sans les personnalisations),
+    // alors que ton email, lui, était généré à partir de la session live du visiteur.
+    v2Parcours = json.parcours || 'standard';
+    evoChecked = { ...(json.personnalisations || {}) };
+    evoInsertsChecked = { ...(json.inserts || {}) };
+    evoGravureText = json.texte_gravure || '';
+    evoCustomText = json.demande_particuliere || '';
 
     // Afficher l'info dans le header principal (badge proto)
     const protoBadge = document.getElementById('proto-badge');
