@@ -1811,9 +1811,11 @@ function dtShowSaved() {
         '</div>';
       }).join('');
   }
-  // Activer dt-s4 (afficher le contenu)
+  // Activer dt-s6devis (le vrai conteneur qui contient dt-s6devis-inner, rempli
+  // juste au-dessus) — "dt-s4" n'existe pas dans le HTML, cet appel ne faisait
+  // donc jamais rien, laissant l'écran précédent affiché (fenêtre vide en pratique).
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  const s4el = document.getElementById('dt-s4');
+  const s4el = document.getElementById('dt-s6devis');
   if (s4el) s4el.classList.add('active');
   // Mettre à jour stepper
   for (let i = 1; i <= 4; i++) {
