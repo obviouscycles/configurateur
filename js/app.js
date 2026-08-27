@@ -289,6 +289,17 @@ function computeTotals(modelId, opts) {
   return { price, weight };
 }
 
+// Prix "à partir de" (page 1) = prix réel de la préconfig Ti2, calculé dynamiquement —
+// jamais le basePrice brut du modèle, qui ne peut pas se désynchroniser tout seul si
+// un composant de Ti2 change de prix plus tard. Repli sur basePrice+assembly si jamais
+// Ti2 n'existe pas pour ce modèle (cas normalement impossible, sécurité seulement).
+function tiMinPrice(modelId) {
+  const model = MODELS.find(m => m.id === modelId);
+  const preset = PRESETS[modelId] && PRESETS[modelId]['Ti2'];
+  if (!preset) return model.basePrice + (model.assembly || 0);
+  return computeTotals(modelId, preset).price;
+}
+
 function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const { price, weight } = computeTotals(modelId, opts);
@@ -1309,6 +1320,17 @@ function v3InitTitaniumStickyMobile() {
   }
 
   function render() {
+    // Mode embed (iframe Wordpress) : même souci que la version desktop — ce bandeau
+    // repose sur position:fixed, qui s'ancre à la hauteur TOTALE de la page une fois
+    // que l'iframe grandit pour englober tout le contenu, pas à ce que le visiteur
+    // voit réellement à l'écran. Concerne surtout les tests desktop en fenêtre
+    // réduite (<768px) restés en mode embed — un vrai mobile ne charge jamais
+    // ?embed=1, il est redirigé directement vers github.io par le script du site.
+    if (window.location.search.indexOf('embed=1') !== -1) {
+      sticky.style.transform = 'translateY(100%)';
+      sticky.style.pointerEvents = 'none';
+      return;
+    }
     // Ce bandeau est réservé au mobile — sur desktop, c'est #titanium-morph qui gère
     // l'équivalent. Sans ce garde-fou, ce bandeau s'affichait aussi sur desktop car
     // p11CurrentStep vaut 1 par défaut, y compris quand le visiteur est sur desktop.
@@ -1384,23 +1406,25 @@ function v3InitTitaniumSticky() {
   // Un seul élément change de forme : carré replié <-> bandeau complet déplié.
   // Ni les deux affichés en même temps, ni jamais visible quand le bandeau original l'est déjà.
   function render() {
+    // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
+    // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
+    const bannerR = inline.getBoundingClientRect();
+    const realHeight = Math.round(bannerR.height) || 78;
+
     // Mode embed (iframe Wordpress) : la version flottante ("carré" qui suit le
     // défilement) repose sur position:fixed, qui s'ancre à la hauteur TOTALE de la
     // page une fois que l'iframe grandit pour englober tout le contenu (voir plus
     // bas dans ce fichier) — pas à ce que le visiteur voit réellement à l'écran. Le
-    // carré finit invisible en usage normal (il faudrait scroller jusqu'au vrai bas
-    // de la page pour l'atteindre). Le bandeau original, lui, est en flux normal et
-    // n'a aucun souci — on le laisse simplement toujours visible, sans jamais
-    // basculer vers la version flottante, qui n'a de sens que hors iframe.
+    // bandeau original, lui, est en flux normal et n'a aucun souci — on le laisse
+    // simplement toujours visible, sans jamais basculer vers la version flottante,
+    // qui n'a de sens que hors iframe. Testé avec un repositionnement fixe (haut de
+    // page) : chevauchait systématiquement d'autres éléments selon l'écran — pas
+    // assez fiable pour être conservé, mieux vaut l'absence que le mal placé.
     if (window.location.search.indexOf('embed=1') !== -1) {
       morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
       if (text) text.style.opacity = '0';
       return;
     }
-    // Hauteur RÉELLE du bandeau original — utilisée telle quelle pour les deux états
-    // (carré replié ET bandeau déplié), garantissant une hauteur toujours identique.
-    const bannerR = inline.getBoundingClientRect();
-    const realHeight = Math.round(bannerR.height) || 78;
 
     if (dtStep !== 1) {
       morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '12px';
@@ -1590,7 +1614,7 @@ function dtRenderS1() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(m.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
       (hasPresets && sel ? dtPresetBar(m.id) : '') +
     '</div>';
@@ -1632,8 +1656,8 @@ function dtSelectModel(id) {
   }
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+  if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1812,7 +1836,7 @@ function dtRenderS2() {
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (model.basePrice + (model.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(model.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
       dtPresetBar(model.id);
   }
@@ -2583,9 +2607,9 @@ function dtReset() {
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
-  // Recharger Ti1 par défaut
-  if (selModel && PRESETS[selModel] && PRESETS[selModel]['Ti1']) {
-    window._activePreset = 'Ti1'; selOpts = {...PRESETS[selModel]['Ti1']};
+  // Recharger Ti2 par défaut
+  if (selModel && PRESETS[selModel] && PRESETS[selModel]['Ti2']) {
+    window._activePreset = 'Ti2'; selOpts = {...PRESETS[selModel]['Ti2']};
   }
   dtStep = 1; document.body.classList.remove('dt-step-4');
   dtRender();
@@ -4662,7 +4686,7 @@ function p11RenderModels() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(m.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -4729,8 +4753,8 @@ function p11LoadPreset(decl) {
 
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+  if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   p11RenderModels();
   p11RenderPresets();
   // Activer bouton next

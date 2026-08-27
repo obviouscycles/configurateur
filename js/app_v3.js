@@ -289,6 +289,17 @@ function computeTotals(modelId, opts) {
   return { price, weight };
 }
 
+// Prix "à partir de" (page 1) = prix réel de la préconfig Ti2, calculé dynamiquement —
+// jamais le basePrice brut du modèle, qui ne peut pas se désynchroniser tout seul si
+// un composant de Ti2 change de prix plus tard. Repli sur basePrice+assembly si jamais
+// Ti2 n'existe pas pour ce modèle (cas normalement impossible, sécurité seulement).
+function tiMinPrice(modelId) {
+  const model = MODELS.find(m => m.id === modelId);
+  const preset = PRESETS[modelId] && PRESETS[modelId]['Ti2'];
+  if (!preset) return model.basePrice + (model.assembly || 0);
+  return computeTotals(modelId, preset).price;
+}
+
 function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const { price, weight } = computeTotals(modelId, opts);
@@ -1576,7 +1587,7 @@ function dtRenderS1() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(m.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
       (hasPresets && sel ? dtPresetBar(m.id) : '') +
     '</div>';
@@ -1618,8 +1629,8 @@ function dtSelectModel(id) {
   }
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+  if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
     FORCE_SELECT.forEach(rule => {
@@ -1798,7 +1809,7 @@ function dtRenderS2() {
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + (model.basePrice + (model.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(model.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
       dtPresetBar(model.id);
   }
@@ -2569,9 +2580,9 @@ function dtReset() {
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
-  // Recharger Ti1 par défaut
-  if (selModel && PRESETS[selModel] && PRESETS[selModel]['Ti1']) {
-    window._activePreset = 'Ti1'; selOpts = {...PRESETS[selModel]['Ti1']};
+  // Recharger Ti2 par défaut
+  if (selModel && PRESETS[selModel] && PRESETS[selModel]['Ti2']) {
+    window._activePreset = 'Ti2'; selOpts = {...PRESETS[selModel]['Ti2']};
   }
   dtStep = 1; document.body.classList.remove('dt-step-4');
   dtRender();
@@ -4651,7 +4662,7 @@ function p11RenderModels() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        '<span class="mc-price">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</span>' +
+        '<span class="mc-price">à partir de ' + tiMinPrice(m.id).toLocaleString('fr-FR') + ' €</span>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -4718,8 +4729,8 @@ function p11LoadPreset(decl) {
 
 function p11SelectModel(id) {
   selModel = id; selOpts = {}; openPost = null;
-  const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-  if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+  const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+  if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   p11RenderModels();
   p11RenderPresets();
   // Activer bouton next

@@ -327,6 +327,24 @@ function computeTotals(modelId, opts) {
   return { price, weight };
 }
 
+// Prix "à partir de" (page 1, vélo complet uniquement) = prix réel de la préconfig
+// Ti2, calculé dynamiquement — jamais le basePrice brut. Calcul autonome, volontai-
+// rement indépendant de computeTotals()/activePostMeta() : ces deux-là dépendent de
+// window._kitCadre (l'état GLOBAL actuellement actif ailleurs sur la page), alors que
+// "à partir de" doit toujours représenter le vélo complet, peu importe ce qui est
+// sélectionné par ailleurs au moment de l'appel.
+function tiMinPrice(modelId) {
+  const model = MODELS.find(m => m.id === modelId);
+  const preset = PRESETS[modelId] && PRESETS[modelId]['Ti2'];
+  if (!preset) return model.basePrice + (model.assembly || 0);
+  let price = model.basePrice + (model.assembly || 0);
+  POST_META.forEach(p => {
+    const opt = (ALL_OPTIONS[p.id] || []).find(o => o.id === preset[p.id]);
+    if (opt && !isLocked(opt, modelId)) price += opt.price;
+  });
+  return price;
+}
+
 function buildConfigText(modelId, opts) {
   const model = MODELS.find(m => m.id === modelId);
   const { price, weight } = computeTotals(modelId, opts);
@@ -1628,7 +1646,7 @@ function dtRenderS1() {
     const isKitSel = sel && window._kitCadre === true;
     const isCompletSel = sel && window._kitCadre === false;
     const isFocusedOnly = sel && (window._kitCadre === null || window._kitCadre === undefined);
-    const completPrice = m.basePrice + (m.assembly||0);
+    const completPrice = tiMinPrice(m.id);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
     return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
@@ -1710,15 +1728,16 @@ function dtSelectModel(id) {
   }
   selModel = id; selOpts = {}; openPost = null;
   window._singleModel = id; window._activePreset = null;
-  // Vélo complet -> preset Ti1 par défaut. Kit cadre -> préconfig kit cadre dédiée
-  // (fourche/pilotage/tige uniquement — vide pour le VTT, le visiteur choisit lui-même).
+  // Vélo complet -> preset Ti2 par défaut (= le prix "à partir de" affiché en page 1).
+  // Kit cadre -> préconfig kit cadre dédiée (fourche/pilotage/tige uniquement — vide
+  // pour le VTT, le visiteur choisit lui-même).
   if (window._kitCadre) {
     window._activePreset = null;
     const kitPreset = KIT_CADRE_PRESETS[id];
     if (kitPreset && Object.keys(kitPreset).length) { selOpts = {...kitPreset}; syncAllPostDims(); }
   } else {
-    const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-    if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+    const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+    if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   }
   Object.keys(selOpts).forEach(pid => {
     const optId = selOpts[pid]; if (!optId) return;
@@ -1903,7 +1922,7 @@ function dtRenderS2() {
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
-        '<span class="mc-price">à partir de ' + ((window._kitCadre && KIT_CADRE_PRICES[model.id] ? (KIT_CADRE_PRICES[model.id].basePrice + (KIT_CADRE_PRICES[model.id].assembly||0)) : (model.basePrice + (model.assembly||0))).toLocaleString('fr-FR')) + ' €</span>' +
+        '<span class="mc-price">à partir de ' + ((window._kitCadre && KIT_CADRE_PRICES[model.id] ? (KIT_CADRE_PRICES[model.id].basePrice + (KIT_CADRE_PRICES[model.id].assembly||0)) : tiMinPrice(model.id)).toLocaleString('fr-FR')) + ' €</span>' +
         '<div class="mc-switch-mode">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="dtSwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
       '</div>' +
       (window._kitCadre ? '' : dtPresetBar(model.id));
@@ -2717,9 +2736,9 @@ function dtReset() {
   window._activePreset = null;
   selModel = keptModel; // on garde le modèle
   window._singleModel = keptModel; // bouton "choisir un autre vélo" visible
-  // Recharger Ti1 par défaut (vélo complet uniquement)
-  if (!window._kitCadre && selModel && PRESETS[selModel] && PRESETS[selModel]['Ti1']) {
-    window._activePreset = 'Ti1'; selOpts = {...PRESETS[selModel]['Ti1']};
+  // Recharger Ti2 par défaut (vélo complet uniquement)
+  if (!window._kitCadre && selModel && PRESETS[selModel] && PRESETS[selModel]['Ti2']) {
+    window._activePreset = 'Ti2'; selOpts = {...PRESETS[selModel]['Ti2']};
   }
   dtStep = 1; document.body.classList.remove('dt-step-4');
   dtRender();
@@ -4804,7 +4823,7 @@ function p11RenderModels() {
     // false (vélo complet) — même logique que desktop, pour un comportement identique.
     const isKitSel = sel && window._kitCadre === true;
     const isCompletSel = sel && window._kitCadre === false;
-    const completPrice = m.basePrice + (m.assembly||0);
+    const completPrice = tiMinPrice(m.id);
     const kitPricing = KIT_CADRE_PRICES[m.id];
     const kitPrice = kitPricing ? (kitPricing.basePrice + (kitPricing.assembly||0)) : null;
     const minPrice = kitPrice !== null ? Math.min(completPrice, kitPrice) : completPrice;
@@ -4924,8 +4943,8 @@ function p11SelectModel(id) {
     const kitPreset = KIT_CADRE_PRESETS[id];
     if (kitPreset && Object.keys(kitPreset).length) { selOpts = {...kitPreset}; syncAllPostDims(); }
   } else {
-    const preset = PRESETS[id] && PRESETS[id]['Ti1'];
-    if (preset) { window._activePreset = 'Ti1'; selOpts = {...preset}; syncAllPostDims(); }
+    const preset = PRESETS[id] && PRESETS[id]['Ti2'];
+    if (preset) { window._activePreset = 'Ti2'; selOpts = {...preset}; syncAllPostDims(); }
   }
   p11RenderModels();
   p11RenderPresets();
