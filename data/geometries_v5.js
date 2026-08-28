@@ -4,6 +4,7 @@
 // automatique des dimensions une fois la taille déterminée (non câblé pour l'instant).
 const TAILLES_CADRE = {
   'route': [
+    { 'taille': "XXS", 'stature_min': 155, 'stature_max': 164, 'ej_min': 70, 'ej_max': 81.39999999999999, 'manivelle': 165, 'cintre': 380, 'potence': 80, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },
     { 'taille': "XS", 'stature_min': 163, 'stature_max': 171, 'ej_min': 73.4, 'ej_max': 84.8, 'manivelle': 165, 'cintre': 400, 'potence': 90, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },
     { 'taille': "S", 'stature_min': 170, 'stature_max': 177, 'ej_min': 76.8, 'ej_max': 88.19999999999999, 'manivelle': 170, 'cintre': 400, 'potence': 90, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },
     { 'taille': "M", 'stature_min': 176, 'stature_max': 182, 'ej_min': 80.2, 'ej_max': 91.6, 'manivelle': 170, 'cintre': 420, 'potence': 100, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },
