@@ -2132,7 +2132,7 @@ function renderCadreCard(selectId) {
   selectId = selectId || 'cadre-taille-select';
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
   const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
-  const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '');
+  const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '__unknown__');
   const summary = v2Parcours === 'sur_mesure' ? 'Sur-mesure (+300 €)'
     : selSize.taille ? 'Taille ' + selSize.taille
     : 'À déterminer';
@@ -2146,7 +2146,7 @@ function renderCadreCard(selectId) {
       '<div class="dim-field" style="max-width:320px;">' +
         '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
         '<select class="size-select" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
-          '<option value="">Je ne sais pas encore</option>' +
+          '<option value="__unknown__"' + (current === '__unknown__' ? ' selected' : '') + '>Je ne sais pas encore</option>' +
           tailles.map(t => '<option value="' + t + '"' + (current === t ? ' selected' : '') + '>' + t + '</option>').join('') +
           '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
         '</select>' +
@@ -2159,12 +2159,16 @@ function selectCadreTaille(value) {
   if (value === '__sur_mesure__') {
     v2Parcours = 'sur_mesure';
     delete selSize.taille; delete selSizeSource.taille;
-  } else if (value) {
-    v2Parcours = 'standard';
-    selSize.taille = value; selSizeSource.taille = 'user';
-  } else {
+  } else if (value === '__unknown__' || !value) {
+    // "Je ne sais pas encore" — fonctionnellement identique a "rien de choisi", mais
+    // garde comme valeur dediee pour que le menu continue d'afficher cette option
+    // precise au prochain rendu, plutot que de retomber sur le premier element de
+    // la liste par defaut du navigateur.
     v2Parcours = 'standard';
     delete selSize.taille; delete selSizeSource.taille;
+  } else {
+    v2Parcours = 'standard';
+    selSize.taille = value; selSizeSource.taille = 'user';
   }
   // La taille de cadre change : les dimensions morphologiques auto-remplies (source 'default')
   // ne sont plus forcément pertinentes -> on les efface pour qu'elles se recalculent au rendu suivant.
