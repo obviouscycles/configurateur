@@ -1,7 +1,4 @@
 // Généré automatiquement depuis configurateur_velos_v5.xlsx — NE PAS ÉDITER À LA MAIN
-// Plus de basePrice fixe — le prix total = prix du poste 'cadre' (caché, voir composants_v5.js)
-// + assembly + somme des prix absolus de chaque poste sélectionné.
-
 const MODELS = [
   { id: 'route', name: 'ON/', badge: 'Route', desc: 'Cadre titane, fourche carbone, sportif et polyvalent. Transmission électronique.', assembly: 300, photo: '/configurateur/assets/velos/ON_2025.webp' },
   { id: 'gravel_racing', name: 'ON/OFF', badge: 'Gravel Racing', desc: 'Cadre titane, géométrie sport, fourche carbone, intégration complète', assembly: 300, photo: '/configurateur/assets/velos/ONOFF_2024.webp' },
@@ -9,7 +6,6 @@ const MODELS = [
   { id: 'vtt_enduro', name: '/OFF', badge: 'Enduro HT', desc: 'Cadre titane semi-rigide, géométrie enduro, fourche 140/150 mm, boost 148 mm', assembly: 300, photo: '/configurateur/assets/velos/OFF_2025.webp' },
 ];
 
-// Kit cadre — plus de basePrice séparé non plus : prix = poste 'cadre' + composants fourche_kit/potence_kit/cintre_kit/tige_kit choisis.
 const KIT_CADRE_PHOTOS = {
   'route': '/configurateur/assets/kits/kit_ON.webp',
   'gravel_racing': '/configurateur/assets/kits/kit_ONOFF.webp',
@@ -52,7 +48,6 @@ const PRESET_DESCS = {
   'Ti1': 'Le meilleur équilibre performance / prix de la gamme.',
   'Signature': 'Le haut de gamme — composants haut de gamme, chaque détail compté.',
 };
-// Même contenu, ordre inversé (Signature en premier) — utilisé par l'affichage desktop.
 const PRESET_DESCS_DT = {
   'Signature': 'Le haut de gamme — composants premium, chaque détail soigné.',
   'Ti1':       'Le meilleur équilibre performance / prix de la gamme.',

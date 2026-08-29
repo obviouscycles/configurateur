@@ -1,7 +1,4 @@
 // Généré automatiquement depuis configurateur_velos_v5.xlsx — NE PAS ÉDITER À LA MAIN
-// Nouveauté V5 : dimensions RECOMMANDÉES par taille (manivelle/cintre/potence/etc.)
-// — donnée absente de geometries.js (V3/V4), à exploiter plus tard pour un pré-remplissage
-// automatique des dimensions une fois la taille déterminée (non câblé pour l'instant).
 const TAILLES_CADRE = {
   'route': [
     { 'taille': "XXS", 'stature_min': 155, 'stature_max': 164, 'ej_min': 70, 'ej_max': 81.39999999999999, 'manivelle': 165, 'cintre': 380, 'potence': 80, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },
