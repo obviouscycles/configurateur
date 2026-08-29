@@ -1707,13 +1707,17 @@ function dtRender() {
     else { resetBtn.style.opacity='.3'; resetBtn.style.pointerEvents='none'; }
   }
 
-  // Stepper
-  for (let i = 1; i <= 5; i++) {
+  // Stepper — 6 étapes réelles (Modèle/Composants/Cadre/Taille-Options/Personnalisation/
+  // Devis). Cette boucle s'arrêtait à 5 et plaçait la flèche "→" sur l'étape 5 — un
+  // reliquat d'avant l'ajout de "Personnalisation" comme étape à part entière, qui
+  // avait décalé "Devis" de la position 5 à la position 6 sans que cette logique soit
+  // mise à jour. L'étape "Devis" ne s'affichait donc jamais comme active/complétée.
+  for (let i = 1; i <= 6; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 5 ? '→' : String(i);
+    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 6 ? '→' : String(i);
   }
   const model = MODELS.find(m => m.id === selModel);
   const el = (id) => document.getElementById(id);
