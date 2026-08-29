@@ -4409,7 +4409,7 @@ function buildDimsGrid() {
       ? `selSize['${f.key}']=this.value; selSize.manivelle=null; selSize.cintre=null; selSize.potence=null; buildDimsGrid();`
       : `selSize['${f.key}']=this.value`;
     const jnspOption = f.options.length >= 2
-      ? `<option value="">Je ne sais pas encore</option>`
+      ? `<option value="__unknown__" ${selSize[f.key]==='__unknown__'?'selected':''}>Je ne sais pas encore</option>`
       : '';
     // Valeur unique : pré-sélectionner silencieusement
     if (f.options.length === 1) selSize[f.key] = String(f.options[0]);
@@ -5530,7 +5530,7 @@ function p11BuildDimsGrid() {
     return '<div class="dim-field"><label>' + f.label + '</label>' +
       '<select class="size-select" id="' + f.id + '" onchange="' + onchangeFn + '">' +
       '<option value="">— choisir —</option>' + optHTML +
-      (f.options.length >= 2 ? '<option value="">Je ne sais pas encore</option>' : '') +
+      (f.options.length >= 2 ? '<option value="__unknown__"' + (selSize[f.key]==='__unknown__'?' selected':'') + '>Je ne sais pas encore</option>' : '') +
       '</select>' +
       (f.note ? '<span class="dim-note">' + f.note + '</span>' : '') + '</div>';
   }
