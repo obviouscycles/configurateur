@@ -1683,6 +1683,27 @@ function v3GoTitaniumFromS1() {
 function dtGo(n) {
   if (window.innerWidth < 768) return;
   if (n > 1 && !selModel) return;
+  // Étapes 3 à 6 : chacune vit dans un conteneur dont le nom interne ne correspond
+  // plus au numéro d'étape (reliquat d'anciennes restructurations — "dt-s3" pour
+  // l'étape 4, "dt-s5perso" pour l'étape 5, etc.). dtRender() ne sait activer que
+  // dt-s1/dt-s2 (dont le nom correspond encore), donc cliquer directement sur ces
+  // étapes depuis le sommaire affichait une page vide. On délègue désormais aux
+  // fonctions dédiées, déjà correctes, plutôt que de deviner un nom de conteneur.
+  if (n === 6) { v2GoRecap(); return; }
+  if (n === 5) { v3GoPersoFromS2(); return; }
+  if (n === 4) {
+    if (!v2Parcours || v2Parcours === 'standard_evo') v2Parcours = 'standard';
+    v2ChooseParcours(v2Parcours);
+    return;
+  }
+  if (n === 3) {
+    dtStep = 3;
+    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
+    document.getElementById('dt-s3bif')?.classList.add('active');
+    v2UpdateStepper(); dtRenderRecap();
+    const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
+    return;
+  }
   dtStep = n;
   document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
@@ -3363,19 +3384,16 @@ function v2ChooseParcours(parcours) {
     const main = document.getElementById('dt-main');
 
     if (parcours === 'standard' || parcours === 'standard_evo') {
-      dtStep = 4;
-      document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-      document.getElementById('dt-s3')?.classList.add('active');
-      dtRenderS3();
-      // Update next button label
-      const lbl = document.getElementById('dt-next-taille-lbl');
-      if (lbl) {
-        if (window.sizeValidated) {
-          lbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
-        } else {
-          lbl.textContent = 'Continuer sans taille';
-        }
-      }
+      // "Cadre standard" ne mène plus à un écran "Taille/Options" séparé — ce
+      // conteneur (dt-s3-cards) n'existe plus dans le HTML depuis une précédente
+      // restructuration, laissant une page vide à quiconque choisissait cette
+      // option (le choix par défaut, donc la quasi-totalité des visiteurs !). La
+      // détermination de taille se fait déjà depuis le bouton dédié en bas de
+      // l'étape Composants (dtUpdateStep2Footer) — on va donc directement à
+      // Personnalisation, exactement comme le fait déjà un clic sur cette étape
+      // dans le sommaire.
+      v3GoPersoFromS2();
+      return;
     } else if (parcours === 'sur_mesure') {
       dtStep = 4;
       document.getElementById('dt-s4mesure')?.classList.add('active');
