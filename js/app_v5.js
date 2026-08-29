@@ -2245,9 +2245,22 @@ function dtRenderPosts() {
       const rec2 = isRecommended(o, selModel);
       const d = o.price - curPrice;
       const diff = sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
+      // Grille de couleurs — un simple aperçu visuel (bascule la photo affichée), sans
+      // jamais changer l'option réellement sélectionnée ni son prix (les variantes de
+      // couleur d'un même produit partagent toujours le même id, le même prix).
+      const imgId = 'opc-img-' + p.id + '-' + o.id;
+      const colorSwatchesHtml = (o.couleurs && o.couleurs.length) ?
+        '<div class="opc-colors" onclick="event.stopPropagation()">' +
+          o.couleurs.map((c, ci) =>
+            '<button type="button" class="opc-color-dot' + (ci===0?' active':'') + '" ' +
+            'style="background:' + c.hex + ';" title="' + c.nom + '" ' +
+            "onclick=\"dtPreviewColor('" + imgId + "', '" + c.photo.replace(/'/g, "\\'") + "', this)\"></button>"
+          ).join('') +
+        '</div>' : '';
       if (hasPhotos) {
-        const imgHtml = (o.image && o.image !== 'assets/no_option.png')
-          ? '<img src="' + o.image + '" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;display:block;">'
+        const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[0].photo : o.image;
+        const imgHtml = (defaultImg && defaultImg !== 'assets/no_option.png')
+          ? '<img id="' + imgId + '" src="' + defaultImg + '" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;display:block;">'
           : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
         return '<div class="opt-photo-card' + (sel2?' sel':'') + '" data-pid="' + p.id + '" data-oid="' + o.id + '">' +
           '<div class="opc-check"><i class="ti ti-check"></i></div>' +
@@ -2256,12 +2269,13 @@ function dtRenderPosts() {
           (rec2?'<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px;"></i> Recommandé</span></div>':'') +
           '<div class="opc-name">' + o.name + '</div>' +
           (o.desc?'<div class="opc-desc">'+o.desc+'</div>':'') +
+          colorSwatchesHtml +
           '<div class="opc-price' + (d<0?' negative':'') + '">' + diff + '</div>' +
           '</div></div>';
       } else {
         return '<div class="opt-item' + (sel2?' sel':'') + '" data-pid="' + p.id + '" data-oid="' + o.id + '">' +
           '<div class="opt-radio"><div class="radio-dot"></div></div>' +
-          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + '</div>' +
+          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + colorSwatchesHtml + '</div>' +
           '<div class="oi-meta"><div class="oi-price' + (d<0?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
       }
@@ -2305,6 +2319,18 @@ function dtRenderPosts() {
 
   dtRenderRecap();
   dtUpdateStep2Footer();
+}
+
+// Bascule la photo affichée sur une carte d'option vers la variante de couleur
+// cliquée — un simple aperçu visuel, ne change jamais l'option réellement
+// sélectionnée (même id, même prix quelle que soit la couleur).
+function dtPreviewColor(imgId, photoUrl, btnEl) {
+  const img = document.getElementById(imgId);
+  if (img) img.src = photoUrl;
+  if (btnEl && btnEl.parentElement) {
+    btnEl.parentElement.querySelectorAll('.opc-color-dot').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
 }
 
 function dtSelectOpt(postId, optId) {
