@@ -61,7 +61,7 @@ async function loadConfigFromUrl() {
       // que le récap était bien généré, juste dans un conteneur resté caché.
       v2GoRecap();
     } else {
-      renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
+      renderModels(); v2Parcours = 'standard'; p11UpdateStep(4);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
@@ -4620,20 +4620,14 @@ let p11CurrentStep = 1;
 let p11SizeMode = null;
 let p11OverlapTailles = null;
 
-const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre cadre', 'Votre taille', 'Personnalisation', 'Votre configuration'];
+const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Personnalisation', 'Votre configuration'];
 
 // Retourne l'ID de la div à afficher pour un numéro d'étape donné, selon le parcours choisi
 function p11StepDivId(n) {
   if (n === 1) return 'p11-s1';
   if (n === 2) return 'p11-s2';
-  if (n === 3) return 'p11-s5perso'; // repurposé : Personnalisation (cadre standard déjà connu)
-  if (n === 4) {
-    if (v2Parcours === 'sur_mesure') return 'p11-s4mesure';
-    if (v2Parcours === 'hors_gamme') return 'p11-s4horsgamme';
-    return 'p11-s4std';
-  }
-  if (n === 5) return 'p11-s5evo';
-  if (n === 6) return 'p11-s6devis';
+  if (n === 3) return 'p11-s5perso'; // Personnalisation (cadre standard déjà connu)
+  if (n === 4) return 'p11-s6devis';
   return 'p11-s1';
 }
 
@@ -4691,8 +4685,10 @@ function p11UpdateStep(n) {
   if (p11HistoryReady && !p11SkipHistoryPush) {
     history.pushState({ p11step: n }, '', location.href);
   }
-  // Dots + labels (6 étapes)
-  for (let i=1; i<=6; i++) {
+  // Dots + labels — 4 étapes réelles (Modèle/Composants/Personnalisation/Devis).
+  // "Cadre" et "Taille" retirées : la première ne menait qu'à un écran fantôme, la
+  // seconde était déjà remplacée dans les faits par Personnalisation (voir p11Next()).
+  for (let i=1; i<=4; i++) {
     const dot = document.getElementById('p11-dot-' + i);
     if (!dot) continue;
     dot.className = 'p11-step-dot' + (i === n ? ' active' : i < n ? ' done' : '');
@@ -4702,92 +4698,63 @@ function p11UpdateStep(n) {
   const backBtn = document.getElementById('p11-back-btn');
   const fwdBtn  = document.getElementById('p11-fwd-btn');
   if (backBtn) backBtn.style.color = n > 1 ? '#F5C400' : '#333';
-  if (fwdBtn)  fwdBtn.style.color  = (n < 6 && n !== 3) ? '#F5C400' : '#333';
+  if (fwdBtn)  fwdBtn.style.color  = (n < 4 && n !== 3) ? '#F5C400' : '#333';
   // Steps
   document.querySelectorAll('.p11-step').forEach(s => { s.classList.remove('active'); s.classList.remove('p11-active'); s.style.display = 'none'; });
   const stepId = p11StepDivId(n);
   const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
-  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape 6, récap déjà détaillé)
-  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
+  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape Devis, récap déjà détaillé)
+  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3 et 4)
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
-  const hasInlineNav = (n === 3) || (n === 4 && (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme')) || (n === 5) || (n === 6);
-  if (bar) bar.style.display = (selModel && n !== 6) ? 'block' : 'none';
+  const hasInlineNav = (n === 3) || (n === 4);
+  if (bar) bar.style.display = (selModel && n !== 4) ? 'block' : 'none';
   if (btn) btn.style.display = hasInlineNav ? 'none' : 'flex';
-  if (n === 6) p11InitStep4Bar();
+  if (n === 4) p11InitStep4Bar();
   if (!hasInlineNav && nextLbl) {
-    if (n === 4 && !window.sizeValidated) {
-      nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
-    } else if (n === 4 && v2Parcours === 'standard_evo') {
-      nextLbl.textContent = 'Mes personnalisations';
-    } else if (n === 4) {
-      nextLbl.textContent = 'Ma configuration';
-    } else if (n === 2) {
-      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
-        : !selSize.taille ? 'Déterminer ma taille'
-        : 'Personnalisation';
+    if (n === 2) {
+      nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Personnalisation';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
   }
   // Lien discret "Besoin d'aide" — uniquement étape 2, cadre = taille déjà connue
   const aideLink = document.getElementById('p11-aide-taille-link');
-  if (aideLink) aideLink.style.display = (n === 2 && v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
-  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape 6, récap déjà détaillé)
-  if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
+  if (aideLink) aideLink.style.display = (n === 2 && selSize.taille) ? 'block' : 'none';
+  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape Devis, récap déjà détaillé)
+  if (priceStrip) priceStrip.style.display = (selModel && n !== 4) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
-  if (stripSave) stripSave.style.display = (n >= 2 && n !== 6 && selModel) ? 'flex' : 'none';
+  if (stripSave) stripSave.style.display = (n >= 2 && n !== 4 && selModel) ? 'flex' : 'none';
   if (selModel) p11UpdateTotal();
   // Step 1 : désactiver next si pas de modèle
   if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
   if (n === 2) { p11RenderPosts(); p11UpdateTotal(); }
-  // Step 3 (repurposé) : Personnalisation seule (cadre standard déjà connu)
+  // Step 3 : Personnalisation (cadre standard déjà connu)
   if (n === 3) { p11EvoActiveContainer = 'p11-evo-options-perso'; p11EvoRender(); }
-  // Step 4std (taille) : rebuilder dims si mode connu
-  if (n === 4 && v2Parcours !== 'sur_mesure' && v2Parcours !== 'hors_gamme' && p11SizeMode) p11BuildDimsGrid();
-  // Step 4 sur_mesure : rendre les options Évolution incluses (sans prix)
-  if (n === 4 && v2Parcours === 'sur_mesure') { p11EvoActiveContainer = 'p11-mesure-evo-options'; p11EvoRender(); }
-  // Step 5 : rendre les options Évolution (avec prix)
-  if (n === 5) { p11EvoActiveContainer = 'p11-evo-options'; p11EvoRender(); }
-  // Step 6 : construire le récap final
-  if (n === 6) p11RenderFinalRecap();
+  // Step 4 : construire le récap final
+  if (n === 4) p11RenderFinalRecap();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function p11Next() {
   if (p11CurrentStep === 1) { if (!selModel) return; p11UpdateStep(2); return; }
   if (p11CurrentStep === 2) {
-    // Destination selon le choix Cadre (carte "Cadre" en haut des composants)
-    if (v2Parcours === 'sur_mesure') { p11UpdateStep(4); return; }
     if (!selSize.taille) { p11OpenGuideSheet(); return; }
-    p11UpdateStep(3); return; // Personnalisation (repurposé)
+    p11UpdateStep(3); return; // Personnalisation
   }
   if (p11CurrentStep === 3) return; // navigation par boutons inline uniquement
-  if (p11CurrentStep === 4) {
-    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
-    p11UpdateStep(6); return;
-  }
-  if (p11CurrentStep === 5) { p11UpdateStep(6); return; }
+  if (p11CurrentStep === 4) return; // navigation par boutons inline uniquement
 }
 
 function p11Back() {
   if (p11CurrentStep === 1) return;
   if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
   if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
-  if (p11CurrentStep === 4) {
-    if (v2Parcours === 'hors_gamme') { p11UpdateStep(1); return; } // Titanium -> retour étape 1 (démarré de là)
-    p11UpdateStep(2); return; // Performance -> retour composants
-  }
-  if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
-  if (p11CurrentStep === 6) {
-    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
-    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') { p11UpdateStep(4); return; }
-    p11UpdateStep(3); return; // standard -> retour Personnalisation
-  }
+  if (p11CurrentStep === 4) { p11UpdateStep(3); return; } // retour Personnalisation
 }
 
 function p11GoTo(n) { p11UpdateStep(n); }
@@ -4814,7 +4781,7 @@ function p11GoDevisFromOOD() {
     if (input) { input.style.borderColor = '#e05555'; input.focus(); }
     return;
   }
-  p11UpdateStep(6);
+  p11UpdateStep(4);
 }
 
 // ─── DROPZONE FICHIER MOBILE (tap pour choisir, pas de drag&drop) ──────────────
@@ -5172,9 +5139,21 @@ function p11RenderPosts() {
           const d = o.price - curPrice;
           const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
           const pc = d<0?'neg':d>0?'pos':'zero';
-          const imgHTML = o.image && o.image !== 'assets/no_option.png'
-            ? '<img src="' + o.image + '" alt="' + o.name + '" loading="lazy" onerror="this.style.display=\'none\'">'
+          const imgId = 'p11-opc-img-' + p.id + '-' + o.id;
+          const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[0].photo : o.image;
+          const imgHTML = defaultImg && defaultImg !== 'assets/no_option.png'
+            ? '<img id="' + imgId + '" src="' + defaultImg + '" alt="' + o.name + '" loading="lazy" onerror="this.style.display=\'none\'">'
             : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
+          // Grille de couleurs — même mécanisme que desktop : bascule juste la photo
+          // affichée, ne change jamais l'option réellement sélectionnée ni son prix.
+          const colorSwatchesHtml = (o.couleurs && o.couleurs.length) ?
+            '<div class="opc-colors" onclick="event.stopPropagation()">' +
+              o.couleurs.map((c, ci) =>
+                '<button type="button" class="opc-color-dot' + (ci===0?' active':'') + '" ' +
+                'style="background:' + c.hex + ';" title="' + c.nom + '" ' +
+                "onclick=\"dtPreviewColor('" + imgId + "', '" + c.photo.replace(/'/g, "\\'") + "', this)\"></button>"
+              ).join('') +
+            '</div>' : '';
           return '<div class="opt-photo-card' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
             '<div class="opc-check"><i class="ti ti-check"></i></div>' +
             '<div class="opc-img-wrap">' + imgHTML + '</div>' +
@@ -5182,6 +5161,7 @@ function p11RenderPosts() {
               (rec ? '<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span></div>' : '') +
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
+              colorSwatchesHtml +
               (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
