@@ -1683,29 +1683,14 @@ function v3GoTitaniumFromS1() {
 function dtGo(n) {
   if (window.innerWidth < 768) return;
   if (n > 1 && !selModel) return;
-  // Étapes 3 à 6 : chacune vit dans un conteneur dont le nom interne ne correspond
-  // plus au numéro d'étape (reliquat d'anciennes restructurations — "dt-s3" pour
-  // l'étape 4, "dt-s5perso" pour l'étape 5, etc.). dtRender() ne sait activer que
-  // dt-s1/dt-s2 (dont le nom correspond encore), donc cliquer directement sur ces
-  // étapes depuis le sommaire affichait une page vide. On délègue désormais aux
-  // fonctions dédiées, déjà correctes, plutôt que de deviner un nom de conteneur.
-  if (n === 6) { v2GoRecap(); return; }
-  if (n === 5) { v3GoPersoFromS2(); return; }
-  if (n === 4) {
-    if (!v2Parcours || v2Parcours === 'standard_evo') v2Parcours = 'standard';
-    v2ChooseParcours(v2Parcours);
-    return;
-  }
-  if (n === 3) {
-    dtStep = 3;
-    document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-    document.getElementById('dt-s3bif')?.classList.add('active');
-    v2UpdateStepper(); dtRenderRecap();
-    const main = document.getElementById('dt-main'); if (main) main.scrollTop = 0;
-    return;
-  }
+  // 4 étapes réelles : 1 Modèle, 2 Composants, 3 Personnalisation, 4 Devis. Les
+  // anciennes étapes "Cadre" (bifurcation standard/sur-mesure/hors-gamme) et
+  // "Taille/Options" ont été retirées du parcours normal — la première ne menait
+  // qu'à un écran fantôme, la seconde était déjà remplacée dans les faits par
+  // Personnalisation, atteinte directement depuis Composants.
+  if (n === 4) { v2GoRecap(); return; }
+  if (n === 3) { v3GoPersoFromS2(); return; }
   dtStep = n;
-  document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
   v2UpdateStepper();
   const morph = document.getElementById('titanium-morph');
@@ -1728,17 +1713,14 @@ function dtRender() {
     else { resetBtn.style.opacity='.3'; resetBtn.style.pointerEvents='none'; }
   }
 
-  // Stepper — 6 étapes réelles (Modèle/Composants/Cadre/Taille-Options/Personnalisation/
-  // Devis). Cette boucle s'arrêtait à 5 et plaçait la flèche "→" sur l'étape 5 — un
-  // reliquat d'avant l'ajout de "Personnalisation" comme étape à part entière, qui
-  // avait décalé "Devis" de la position 5 à la position 6 sans que cette logique soit
-  // mise à jour. L'étape "Devis" ne s'affichait donc jamais comme active/complétée.
-  for (let i = 1; i <= 6; i++) {
+  // Stepper — 4 étapes réelles (Modèle/Composants/Personnalisation/Devis). "Cadre" et
+  // "Taille/Options" retirées du parcours normal (voir dtGo()).
+  for (let i = 1; i <= 4; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 6 ? '→' : String(i);
+    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 4 ? '→' : String(i);
   }
   const model = MODELS.find(m => m.id === selModel);
   const el = (id) => document.getElementById(id);
@@ -2630,7 +2612,8 @@ function v3SortirSansReport() {
 
 // ─── PAGE "PERSONNALISATION" SEULE (dt-s5perso) — cadre standard déjà connu ──────
 function v3GoPersoFromS2() {
-  dtStep = 5;
+  dtStep = 3;
+  document.body.classList.remove('dt-step-4');
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s5perso')?.classList.add('active');
   evoActiveContainer = 'v2-evo-options';
@@ -3420,7 +3403,7 @@ function v2NextFromTaille() {
 
 // Aller au récap avant devis
 function v2GoRecap() {
-  dtStep = 6;
+  dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s6devis')?.classList.add('active');
   document.body.classList.add('dt-step-4');
@@ -3449,14 +3432,14 @@ function v2GoDevis() {
 
 function v2UpdateStepper() {
   const n = dtStep;
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 4; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
     d.innerHTML = i < n
       ? '<i class="ti ti-check" style="font-size:9px;"></i>'
-      : i === 6 ? '→' : String(i);
+      : i === 4 ? '→' : String(i);
   }
   const d3 = document.getElementById('dts-d3');
   if (d3) d3.textContent = n > 3
@@ -3499,35 +3482,10 @@ function v2BackFromMesureOrHorsGamme() {
 }
 
 function v2BackFromDevis() {
-  document.body.classList.remove('dt-step-4');
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  if (v2Parcours === 'standard') {
-    // Taille connue -> Personnalisation (dt-s5perso), l'écran réellement utilisé dans le
-    // flux actuel (vélo complet comme kit cadre). L'ancien dt-s3 / v2RenderTaille()
-    // n'existent plus depuis la restructuration de la carte Cadre — ce cas renvoyait
-    // vers un écran fantôme, vide.
-    dtStep = 5;
-    document.getElementById('dt-s5perso')?.classList.add('active');
-    evoActiveContainer = 'v2-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'standard_evo') {
-    dtStep = 5;
-    document.getElementById('dt-s5evo')?.classList.add('active');
-    evoActiveContainer = 'v2-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'sur_mesure') {
-    dtStep = 4;
-    document.getElementById('dt-s4mesure')?.classList.add('active');
-    evoActiveContainer = 'v2-mesure-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'hors_gamme') {
-    dtStep = 4;
-    document.getElementById('dt-s4horsgamme')?.classList.add('active');
-  }
-  v2UpdateStepper();
-  dtRenderRecap();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
+  // v2Parcours reste toujours 'standard' désormais (Sur-mesure/Projet spécifique
+  // retirés du parcours normal) — plus besoin de distinguer plusieurs cas, on
+  // retourne toujours vers Personnalisation.
+  v3GoPersoFromS2();
 }
 
 function v2GoBackToTailleEvo() {
@@ -5901,13 +5859,7 @@ function dtSmartBack() {
   if (dtStep === 1) return;
   if (dtStep === 2) { dtGo(1); return; }
   if (dtStep === 3) { dtGo(2); return; }
-  if (dtStep === 4) {
-    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') v2BackFromMesureOrHorsGamme();
-    else v2BackFromTaille();
-    return;
-  }
-  if (dtStep === 5) { v2GoBackToTailleEvo(); return; }
-  if (dtStep === 6) { v2BackFromDevis(); return; }
+  if (dtStep === 4) { v2BackFromDevis(); return; }
 }
 
 // Enveloppe les fonctions de navigation existantes pour pousser une entrée d'historique
