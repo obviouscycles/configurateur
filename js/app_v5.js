@@ -2116,7 +2116,12 @@ function renderComponentDimField(key, label, options, refreshFn, defaultValue) {
       </select>
     </div>`;
   }
-  if (!selSize[key] && defaultValue !== null && defaultValue !== undefined && options.map(String).includes(String(defaultValue))) {
+  // "!selSize[key]" est vrai à la fois pour undefined (jamais touché) ET pour null
+  // (valeur que "Je ne sais pas encore" vient justement de stocker) — sans cette
+  // distinction explicite, choisir "Je ne sais pas encore" se faisait aussitôt
+  // écraser par la valeur recommandée au rendu suivant (déclenché par le clic
+  // lui-même), rendant ce choix visible mais sans aucun effet.
+  if (selSize[key] === undefined && defaultValue !== null && defaultValue !== undefined && options.map(String).includes(String(defaultValue))) {
     selSize[key] = String(defaultValue);
     selSizeSource[key] = 'default';
   }
@@ -4370,7 +4375,10 @@ function buildDimsGrid() {
   const defs = selSize.taille && DEFAULTS_BY_TAILLE[selModel] ? DEFAULTS_BY_TAILLE[selModel][selSize.taille] : {};
   if (defs) {
     fields.forEach(f => {
-      if (!selSize[f.key] && defs[f.key] !== undefined) {
+      // selSize[f.key] === undefined (jamais touché) uniquement — pas null, sinon
+      // choisir "Je ne sais pas encore" se refait aussitôt écraser par la valeur
+      // recommandée au rendu suivant (même bug que renderComponentDimField).
+      if (selSize[f.key] === undefined && defs[f.key] !== undefined) {
         const defVal = defs[f.key];
         // Trouver la valeur disponible la plus proche (inférieure pour manivelle)
         if (f.options && f.options.length > 0) {
@@ -5497,7 +5505,9 @@ function p11BuildDimsGrid() {
   const defs = selSize.taille && DEFAULTS_BY_TAILLE[selModel] ? DEFAULTS_BY_TAILLE[selModel][selSize.taille] : {};
   if (defs) {
     fields.forEach(f => {
-      if (!selSize[f.key] && defs[f.key] !== undefined) {
+      // selSize[f.key] === undefined uniquement — pas null (même raison que la
+      // version desktop, voir buildDimsGrid()).
+      if (selSize[f.key] === undefined && defs[f.key] !== undefined) {
         const defVal = defs[f.key];
         if (f.options && f.options.length > 0) {
           const nums = f.options.map(Number).filter(n=>!isNaN(n));
