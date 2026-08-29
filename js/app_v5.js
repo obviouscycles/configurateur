@@ -244,12 +244,11 @@ function optionsFor(postId, modelId) {
       opts = opts.filter(o => o.id === 'pwr_all');
     }
   }
-  // Kit cadre : le cintre ne se débloque qu'une fois une VRAIE potence choisie
-  // (pas juste "Sans potence") — tant que ce n'est pas fait, seul "Sans cintre" est proposé.
-  if (postId === 'cintre_kit' && window._kitCadre) {
-    const hasRealPotence = selOpts['potence_kit'] && selOpts['potence_kit'] !== 'potence_no';
-    if (!hasRealPotence) opts = opts.filter(o => o.id === 'cintre_no');
-  }
+  // Filtre générique "requiresPost/requiresOptionNot" — remplace l'ancienne règle
+  // codée en dur spécifique au cintre/potence kit cadre. Généré depuis les colonnes
+  // requires_post / requires_option_not de l'onglet 4 (composants_v5.js), s'applique
+  // désormais à N'IMPORTE QUELLE option, sur n'importe quel poste.
+  opts = opts.filter(o => passesRequiresGate(o, selOpts));
   return opts.sort((a, b) => {
     const aRec = isRecommended(a, modelId) ? 0 : 1;
     const bRec = isRecommended(b, modelId) ? 0 : 1;
@@ -2958,18 +2957,6 @@ const EVO_OPTIONS = [
       "gravel_bikepacking",
       "vtt_enduro"
     ]
-  },
-  {
-    "id": "evo_sloping",
-    "label": "Modification sloping",
-    "price": 10,
-    "note": "Changement de l'inclinaison du tube supérieur — sans changement de géométrie, dans la limite fixée par Obvious. Nouvelle option (xlsx V5).",
-    "modeles": [
-      "route",
-      "gravel_racing",
-      "gravel_bikepacking",
-      "vtt_enduro"
-    ]
   }
 ];
 
@@ -3103,7 +3090,7 @@ let evoActiveContainer = 'v2-evo-options';
 
 const EVO_ICONS = {
   evo_inserts: 'ti-bottle', evo_iscg: 'ti-settings', evo_integ: 'ti-cable',
-  evo_gravure: 'ti-typography', evo_sloping: 'ti-angle',
+  evo_gravure: 'ti-typography',
   ins_pb1: 'ti-bottle', ins_pb2: 'ti-bottle', ins_pb3: 'ti-bottle',
   ins_sacoche: 'ti-briefcase', ins_pbag4: 'ti-package', ins_pbag2: 'ti-package',
   ins_gardeboue: 'ti-umbrella'
