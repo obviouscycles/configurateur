@@ -60,7 +60,7 @@ async function loadConfigFromUrl() {
       // que le récap était bien généré, juste dans un conteneur resté caché.
       v2GoRecap();
     } else {
-      renderModels(); v2Parcours = 'standard'; p11UpdateStep(6);
+      renderModels(); v2Parcours = 'standard'; p11UpdateStep(4);
     }
 
     // ── Mode "config partagée" : adapter l'interface ──────────────────
@@ -1626,8 +1626,14 @@ function v3GoTitaniumFromS1() {
 function dtGo(n) {
   if (window.innerWidth < 768) return;
   if (n > 1 && !selModel) return;
+  // 4 étapes réelles : 1 Modèle, 2 Composants, 3 Personnalisation, 4 Devis. Les
+  // anciennes étapes "Cadre" (bifurcation standard/sur-mesure/hors-gamme) et
+  // "Taille/Options" ont été retirées du parcours normal — la première ne menait
+  // qu'à un écran fantôme, la seconde était déjà remplacée dans les faits par
+  // Personnalisation, atteinte directement depuis Composants.
+  if (n === 4) { v2GoRecap(); return; }
+  if (n === 3) { v3GoPersoFromS2(); return; }
   dtStep = n;
-  document.body.classList.toggle('dt-step-4', n === 5 && v2Parcours === 'standard');
   dtRender();
   v2UpdateStepper();
   const morph = document.getElementById('titanium-morph');
@@ -1650,19 +1656,20 @@ function dtRender() {
     else { resetBtn.style.opacity='.3'; resetBtn.style.pointerEvents='none'; }
   }
 
-  // Stepper
-  for (let i = 1; i <= 5; i++) {
+  // Stepper — 6 étapes réelles (Modèle/Composants/Cadre/Taille-Options/Personnalisation/
+  // Stepper — 4 étapes réelles (Modèle/Composants/Personnalisation/Devis). "Cadre" et
+  // "Taille/Options" retirées du parcours normal (voir dtGo()).
+  for (let i = 1; i <= 4; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
-    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 5 ? '→' : String(i);
+    d.innerHTML = i < n ? '<i class="ti ti-check" style="font-size:9px;"></i>' : i === 4 ? '→' : String(i);
   }
   const model = MODELS.find(m => m.id === selModel);
   const el = (id) => document.getElementById(id);
   if (el('dts-d1')) el('dts-d1').textContent = model ? model.name : '';
   if (el('dts-d2')) el('dts-d2').textContent = window._activePreset || (model ? 'Base' : '');
-  if (el('dts-d3')) el('dts-d3').textContent = window.sizeValidated ? 'Enregistrée ✓' : 'Optionnel';
 
   // Modif count stepper
   const mc = dtModifCount();
@@ -2436,7 +2443,8 @@ function v3SortirSansReport() {
 
 // ─── PAGE "PERSONNALISATION" SEULE (dt-s5perso) — cadre standard déjà connu ──────
 function v3GoPersoFromS2() {
-  dtStep = 5;
+  dtStep = 3;
+  document.body.classList.remove('dt-step-4');
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s5perso')?.classList.add('active');
   evoActiveContainer = 'v2-evo-options';
@@ -3207,7 +3215,7 @@ function v2NextFromTaille() {
 
 // Aller au récap avant devis
 function v2GoRecap() {
-  dtStep = 6;
+  dtStep = 4;
   document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
   document.getElementById('dt-s6devis')?.classList.add('active');
   document.body.classList.add('dt-step-4');
@@ -3236,24 +3244,14 @@ function v2GoDevis() {
 
 function v2UpdateStepper() {
   const n = dtStep;
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 4; i++) {
     const s = document.getElementById('dts-' + i);
     const d = document.getElementById('dts-dot-' + i);
     if (!s || !d) continue;
     s.className = 'dts-step' + (i === n ? ' active' : i < n ? ' done' : '');
     d.innerHTML = i < n
       ? '<i class="ti ti-check" style="font-size:9px;"></i>'
-      : i === 6 ? '→' : String(i);
-  }
-  const d3 = document.getElementById('dts-d3');
-  if (d3) d3.textContent = n > 3
-    ? ({standard:'Standard',standard_evo:'Standard + perso',sur_mesure:'Sur mesure',hors_gamme:'Projet unique'}[v2Parcours] || '') + ' ✓'
-    : '';
-  const d4 = document.getElementById('dts-d4');
-  if (d4) {
-    if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
-    else if (v2Parcours === 'standard_evo') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
-    else d4.textContent = '';
+      : i === 4 ? '→' : String(i);
   }
 }
 
@@ -3286,34 +3284,10 @@ function v2BackFromMesureOrHorsGamme() {
 }
 
 function v2BackFromDevis() {
-  document.body.classList.remove('dt-step-4');
-  document.querySelectorAll('.dt-step-content').forEach(s => s.classList.remove('active'));
-  if (v2Parcours === 'standard') {
-    // Taille connue -> Personnalisation (dt-s5perso), l'écran réellement utilisé dans le
-    // flux actuel. L'ancien dt-s3 / v2RenderTaille() n'existent plus depuis la
-    // restructuration de la carte Cadre — ce cas renvoyait vers un écran fantôme, vide.
-    dtStep = 5;
-    document.getElementById('dt-s5perso')?.classList.add('active');
-    evoActiveContainer = 'v2-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'standard_evo') {
-    dtStep = 5;
-    document.getElementById('dt-s5evo')?.classList.add('active');
-    evoActiveContainer = 'v2-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'sur_mesure') {
-    dtStep = 4;
-    document.getElementById('dt-s4mesure')?.classList.add('active');
-    evoActiveContainer = 'v2-mesure-evo-options';
-    evoRender();
-  } else if (v2Parcours === 'hors_gamme') {
-    dtStep = 4;
-    document.getElementById('dt-s4horsgamme')?.classList.add('active');
-  }
-  v2UpdateStepper();
-  dtRenderRecap();
-  const main = document.getElementById('dt-main');
-  if (main) main.scrollTop = 0;
+  // v2Parcours reste toujours 'standard' désormais (Sur-mesure/Projet spécifique
+  // retirés du parcours normal) — plus besoin de distinguer plusieurs cas, on
+  // retourne toujours vers Personnalisation.
+  v3GoPersoFromS2();
 }
 
 function v2GoBackToTailleEvo() {
@@ -4453,20 +4427,14 @@ let p11CurrentStep = 1;
 let p11SizeMode = null;
 let p11OverlapTailles = null;
 
-const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Votre cadre', 'Votre taille', 'Personnalisation', 'Votre configuration'];
+const P11_LABELS = ['Choisir votre modèle', 'Configurer vos composants', 'Personnalisation', 'Votre configuration'];
 
 // Retourne l'ID de la div à afficher pour un numéro d'étape donné, selon le parcours choisi
 function p11StepDivId(n) {
   if (n === 1) return 'p11-s1';
   if (n === 2) return 'p11-s2';
-  if (n === 3) return 'p11-s5perso'; // repurposé : Personnalisation (cadre standard déjà connu)
-  if (n === 4) {
-    if (v2Parcours === 'sur_mesure') return 'p11-s4mesure';
-    if (v2Parcours === 'hors_gamme') return 'p11-s4horsgamme';
-    return 'p11-s4std';
-  }
-  if (n === 5) return 'p11-s5evo';
-  if (n === 6) return 'p11-s6devis';
+  if (n === 3) return 'p11-s5perso'; // Personnalisation (cadre standard déjà connu)
+  if (n === 4) return 'p11-s6devis';
   return 'p11-s1';
 }
 
@@ -4524,8 +4492,10 @@ function p11UpdateStep(n) {
   if (p11HistoryReady && !p11SkipHistoryPush) {
     history.pushState({ p11step: n }, '', location.href);
   }
-  // Dots + labels (6 étapes)
-  for (let i=1; i<=6; i++) {
+  // Dots + labels — 4 étapes réelles (Modèle/Composants/Personnalisation/Devis).
+  // "Cadre" et "Taille" retirées : la première ne menait qu'à un écran fantôme, la
+  // seconde était déjà remplacée dans les faits par Personnalisation (voir p11Next()).
+  for (let i=1; i<=4; i++) {
     const dot = document.getElementById('p11-dot-' + i);
     if (!dot) continue;
     dot.className = 'p11-step-dot' + (i === n ? ' active' : i < n ? ' done' : '');
@@ -4535,92 +4505,68 @@ function p11UpdateStep(n) {
   const backBtn = document.getElementById('p11-back-btn');
   const fwdBtn  = document.getElementById('p11-fwd-btn');
   if (backBtn) backBtn.style.color = n > 1 ? '#F5C400' : '#333';
-  if (fwdBtn)  fwdBtn.style.color  = (n < 6 && n !== 3) ? '#F5C400' : '#333';
+  if (fwdBtn)  fwdBtn.style.color  = (n < 4 && n !== 3) ? '#F5C400' : '#333';
   // Steps
   document.querySelectorAll('.p11-step').forEach(s => { s.classList.remove('active'); s.classList.remove('p11-active'); s.style.display = 'none'; });
   const stepId = p11StepDivId(n);
   const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
-  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape 6, récap déjà détaillé)
-  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3, 4mesure, 4horsgamme, 5, 6)
+  // Bandeau bas : toujours visible si un modèle est choisi (sauf étape Devis, récap déjà détaillé)
+  // Seul le bouton "Suivant" est masqué sur l'étape Devis (boutons d'action dédiés :
+  // "Recevoir mon devis", "Sauvegarder"...). Personnalisation (3) utilise désormais le
+  // même bandeau fixe pleine largeur que Modèle/Composants, pour rester cohérente
+  // visuellement — plus de bouton "Retour" en double avec la flèche du sommaire.
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
-  const hasInlineNav = (n === 3) || (n === 4 && (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme')) || (n === 5) || (n === 6);
-  if (bar) bar.style.display = (selModel && n !== 6) ? 'block' : 'none';
+  const hasInlineNav = (n === 4);
+  if (bar) bar.style.display = (selModel && n !== 4) ? 'block' : 'none';
   if (btn) btn.style.display = hasInlineNav ? 'none' : 'flex';
-  if (n === 6) p11InitStep4Bar();
+  if (n === 4) p11InitStep4Bar();
   if (!hasInlineNav && nextLbl) {
-    if (n === 4 && !window.sizeValidated) {
-      nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Continuer' : 'Continuer sans taille';
-    } else if (n === 4 && v2Parcours === 'standard_evo') {
-      nextLbl.textContent = 'Mes personnalisations';
-    } else if (n === 4) {
+    if (n === 2) {
+      nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Personnalisation';
+    } else if (n === 3) {
       nextLbl.textContent = 'Ma configuration';
-    } else if (n === 2) {
-      nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
-        : !selSize.taille ? 'Déterminer ma taille'
-        : 'Personnalisation';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
   }
   // Lien discret "Besoin d'aide" — uniquement étape 2, cadre = taille déjà connue
   const aideLink = document.getElementById('p11-aide-taille-link');
-  if (aideLink) aideLink.style.display = (n === 2 && v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
-  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape 6, récap déjà détaillé)
-  if (priceStrip) priceStrip.style.display = (selModel && n !== 6) ? 'flex' : 'none';
+  if (aideLink) aideLink.style.display = (n === 2 && selSize.taille) ? 'block' : 'none';
+  // Afficher le prix sur toutes les pages dès qu'un modèle est choisi (sauf étape Devis, récap déjà détaillé)
+  if (priceStrip) priceStrip.style.display = (selModel && n !== 4) ? 'flex' : 'none';
   const stripSave = document.getElementById('p11-strip-save');
-  if (stripSave) stripSave.style.display = (n >= 2 && n !== 6 && selModel) ? 'flex' : 'none';
+  if (stripSave) stripSave.style.display = (n >= 2 && n !== 4 && selModel) ? 'flex' : 'none';
   if (selModel) p11UpdateTotal();
   // Step 1 : désactiver next si pas de modèle
   if (n === 1 && btn) btn.style.opacity = selModel ? '1' : '.4';
   // Step 2 : construire les postes
   if (n === 2) { p11RenderPosts(); p11UpdateTotal(); }
-  // Step 3 (repurposé) : Personnalisation seule (cadre standard déjà connu)
+  // Step 3 : Personnalisation (cadre standard déjà connu)
   if (n === 3) { p11EvoActiveContainer = 'p11-evo-options-perso'; p11EvoRender(); }
-  // Step 4std (taille) : rebuilder dims si mode connu
-  if (n === 4 && v2Parcours !== 'sur_mesure' && v2Parcours !== 'hors_gamme' && p11SizeMode) p11BuildDimsGrid();
-  // Step 4 sur_mesure : rendre les options Évolution incluses (sans prix)
-  if (n === 4 && v2Parcours === 'sur_mesure') { p11EvoActiveContainer = 'p11-mesure-evo-options'; p11EvoRender(); }
-  // Step 5 : rendre les options Évolution (avec prix)
-  if (n === 5) { p11EvoActiveContainer = 'p11-evo-options'; p11EvoRender(); }
-  // Step 6 : construire le récap final
-  if (n === 6) p11RenderFinalRecap();
+  // Step 4 : construire le récap final
+  if (n === 4) p11RenderFinalRecap();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function p11Next() {
   if (p11CurrentStep === 1) { if (!selModel) return; p11UpdateStep(2); return; }
   if (p11CurrentStep === 2) {
-    // Destination selon le choix Cadre (carte "Cadre" en haut des composants)
-    if (v2Parcours === 'sur_mesure') { p11UpdateStep(4); return; }
     if (!selSize.taille) { p11OpenGuideSheet(); return; }
-    p11UpdateStep(3); return; // Personnalisation (repurposé)
+    p11UpdateStep(3); return; // Personnalisation
   }
-  if (p11CurrentStep === 3) return; // navigation par boutons inline uniquement
-  if (p11CurrentStep === 4) {
-    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
-    p11UpdateStep(6); return;
-  }
-  if (p11CurrentStep === 5) { p11UpdateStep(6); return; }
+  if (p11CurrentStep === 3) { p11UpdateStep(4); return; } // Personnalisation -> Devis
+  if (p11CurrentStep === 4) return; // navigation par boutons inline uniquement (Devis)
 }
 
 function p11Back() {
   if (p11CurrentStep === 1) return;
   if (p11CurrentStep === 2) { p11UpdateStep(1); return; }
   if (p11CurrentStep === 3) { p11UpdateStep(2); return; }
-  if (p11CurrentStep === 4) {
-    if (v2Parcours === 'hors_gamme') { p11UpdateStep(1); return; } // Titanium -> retour étape 1 (démarré de là)
-    p11UpdateStep(2); return; // Performance -> retour composants
-  }
-  if (p11CurrentStep === 5) { p11UpdateStep(4); return; }
-  if (p11CurrentStep === 6) {
-    if (v2Parcours === 'standard_evo') { p11UpdateStep(5); return; }
-    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') { p11UpdateStep(4); return; }
-    p11UpdateStep(3); return; // standard -> retour Personnalisation
-  }
+  if (p11CurrentStep === 4) { p11UpdateStep(3); return; } // retour Personnalisation
 }
 
 function p11GoTo(n) { p11UpdateStep(n); }
@@ -4647,7 +4593,7 @@ function p11GoDevisFromOOD() {
     if (input) { input.style.borderColor = '#e05555'; input.focus(); }
     return;
   }
-  p11UpdateStep(6);
+  p11UpdateStep(4);
 }
 
 // ─── DROPZONE FICHIER MOBILE (tap pour choisir, pas de drag&drop) ──────────────
@@ -5610,13 +5556,7 @@ function dtSmartBack() {
   if (dtStep === 1) return;
   if (dtStep === 2) { dtGo(1); return; }
   if (dtStep === 3) { dtGo(2); return; }
-  if (dtStep === 4) {
-    if (v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') v2BackFromMesureOrHorsGamme();
-    else v2BackFromTaille();
-    return;
-  }
-  if (dtStep === 5) { v2GoBackToTailleEvo(); return; }
-  if (dtStep === 6) { v2BackFromDevis(); return; }
+  if (dtStep === 4) { v2BackFromDevis(); return; }
 }
 
 // Enveloppe les fonctions de navigation existantes pour pousser une entrée d'historique

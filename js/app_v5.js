@@ -1726,7 +1726,6 @@ function dtRender() {
   const el = (id) => document.getElementById(id);
   if (el('dts-d1')) el('dts-d1').textContent = model ? model.name : '';
   if (el('dts-d2')) el('dts-d2').textContent = window._activePreset || (model ? 'Base' : '');
-  if (el('dts-d3')) el('dts-d3').textContent = window.sizeValidated ? 'Enregistrée ✓' : 'Optionnel';
 
   // Modif count stepper
   const mc = dtModifCount();
@@ -3441,16 +3440,6 @@ function v2UpdateStepper() {
       ? '<i class="ti ti-check" style="font-size:9px;"></i>'
       : i === 4 ? '→' : String(i);
   }
-  const d3 = document.getElementById('dts-d3');
-  if (d3) d3.textContent = n > 3
-    ? ({standard:'Standard',standard_evo:'Standard + perso',sur_mesure:'Sur mesure',hors_gamme:'Projet unique'}[v2Parcours] || '') + ' ✓'
-    : '';
-  const d4 = document.getElementById('dts-d4');
-  if (d4) {
-    if (v2Parcours === 'standard') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
-    else if (v2Parcours === 'standard_evo') d4.textContent = window.sizeValidated ? 'Taille ✓' : 'Optionnel';
-    else d4.textContent = '';
-  }
 }
 
 function v2BackFromTaille() {
@@ -4705,18 +4694,23 @@ function p11UpdateStep(n) {
   const step = document.getElementById(stepId);
   if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
   // Bandeau bas : toujours visible si un modèle est choisi (sauf étape Devis, récap déjà détaillé)
-  // Seul le bouton "Suivant" est masqué sur les pages avec boutons inline (3 et 4)
+  // Seul le bouton "Suivant" est masqué sur l'étape Devis (boutons d'action dédiés :
+  // "Recevoir mon devis", "Sauvegarder"...). Personnalisation (3) utilise désormais le
+  // même bandeau fixe pleine largeur que Modèle/Composants, pour rester cohérente
+  // visuellement — plus de bouton "Retour" en double avec la flèche du sommaire.
   const bar = document.getElementById('p11-bottom-bar');
   const btn = document.getElementById('p11-next-btn');
   const nextLbl = document.getElementById('p11-next-label');
   const priceStrip = document.getElementById('p11-price-strip');
-  const hasInlineNav = (n === 3) || (n === 4);
+  const hasInlineNav = (n === 4);
   if (bar) bar.style.display = (selModel && n !== 4) ? 'block' : 'none';
   if (btn) btn.style.display = hasInlineNav ? 'none' : 'flex';
   if (n === 4) p11InitStep4Bar();
   if (!hasInlineNav && nextLbl) {
     if (n === 2) {
       nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Personnalisation';
+    } else if (n === 3) {
+      nextLbl.textContent = 'Ma configuration';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
@@ -4746,8 +4740,8 @@ function p11Next() {
     if (!selSize.taille) { p11OpenGuideSheet(); return; }
     p11UpdateStep(3); return; // Personnalisation
   }
-  if (p11CurrentStep === 3) return; // navigation par boutons inline uniquement
-  if (p11CurrentStep === 4) return; // navigation par boutons inline uniquement
+  if (p11CurrentStep === 3) { p11UpdateStep(4); return; } // Personnalisation -> Devis
+  if (p11CurrentStep === 4) return; // navigation par boutons inline uniquement (Devis)
 }
 
 function p11Back() {
