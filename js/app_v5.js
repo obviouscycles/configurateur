@@ -2281,7 +2281,7 @@ function dtRenderPosts() {
           '<div class="opc-check"><i class="ti ti-check"></i></div>' +
           '<div class="opc-img-wrap">' + imgHtml + '</div>' +
           '<div class="opc-body">' +
-          (rec2?'<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px;"></i> Recommandé</span></div>':'') +
+          '<div class="opc-badges">' + (rec2?'<span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px;"></i> Recommandé</span>':'') + '</div>' +
           '<div class="opc-name">' + o.name + '</div>' +
           (o.desc?'<div class="opc-desc">'+o.desc+'</div>':'') +
           colorSwatchesHtml +
@@ -5152,7 +5152,7 @@ function p11RenderPosts() {
             '<div class="opc-check"><i class="ti ti-check"></i></div>' +
             '<div class="opc-img-wrap">' + imgHTML + '</div>' +
             '<div class="opc-body">' +
-              (rec ? '<div class="opc-badges"><span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span></div>' : '') +
+              '<div class="opc-badges">' + (rec ? '<span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px"></i> Recommandé</span>' : '') + '</div>' +
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
               colorSwatchesHtml +
