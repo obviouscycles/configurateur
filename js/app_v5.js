@@ -189,6 +189,11 @@ async function getConfigFromSupabase(configId) {
 
 // ─── ÉTAT ────────────────────────────────────────────────────────────────────
 let selModel = null, selOpts = {}, openPost = null, savedConfigs = [];
+// Couleur choisie par option (clé "postId_optId" -> index dans o.couleurs) — mémorisée
+// séparément de la sélection elle-même, pour que cliquer une couleur d'une option pas
+// encore choisie sélectionne CETTE couleur précise, sans revenir à la couleur par
+// défaut au rendu suivant.
+let selOptColorIdx = {};
 
 // ─── STOCKAGE LOCAL ───────────────────────────────────────────────────────────
 function loadSaved() {
@@ -2260,20 +2265,23 @@ function dtRenderPosts() {
       const rec2 = isRecommended(o, selModel);
       const d = o.price - curPrice;
       const diff = sel2 ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
-      // Grille de couleurs — un simple aperçu visuel (bascule la photo affichée), sans
-      // jamais changer l'option réellement sélectionnée ni son prix (les variantes de
-      // couleur d'un même produit partagent toujours le même id, le même prix).
+      // Grille de couleurs — cliquer une couleur sélectionne CETTE option, dans CETTE
+      // couleur (voir dtSelectColor) : la couleur choisie sur une option pas encore
+      // sélectionnée doit être conservée telle quelle, pas revenir à la couleur par
+      // défaut une fois l'option confirmée.
       const imgId = 'opc-img-' + p.id + '-' + o.id;
+      const colorKey = p.id + '_' + o.id;
+      const activeColorIdx = selOptColorIdx[colorKey] || 0;
       const colorSwatchesHtml = (o.couleurs && o.couleurs.length) ?
         '<div class="opc-colors" onclick="event.stopPropagation()">' +
           o.couleurs.map((c, ci) =>
-            '<button type="button" class="opc-color-dot' + (ci===0?' active':'') + '" ' +
+            '<button type="button" class="opc-color-dot' + (ci===activeColorIdx?' active':'') + '" ' +
             'style="background:' + c.hex + ';" title="' + c.nom + '" ' +
-            "onclick=\"dtPreviewColor('" + imgId + "', '" + c.photo.replace(/'/g, "\\'") + "', this)\"></button>"
+            "onclick=\"dtSelectColor('" + p.id + "', '" + o.id + "', " + ci + ")\"></button>"
           ).join('') +
         '</div>' : '';
       if (hasPhotos) {
-        const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[0].photo : o.image;
+        const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[activeColorIdx].photo : o.image;
         const imgHtml = (defaultImg && defaultImg !== 'assets/no_option.png')
           ? '<img id="' + imgId + '" src="' + defaultImg + '" alt="" loading="lazy" style="width:100%;height:80px;object-fit:cover;display:block;">'
           : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
@@ -2339,13 +2347,18 @@ function dtRenderPosts() {
 // Bascule la photo affichée sur une carte d'option vers la variante de couleur
 // cliquée — un simple aperçu visuel, ne change jamais l'option réellement
 // sélectionnée (même id, même prix quelle que soit la couleur).
-function dtPreviewColor(imgId, photoUrl, btnEl) {
-  const img = document.getElementById(imgId);
-  if (img) img.src = photoUrl;
-  if (btnEl && btnEl.parentElement) {
-    btnEl.parentElement.querySelectorAll('.opc-color-dot').forEach(b => b.classList.remove('active'));
-    btnEl.classList.add('active');
-  }
+// Cliquer une couleur sélectionne le composant lui-même (pas juste un aperçu) —
+// sinon, choisir une couleur puis cliquer la vignette pour confirmer revenait
+// silencieusement à la couleur par défaut, perdant le choix qui venait d'être fait.
+function dtSelectColor(postId, optId, colorIdx) {
+  selOptColorIdx[postId + '_' + optId] = colorIdx;
+  dtSelectOpt(postId, optId);
+}
+
+// Équivalent mobile — même logique, juste la fonction de sélection qui diffère.
+function p11SelectColor(postId, optId, colorIdx) {
+  selOptColorIdx[postId + '_' + optId] = colorIdx;
+  p11SelectOpt(postId, optId);
 }
 
 function dtSelectOpt(postId, optId) {
@@ -5134,18 +5147,20 @@ function p11RenderPosts() {
           const diff = sel ? '±0 €' : d===0 ? '±0 €' : (d>0?'+':'')+d.toLocaleString('fr-FR')+' €';
           const pc = d<0?'neg':d>0?'pos':'zero';
           const imgId = 'p11-opc-img-' + p.id + '-' + o.id;
-          const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[0].photo : o.image;
+          const colorKey = p.id + '_' + o.id;
+          const activeColorIdx = selOptColorIdx[colorKey] || 0;
+          const defaultImg = (o.couleurs && o.couleurs.length) ? o.couleurs[activeColorIdx].photo : o.image;
           const imgHTML = defaultImg && defaultImg !== 'assets/no_option.png'
             ? '<img id="' + imgId + '" src="' + defaultImg + '" alt="' + o.name + '" loading="lazy" onerror="this.style.display=\'none\'">'
             : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
-          // Grille de couleurs — même mécanisme que desktop : bascule juste la photo
-          // affichée, ne change jamais l'option réellement sélectionnée ni son prix.
+          // Grille de couleurs — cliquer une couleur sélectionne CETTE option, dans
+          // CETTE couleur (voir p11SelectColor), même logique que desktop.
           const colorSwatchesHtml = (o.couleurs && o.couleurs.length) ?
             '<div class="opc-colors" onclick="event.stopPropagation()">' +
               o.couleurs.map((c, ci) =>
-                '<button type="button" class="opc-color-dot' + (ci===0?' active':'') + '" ' +
+                '<button type="button" class="opc-color-dot' + (ci===activeColorIdx?' active':'') + '" ' +
                 'style="background:' + c.hex + ';" title="' + c.nom + '" ' +
-                "onclick=\"dtPreviewColor('" + imgId + "', '" + c.photo.replace(/'/g, "\\'") + "', this)\"></button>"
+                "onclick=\"p11SelectColor('" + p.id + "', '" + o.id + "', " + ci + ")\"></button>"
               ).join('') +
             '</div>' : '';
           return '<div class="opt-photo-card' + (sel?' sel':'') + '" onclick="p11SelectOpt(\'' + p.id + '\',\'' + o.id + '\')">' +
