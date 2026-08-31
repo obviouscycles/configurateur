@@ -376,8 +376,15 @@ function computeTuningDelta(opts) {
     const options = TUNING_OPTIONS[tp.tuningId] || [];
     const standard = options.find(o => o.isStandard);
     if (!standard) return;
+    const currentParentOpt = opts[tp.parentPost];
     const selectedId = selTuning[tp.tuningId];
-    const selected = selectedId ? options.find(o => o.id === selectedId) : standard;
+    let selected = selectedId ? options.find(o => o.id === selectedId) : standard;
+    // Une sélection devenue invalide pour le modèle/composant parent actuel (ex:
+    // option réservée à un autre modèle après changement) ne doit plus compter —
+    // retombe silencieusement sur le standard, comme si rien n'était choisi.
+    if (selected && selected.requiresOptionIn && !(currentParentOpt && selected.requiresOptionIn.includes(currentParentOpt))) {
+      selected = standard;
+    }
     if (!selected) return;
     delta += selected.price - standard.price;
   });
@@ -2439,7 +2446,12 @@ function renderTuningBoxesFor(parentPost) {
     isTuningActive(tp, selOpts) &&
     (TUNING_OPTIONS[tp.tuningId] || []).length > 0
   );
-  return relevant.map(renderTuningBox).join('');
+  // La case elle-même peut être "active" (isTuningActive) mais n'avoir, une fois le
+  // filtre par option appliqué, plus AUCUNE carte à montrer pour le modèle actuel
+  // (ex: box sans restriction propre, mais dont toutes les options sont réservées à
+  // un autre modèle) — renderTuningBox() renvoie alors '' et on l'exclut ici, pour
+  // ne jamais afficher une case vide avec juste un titre.
+  return relevant.map(renderTuningBox).filter(html => html !== '').join('');
 }
 
 function renderTuningBox(tp) {
@@ -2448,8 +2460,20 @@ function renderTuningBox(tp) {
   // "standard" n'apparaît comme choix cliquable que si show_standard_as_choice=OUI —
   // sinon, seule(s) l'alternative(s) sont montrées, "standard" restant le choix
   // implicite tant qu'aucune n'est cochée.
-  const visibleOpts = tp.showStandardAsChoice ? allOpts : allOpts.filter(o => !o.isStandard);
-  const selectedId = selTuning[tp.tuningId];
+  // Filtre à deux niveaux : la case elle-même (isTuningActive, déjà vérifié en amont)
+  // + chaque option individuellement, si elle porte sa propre restriction (ex: le
+  // collier titane réservé au VTT alors que la case "Collier de selle" reste visible
+  // sur tous les modèles).
+  const currentParentOpt = selOpts[tp.parentPost];
+  const passesOwnGate = (o) => !o.requiresOptionIn || (currentParentOpt && o.requiresOptionIn.includes(currentParentOpt));
+  const visibleOpts = (tp.showStandardAsChoice ? allOpts : allOpts.filter(o => !o.isStandard)).filter(passesOwnGate);
+  if (visibleOpts.length === 0) return '';
+  const selectedIdRaw = selTuning[tp.tuningId];
+  // Une sélection existante mais devenue invalide pour le composant parent actuel
+  // (ex: collier titane choisi puis modèle changé) ne doit plus apparaître "sel" —
+  // retombe sur le standard, cohérent avec computeTuningDelta().
+  const selectedOpt = selectedIdRaw ? allOpts.find(o => o.id === selectedIdRaw) : null;
+  const selectedId = (selectedOpt && passesOwnGate(selectedOpt)) ? selectedIdRaw : null;
   const currentId = selectedId || (tp.showStandardAsChoice ? (standard ? standard.id : null) : null);
 
   const cardsHtml = visibleOpts.map(o => {
