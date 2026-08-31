@@ -2287,7 +2287,7 @@ function dtRenderPosts() {
           : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
         return '<div class="opt-photo-card' + (sel2?' sel':'') + '" data-pid="' + p.id + '" data-oid="' + o.id + '">' +
           '<div class="opc-check"><i class="ti ti-check"></i></div>' +
-          '<div class="opc-img-wrap">' + imgHtml + '</div>' +
+          '<div class="opc-img-wrap' + (sel2 ? ' zoomable' : '') + '">' + imgHtml + '</div>' +
           '<div class="opc-body">' +
           '<div class="opc-badges">' + (rec2?'<span class="opc-badge-rec"><i class="ti ti-star" style="font-size:8px;"></i> Recommandé</span>':'') + '</div>' +
           '<div class="opc-name">' + o.name + '</div>' +
@@ -2335,6 +2335,17 @@ function dtRenderPosts() {
     // Clic sur toggle post
     const hdr = e.target.closest('[data-toggle]');
     if (hdr) { dtTogglePost(hdr.dataset.toggle); return; }
+    // Clic sur la photo d'un composant DÉJÀ sélectionné -> agrandir au lieu de
+    // re-sélectionner (sans effet). Sur un composant pas encore sélectionné, on
+    // laisse passer normalement vers la sélection ci-dessous.
+    const imgWrap = e.target.closest('.opc-img-wrap');
+    if (imgWrap) {
+      const card = imgWrap.closest('[data-pid][data-oid]');
+      if (card && card.classList.contains('sel')) {
+        const img = imgWrap.querySelector('img');
+        if (img) { dtOpenLightbox(img.src, img.alt); return; }
+      }
+    }
     // Clic sur option
     const opt = e.target.closest('[data-pid][data-oid]');
     if (opt) { dtSelectOpt(opt.dataset.pid, opt.dataset.oid); return; }
@@ -2350,6 +2361,22 @@ function dtRenderPosts() {
 // Cliquer une couleur sélectionne le composant lui-même (pas juste un aperçu) —
 // sinon, choisir une couleur puis cliquer la vignette pour confirmer revenait
 // silencieusement à la couleur par défaut, perdant le choix qui venait d'être fait.
+// Cliquer la photo d'un composant DÉJÀ sélectionné l'agrandit en popup, au lieu de
+// re-sélectionner (sans effet) — clic sur la photo d'un composant pas encore
+// sélectionné continue de le sélectionner normalement (voir délégation ci-dessous).
+function dtOpenLightbox(src, alt) {
+  const lb = document.getElementById('dt-lightbox');
+  const img = document.getElementById('dt-lightbox-img');
+  if (!lb || !img) return;
+  img.src = src;
+  img.alt = alt || '';
+  lb.classList.add('open');
+}
+function dtCloseLightbox() {
+  document.getElementById('dt-lightbox')?.classList.remove('open');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dtCloseLightbox(); });
+
 function dtSelectColor(postId, optId, colorIdx) {
   selOptColorIdx[postId + '_' + optId] = colorIdx;
   dtSelectOpt(postId, optId);
