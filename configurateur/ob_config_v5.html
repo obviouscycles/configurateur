@@ -561,6 +561,13 @@
   .opc-badge-incl { font-size:9px; background:#F1EFE8; color:#5F5E5A; border-radius:20px; padding:1px 6px; display:inline-flex; align-items:center; gap:3px; }
   .opc-badge-rec  { font-size:9px; background:var(--blue); color:#1a1400; font-weight:700; border-radius:20px; padding:1px 6px; display:inline-flex; align-items:center; gap:3px; }
   .opc-colors { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+  /* Lightbox — agrandissement de la photo d'un composant déjà sélectionné */
+  #dt-lightbox { position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; padding:40px; cursor:zoom-out; }
+  #dt-lightbox.open { display:flex; }
+  #dt-lightbox img { max-width:90vw; max-height:90vh; object-fit:contain; box-shadow:0 8px 40px rgba(0,0,0,.6); cursor:default; }
+  #dt-lightbox-close { position:absolute; top:20px; right:24px; background:none; border:none; color:#fff; font-size:28px; cursor:pointer; line-height:1; opacity:.8; }
+  #dt-lightbox-close:hover { opacity:1; }
+  .opc-img-wrap.zoomable { cursor:zoom-in; }
   .opc-color-dot { width:16px; height:16px; border-radius:50%; border:1.5px solid #444; cursor:pointer; padding:0; flex-shrink:0; transition:border-color .15s, transform .15s; }
   .opc-color-dot:hover { transform:scale(1.15); }
   .opc-color-dot.active { border-color:var(--blue); border-width:2px; }
@@ -2981,5 +2988,11 @@ function enableGA() {
   gtag('config', 'G-KGZDWLZ7JZ');
 }
 </script>
+<!-- Lightbox — agrandissement de la photo d'un composant déjà sélectionné (desktop) -->
+<div id="dt-lightbox" onclick="dtCloseLightbox()">
+  <button id="dt-lightbox-close" onclick="event.stopPropagation();dtCloseLightbox()"><i class="ti ti-x"></i></button>
+  <img id="dt-lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+</div>
+
 </body>
 </html>
