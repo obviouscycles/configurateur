@@ -22,7 +22,7 @@ const TUNING_OPTIONS = {
     { id: 'collier_titane', name: 'Collier Obvious titane', desc: 'Collier de selle titane brut', price: 45, isStandard: false, requiresOptionIn: ["cadre_rd_on", "cadre_grr_onoff", "cadre_gra_out", "cadre_vtt_off"], image: '/configurateur/assets/collier/collier_titane.png', couleurs: null },
   ],
   'jeu_direction': [
-    { id: 'jeu_std_ext', name: 'Jeu de direction standard', desc: 'Jeu ZS44 EC44 noir pivot conique', price: 15, isStandard: true, requiresOptionIn: ["cadre_vtt_off"], image: '/configurateur/assets/headset/head_mtb_hope_noir.png', couleurs: null },
+    { id: 'jeu_std_ext', name: 'Jeu de direction standard', desc: 'Jeu ZS44 EC44 noir pivot conique', price: 15, isStandard: true, requiresOptionIn: ["cadre_vtt_off"], image: '/configurateur/assets/headset/head_std_zsec.png', couleurs: null },
     { id: 'jeu_vtt_hope', name: 'Jeu de direction Hope', desc: 'Roulements inox, pour pivot conique, ref HSC2/HSCH', price: 115, isStandard: false, requiresOptionIn: ["cadre_vtt_off"], image: '/configurateur/assets/headset/head_mtb_hope_noir.png', couleurs: [{nom:'Noir',hex:'#000000',photo:'/configurateur/assets/headset/head_mtb_hope_noir.png'}, {nom:'Argent',hex:'#C2C3C1',photo:'/configurateur/assets/headset/head_mtb_hope_argent.png'}, {nom:'Fumé',hex:'#727770',photo:'/configurateur/assets/headset/head_mtb_hope_fume.png'}, {nom:'Bleu',hex:'#4A88E7',photo:'/configurateur/assets/headset/head_mtb_hope_bleu.png'}, {nom:'Rouge',hex:'#ED4043',photo:'/configurateur/assets/headset/head_mtb_hope_rouge.png'}, {nom:'Violet',hex:'#BA59C0',photo:'/configurateur/assets/headset/head_mtb_hope_violet.png'}, {nom:'Orange',hex:'#FAA232',photo:'/configurateur/assets/headset/head_mtb_hope_orange.png'}] },
   ],
 };
