@@ -2220,9 +2220,11 @@ function renderCadreCard(selectId) {
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
   const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
   const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '__unknown__');
-  const summary = v2Parcours === 'sur_mesure' ? 'Sur-mesure (+300 €)'
-    : selSize.taille ? 'Taille ' + selSize.taille
-    : 'À déterminer';
+  // Cohérence avec les autres postes : on affiche le NOM du composant sélectionné
+  // (ici, le cadre lui-même — toujours choisi automatiquement dès le modèle défini),
+  // pas un statut de taille — celle-ci reste visible juste en dessous, dans le menu.
+  const cadreOpt = (ALL_OPTIONS.cadre || []).find(o => o.id === selOpts.cadre);
+  const summary = cadreOpt ? cadreOpt.name : 'À déterminer';
   return '<div class="post-block" data-post-id="cadre">' +
     '<div class="post-hdr" style="cursor:default;">' +
       '<i class="ti ti-frame ph-icon"></i>' +
@@ -2396,6 +2398,19 @@ function dtRenderPosts() {
       if (tCard && tCard.classList.contains('sel')) {
         const img = tuningImgWrap.querySelector('img');
         if (img) { dtOpenLightbox(img.src, img.alt); return; }
+      }
+    }
+    // Clic sur la coche d'une carte de tuning DÉJÀ sélectionnée -> désélectionne
+    // (retour au standard). Sans ce cas précis, recliquer une carte déjà choisie la
+    // re-sélectionnait sur elle-même (aucun changement visible), rendant le tuning
+    // impossible à annuler une fois choisi.
+    const tuningCheck = e.target.closest('.tuning-card-check');
+    if (tuningCheck) {
+      const checkedCard = tuningCheck.closest('[data-tid][data-oid]');
+      if (checkedCard && checkedCard.classList.contains('sel')) {
+        delete selTuning[checkedCard.dataset.tid];
+        dtRenderPosts();
+        return;
       }
     }
     // Clic sur une carte de tuning (pas encore sélectionnée, ou changement de choix)
