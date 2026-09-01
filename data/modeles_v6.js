@@ -15,32 +15,32 @@ const KIT_CADRE_PHOTOS = {
 
 const PRESETS = {
   'route': {
-    'Signature': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_fu_w57', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sh_da', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_ala', selle: 'selle_rd_ari_r00', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
-    'Ti1': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_ob_35', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sr_fo', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_suz_alu', selle: 'selle_rd_ant_r3', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
-    'Ti2': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_dt_p16', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_suz_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', pedales: 'ped_no' },
+    'Signature': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_fu_w57', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sh_da', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_ala', selle: 'selle_rd_ari_r00', tige: 'tige_rd_ob_car', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti1': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_ob_35', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sr_fo', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_suz_alu', selle: 'selle_rd_ant_r3', tige: 'tige_rd_ob_car', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti2': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_dt_p16', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_suz_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', collier_selle: 'collier_std', pedales: 'ped_no' },
   },
   'gravel_racing': {
-    'Signature': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_car', selle: 'selle_rd_arg_r00', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
-    'Ti1': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_alu', selle: 'selle_rd_ant_r3', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
-    'Ti2': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', pedales: 'ped_no' },
+    'Signature': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_car', selle: 'selle_rd_arg_r00', tige: 'tige_rd_ob_car', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti1': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_alu', selle: 'selle_rd_ant_r3', tige: 'tige_rd_ob_car', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti2': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', collier_selle: 'collier_std', pedales: 'ped_no' },
   },
   'gravel_bikepacking': {
-    'Signature': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_br_b17_ho', tige: 'tige_rd_ob_ti', pedales: 'ped_no' },
-    'Ti1': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_dt_g16', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_821', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_gr_arg_x3', tige: 'tige_rd_ob_ti', pedales: 'ped_no' },
-    'Ti2': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_gr_arg_x5', tige: 'tige_rd_de_z1', pedales: 'ped_no' },
+    'Signature': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_br_b17_ho', tige: 'tige_rd_ob_ti', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti1': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_dt_g16', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_821', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_gr_arg_x3', tige: 'tige_rd_ob_ti', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti2': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_gr_arg_x5', tige: 'tige_rd_de_z1', collier_selle: 'collier_std', pedales: 'ped_no' },
   },
   'vtt_enduro': {
-    'Signature': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_fox_fac_36_150', roues: 'roue_vtt_ob_30', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sr_x0', power: 'pwr_all', frein: 'frein_vtt_sr_mvs', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', pedales: 'ped_no' },
-    'Ti1': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_rs_lyr_ult_150', roues: 'roue_vtt_hp_f30', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sh_xt', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', pedales: 'ped_no' },
-    'Ti2': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_rs_lyr_sel_150', roues: 'roue_vtt_fu_rm5', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sh_slx', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', pedales: 'ped_no' },
+    'Signature': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_fox_fac_36_150', jeu_direction: 'jeu_std_ext', roues: 'roue_vtt_ob_30', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sr_x0', power: 'pwr_all', frein: 'frein_vtt_sr_mvs', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti1': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_rs_lyr_ult_150', jeu_direction: 'jeu_std_ext', roues: 'roue_vtt_hp_f30', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sh_xt', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti2': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_rs_lyr_sel_150', jeu_direction: 'jeu_std_ext', roues: 'roue_vtt_fu_rm5', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sh_slx', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', collier_selle: 'collier_std', pedales: 'ped_no' },
   },
 };
 
 const KIT_CADRE_PRESETS = {
-  'route': { cadre: 'cadre_rd_on', fourche_kit: 'fourche_rd_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
-  'gravel_racing': { cadre: 'cadre_grr_onoff', fourche_kit: 'fourche_gr_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
-  'gravel_bikepacking': { cadre: 'cadre_gra_out', fourche_kit: 'fourche_gr_car_ins', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car' },
-  'vtt_enduro': { cadre: 'cadre_vtt_off', fourche_kit: 'fourche_no', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_no' },
+  'route': { cadre: 'cadre_rd_on', fourche_kit: 'fourche_rd_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car', collier_selle_kit: 'collier_std' },
+  'gravel_racing': { cadre: 'cadre_grr_onoff', fourche_kit: 'fourche_gr_car_00', potence_kit: 'potence_rd_sub', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car', collier_selle_kit: 'collier_std' },
+  'gravel_bikepacking': { cadre: 'cadre_gra_out', fourche_kit: 'fourche_gr_car_ins', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_rd_ob_car', collier_selle_kit: 'collier_std' },
+  'vtt_enduro': { cadre: 'cadre_vtt_off', fourche_kit: 'fourche_no', jeu_direction_kit: 'jeu_std_ext', potence_kit: 'potence_no', cintre_kit: 'cintre_no', tige_kit: 'tige_no', collier_selle_kit: 'collier_std' },
 };
 
 const PRESET_DESCS = {
