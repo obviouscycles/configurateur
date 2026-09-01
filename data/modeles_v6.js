@@ -20,7 +20,7 @@ const PRESETS = {
     'Ti2': { cadre: 'cadre_rd_on', fourche: 'fourche_rd_car_00', roues: 'roue_rd_dt_p16', pneus: 'pneu_rd_co_gp', transmission: 'trans_rd_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_rd_suz_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', pedales: 'ped_no' },
   },
   'gravel_racing': {
-    'Signature': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sr_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_car', selle: 'selle_rd_arg_r00', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
+    'Signature': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_car', selle: 'selle_rd_arg_r00', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
     'Ti1': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sr_ri', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_suz_alu', selle: 'selle_rd_ant_r3', tige: 'tige_rd_ob_car', pedales: 'ped_no' },
     'Ti2': { cadre: 'cadre_grr_onoff', fourche: 'fourche_gr_car_00', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_rd_ant_r5', tige: 'tige_rd_de_z1', pedales: 'ped_no' },
   },
