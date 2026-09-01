@@ -391,6 +391,35 @@ function computeTuningDelta(opts) {
   return delta;
 }
 
+// Liste des personnalisations de tuning réellement choisies (≠ standard) pour la
+// configuration actuelle — réutilisée par le récap final (desktop/mobile), la
+// sauvegarde de configuration et l'e-mail de devis, pour ne jamais avoir ces 3
+// endroits qui divergent silencieusement les uns des autres.
+function getSelectedTuningList(opts) {
+  const list = [];
+  (typeof TUNING_POSTS !== 'undefined' ? TUNING_POSTS : []).forEach(tp => {
+    if (!isTuningActive(tp, opts)) return;
+    const options = TUNING_OPTIONS[tp.tuningId] || [];
+    const standard = options.find(o => o.isStandard);
+    if (!standard) return;
+    const currentParentOpt = opts[tp.parentPost];
+    const selectedId = selTuning[tp.tuningId];
+    if (!selectedId) return; // rien choisi -> standard implicite, pas de ligne à afficher
+    const selected = options.find(o => o.id === selectedId);
+    if (!selected || selected.isStandard) return;
+    if (selected.requiresOptionIn && !(currentParentOpt && selected.requiresOptionIn.includes(currentParentOpt))) return;
+    const colorKey = tp.tuningId + '_' + selected.id;
+    const colorIdx = selTuningColorIdx[colorKey] || 0;
+    const colorName = (selected.couleurs && selected.couleurs[colorIdx]) ? selected.couleurs[colorIdx].nom : null;
+    list.push({
+      label: tp.label,
+      optionName: selected.name + (colorName ? ' (' + colorName + ')' : ''),
+      delta: selected.price - standard.price,
+    });
+  });
+  return list;
+}
+
 // Sélectionne automatiquement le poste "cadre" (caché, jamais affiché en page 2)
 // dès qu'un modèle est choisi — une seule option de cadre existe par modèle, pas de
 // choix visiteur à faire, mais son prix doit toujours entrer dans le calcul total.
@@ -485,6 +514,17 @@ function buildConfigText(modelId, opts) {
         lines.push('Demande particulière : ' + evoCustomText);
       }
     }
+  }
+  // Personnalisations de tuning (collier de selle, jeu de direction, chape...) —
+  // même liste que le récap final, jamais un calcul dupliqué à part.
+  const tuningListEmail = getSelectedTuningList(opts);
+  if (tuningListEmail.length > 0) {
+    lines.push('');
+    lines.push('— Personnalisations —');
+    tuningListEmail.forEach(t => {
+      const sign = t.delta > 0 ? '+' : '';
+      lines.push(t.label + ' : ' + t.optionName + ' (' + sign + t.delta.toLocaleString('fr-FR') + ' €)');
+    });
   }
   lines.push('Prix total : ' + price.toLocaleString('fr-FR') + ' €');
 
@@ -1018,11 +1058,25 @@ function toggleSaveForm1() {
 }
 
 function doSave(inputId, toastId) {
-  syncSelSize();
   const name = document.getElementById(inputId).value.trim();
   if (!name) return;
+  if (!buildAndSaveConfigEntry(name)) return;
+  const toast = document.getElementById(toastId);
+  if (toast) toast.style.display = 'block';
+  document.getElementById('save-form-1').classList.remove('open');
+  document.getElementById('save-form-2').classList.remove('open');
+  setTimeout(() => { if (toast) toast.style.display = 'none'; }, 1800);
+}
+
+// Construit et enregistre l'entrée de configuration sauvegardée — factorisé pour que
+// desktop (formulaire) et mobile (prompt() dans p11QuickSave) partagent EXACTEMENT
+// la même logique, plutôt que de risquer une divergence entre les deux (c'est ce qui
+// avait laissé p11QuickSave() appeler une fonction "doSaveConfig" qui n'existait nulle
+// part dans le fichier — la sauvegarde rapide mobile plantait purement et simplement).
+function buildAndSaveConfigEntry(name) {
+  syncSelSize();
   const model = MODELS.find(m => m.id === selModel);
-  if (!model) return;
+  if (!model) return false;
   const { price: bikePrice, weight } = computeTotals(selModel, selOpts);
   // Prix total = vélo + surcoût des personnalisations (gravure, inserts...) — même
   // source de vérité que l'écran final, jamais un calcul dupliqué à part.
@@ -1044,15 +1098,15 @@ function doSave(inputId, toastId) {
     evoInsertsChecked: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
     evoGravureText: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
     evoCustomText: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+    // Tuning (collier de selle, jeu de direction, chape...) — même logique : sans
+    // ça, recharger une config perdait ces choix tout en gardant leur prix affiché.
+    selTuning: { ...selTuning },
+    selTuningColorIdx: { ...selTuningColorIdx },
   };
   savedConfigs.unshift(entry);
   persistSaved();
   updateSavedCount();
-  const toast = document.getElementById(toastId);
-  if (toast) toast.style.display = 'block';
-  document.getElementById('save-form-1').classList.remove('open');
-  document.getElementById('save-form-2').classList.remove('open');
-  setTimeout(() => { if (toast) toast.style.display = 'none'; }, 1800);
+  return true;
 }
 
 // Alias pour compatibilité avec restoreConfig
@@ -1301,6 +1355,7 @@ async function sendOrder() {
       inserts: (typeof evoInsertsChecked !== 'undefined') ? { ...evoInsertsChecked } : {},
       texte_gravure: (typeof evoGravureText !== 'undefined') ? evoGravureText : '',
       demande_particuliere: (typeof evoCustomText !== 'undefined') ? evoCustomText : '',
+      tuning: { ...selTuning },
     };
 
     // 3. Sauvegarder dans Supabase
@@ -2083,6 +2138,8 @@ function dtLoadSaved(id) {
   evoInsertsChecked = { ...(cfg.evoInsertsChecked || {}) };
   evoGravureText = cfg.evoGravureText || '';
   evoCustomText = cfg.evoCustomText || '';
+  selTuning = { ...(cfg.selTuning || {}) };
+  selTuningColorIdx = { ...(cfg.selTuningColorIdx || {}) };
   // Retirer dt-step-4 AVANT dtRender pour que dt-main soit visible
   document.body.classList.remove('dt-step-4');
   // Activer les boutons du récap
@@ -2938,6 +2995,23 @@ function dtRenderS4() {
         })() +
       '</div>') +
     '</div>' +
+    // Personnalisations de tuning choisies (≠ standard) — collier de selle, jeu de
+    // direction, chape de dérailleur... n'apparaît que s'il y en a au moins une.
+    (() => {
+      const tuningList = getSelectedTuningList(selOpts);
+      if (tuningList.length === 0) return '';
+      return '<div style="margin-top:1rem;padding:1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+        '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Personnalisations</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;">' +
+          tuningList.map(t =>
+            '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
+              '<span style="color:#999;">' + t.label + ' — <span style="color:#f2f2f2;">' + t.optionName + '</span></span>' +
+              '<span style="color:#F5C400;font-weight:500;flex-shrink:0;margin-left:12px;">' + (t.delta > 0 ? '+' : '') + t.delta.toLocaleString('fr-FR') + ' €</span>' +
+            '</div>'
+          ).join('') +
+        '</div>' +
+      '</div>';
+    })() +
     v2RecapBlock() +
     '';
 }
@@ -5813,6 +5887,21 @@ function p11RenderFinalRecap() {
       '</div>' +
     '</div>';
   });
+  // Personnalisations de tuning choisies (≠ standard)
+  const tuningListP11 = getSelectedTuningList(selOpts);
+  if (tuningListP11.length > 0) {
+    html += '<div style="margin-top:1rem;padding:.75rem 1rem;background:#1e1e1e;border:0.5px solid #333;">' +
+      '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Personnalisations</div>' +
+      '<div style="display:flex;flex-direction:column;gap:5px;">' +
+        tuningListP11.map(t =>
+          '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">' +
+            '<span style="color:#999;">' + t.label + ' — <span style="color:#f2f2f2;">' + t.optionName + '</span></span>' +
+            '<span style="color:#F5C400;font-weight:500;flex-shrink:0;margin-left:10px;">' + (t.delta > 0 ? '+' : '') + t.delta.toLocaleString('fr-FR') + ' €</span>' +
+          '</div>'
+        ).join('') +
+      '</div>' +
+    '</div>';
+  }
   // Taille si définie
   const sizeText = buildSizeText();
   if (sizeText) {
@@ -5921,7 +6010,7 @@ function p11GoToPost(postId) {
 function p11QuickSave() {
   const name = prompt('Nom de cette configuration :', 'Ma config');
   if (!name || !name.trim()) return;
-  doSaveConfig(name.trim());
+  buildAndSaveConfigEntry(name.trim());
   // Mini toast dans le bandeau
   const btn = document.getElementById('p11-strip-save');
   if (btn) {
