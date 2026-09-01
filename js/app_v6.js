@@ -308,17 +308,10 @@ function autoSelectLocked(modelId) {
   });
 }
 
-// Fourche/Potence/Cintre/Tige "kit" n'existent QUE pour le Kit cadre — jamais
-// ajoutés à POST_META (fichier partagé avec proto14/V2/V3, qui l'itèrent pour
-// TOUS les vélos). Cette liste locale à V4 remplace entièrement POST_META
-// quand window._kitCadre est actif — plus besoin de filtre d'exclusion, ces
-// 4 postes sont autonomes, jamais mélangés avec fourche/pilotage/tige (vélo complet).
-const KIT_CADRE_POST_META = [
-  { id: 'fourche_kit', name: 'Fourche',       icon: 'ti-git-fork' },
-  { id: 'potence_kit', name: 'Potence',       icon: 'ti-adjustments-horizontal' },
-  { id: 'cintre_kit',  name: 'Cintre',        icon: 'ti-arrows-horizontal' },
-  { id: 'tige_kit',    name: 'Tige de selle', icon: 'ti-arrows-vertical' },
-];
+// KIT_CADRE_POST_META est désormais généré automatiquement dans composants_v6.js —
+// tout poste dont l'id se termine par "_kit" dans l'onglet 3, sans plus jamais avoir
+// besoin de mettre à jour cette liste à la main quand un nouveau poste kit apparaît
+// (ex: jeu_direction_kit, collier_selle_kit).
 function activePostMeta() {
   return window._kitCadre ? KIT_CADRE_POST_META : POST_META;
 }
@@ -2342,7 +2335,7 @@ function dtRenderPosts() {
     if (comboLock) {
       return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
         '<div class="post-hdr" style="cursor:default;">' +
-          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
           '<span class="ph-name">' + p.name + '</span>' +
           '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
         '</div>' +
@@ -2424,7 +2417,7 @@ function dtRenderPosts() {
     const tuningHtml = renderTuningBoxesFor(p.id, 'dtRenderPosts');
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
-        '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+        '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (_isModDt ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F5C400;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
         (selOpt?'<span class="ph-sel">'+selOpt.name+'</span>':'<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
@@ -5386,7 +5379,7 @@ function p11RenderPosts() {
     if (comboLock) {
       return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
         '<div class="post-hdr" style="cursor:default;">' +
-          '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+          '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
           '<span class="ph-name">' + p.name + '</span>' +
           '<span class="ph-sel" style="color:#888;font-style:italic;">' + comboLock.comboWithLabel + '</span>' +
         '</div>' +
@@ -5478,7 +5471,7 @@ function p11RenderPosts() {
       PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" onclick="p11TogglePost(\'' + p.id + '\')">' +
-        '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
+        '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (isModified ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F5C400;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
         (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
