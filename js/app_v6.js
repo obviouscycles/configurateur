@@ -2215,8 +2215,9 @@ function v3GoSurMesureFromS2() {
 }
 
 // ─── CARTE "CADRE" — nouvelle en tête de l'étape Composants ──────────────────
-function renderCadreCard(selectId) {
+function renderCadreCard(selectId, renderFn) {
   selectId = selectId || 'cadre-taille-select';
+  renderFn = renderFn || 'dtRenderPosts';
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
   const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
   const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '__unknown__');
@@ -2232,7 +2233,7 @@ function renderCadreCard(selectId) {
       '<span class="ph-sel">' + summary + '</span>' +
     '</div>' +
     '<div class="post-opts open">' +
-      renderTuningBoxesFor('cadre') +
+      renderTuningBoxesFor('cadre', renderFn) +
       '<div class="dim-field" style="max-width:320px;">' +
         '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
         '<select class="size-select" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
@@ -2278,7 +2279,7 @@ function dtRenderPosts() {
   if (!container || !selModel) return;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
 
-  container.innerHTML = renderCadreCard() + activePostMeta().map(p => {
+  container.innerHTML = renderCadreCard(null, 'dtRenderPosts') + activePostMeta().map(p => {
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
@@ -2363,7 +2364,7 @@ function dtRenderPosts() {
     }
 
     const _isModDt = !!(window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset] && PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
-    const tuningHtml = renderTuningBoxesFor(p.id);
+    const tuningHtml = renderTuningBoxesFor(p.id, 'dtRenderPosts');
     return '<div class="post-block" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
         '<i class="ti ' + (icons[p.id]||'ti-point') + ' ph-icon"></i>' +
@@ -2392,30 +2393,10 @@ function dtRenderPosts() {
       }
     }
     // Même chose pour une carte de tuning déjà sélectionnée
-    const tuningImgWrap = e.target.closest('.tuning-card-img');
-    if (tuningImgWrap) {
-      const tCard = tuningImgWrap.closest('[data-tid][data-oid]');
-      if (tCard && tCard.classList.contains('sel')) {
-        const img = tuningImgWrap.querySelector('img');
-        if (img) { dtOpenLightbox(img.src, img.alt); return; }
-      }
-    }
-    // Clic sur la coche d'une carte de tuning DÉJÀ sélectionnée -> désélectionne
-    // (retour au standard). Sans ce cas précis, recliquer une carte déjà choisie la
-    // re-sélectionnait sur elle-même (aucun changement visible), rendant le tuning
-    // impossible à annuler une fois choisi.
-    const tuningCheck = e.target.closest('.tuning-card-check');
-    if (tuningCheck) {
-      const checkedCard = tuningCheck.closest('[data-tid][data-oid]');
-      if (checkedCard && checkedCard.classList.contains('sel')) {
-        delete selTuning[checkedCard.dataset.tid];
-        dtRenderPosts();
-        return;
-      }
-    }
-    // Clic sur une carte de tuning (pas encore sélectionnée, ou changement de choix)
-    const tuningCard = e.target.closest('[data-tid][data-oid]');
-    if (tuningCard) { dtSelectTuning(tuningCard.dataset.tid, tuningCard.dataset.oid); return; }
+    // Note : les cartes de tuning utilisent désormais des onclick en ligne
+    // (dtSelectTuning/dtDeselectTuning/dtOpenLightbox), pas la délégation —
+    // nécessaire pour fonctionner à l'identique sur desktop ET mobile, qui n'a
+    // jamais utilisé de délégation d'événements pour ses propres cartes.
     // Clic sur option
     const opt = e.target.closest('[data-pid][data-oid]');
     if (opt) { dtSelectOpt(opt.dataset.pid, opt.dataset.oid); return; }
@@ -2454,8 +2435,12 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') dtCloseLig
 
 // Génère le HTML de toutes les cases de tuning actives pour un poste donné
 // (parentPost), à insérer entre la grille d'options et les listes de dimensions.
-function renderTuningBoxesFor(parentPost) {
+// renderFn : nom de la fonction à rappeler pour re-rendre après une sélection —
+// 'dtRenderPosts' (desktop) ou 'p11RenderPosts' (mobile). Rend le tuning utilisable
+// des deux côtés avec la même fonction, plutôt que de dupliquer le HTML.
+function renderTuningBoxesFor(parentPost, renderFn) {
   if (typeof TUNING_POSTS === 'undefined') return '';
+  renderFn = renderFn || 'dtRenderPosts';
   const relevant = TUNING_POSTS.filter(tp =>
     tp.parentPost === parentPost &&
     isTuningActive(tp, selOpts) &&
@@ -2466,10 +2451,10 @@ function renderTuningBoxesFor(parentPost) {
   // (ex: box sans restriction propre, mais dont toutes les options sont réservées à
   // un autre modèle) — renderTuningBox() renvoie alors '' et on l'exclut ici, pour
   // ne jamais afficher une case vide avec juste un titre.
-  return relevant.map(renderTuningBox).filter(html => html !== '').join('');
+  return relevant.map(tp => renderTuningBox(tp, renderFn)).filter(html => html !== '').join('');
 }
 
-function renderTuningBox(tp) {
+function renderTuningBox(tp, renderFn) {
   const allOpts = TUNING_OPTIONS[tp.tuningId] || [];
   const standard = allOpts.find(o => o.isStandard);
   // "standard" n'apparaît comme choix cliquable que si show_standard_as_choice=OUI —
@@ -2505,21 +2490,26 @@ function renderTuningBox(tp) {
         o.couleurs.map((c, ci) =>
           '<button type="button" class="opc-color-dot' + (ci===activeColorIdx?' active':'') + '" ' +
           'style="background:' + c.hex + ';" title="' + c.nom + '" ' +
-          "onclick=\"dtSelectTuningColor('" + tp.tuningId + "', '" + o.id + "', " + ci + ")\"></button>"
+          "onclick=\"event.stopPropagation();dtSelectTuningColor('" + tp.tuningId + "', '" + o.id + "', " + ci + ", '" + renderFn + "')\"></button>"
         ).join('') +
       '</div>' : '';
     const imgHtml = (imgSrc && imgSrc !== '/configurateur/assets/no_option.png')
       ? '<img id="' + imgId + '" src="' + imgSrc + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
       : '<div class="opc-img-placeholder"><i class="ti ti-photo"></i></div>';
-    return '<div class="tuning-card' + (sel ? ' sel' : '') + '" data-tid="' + tp.tuningId + '" data-oid="' + o.id + '">' +
-      '<div class="tuning-card-img' + (sel ? ' zoomable' : '') + '">' + imgHtml + '</div>' +
+    // Coche : sur une carte DÉJÀ sélectionnée, cliquer dessus désélectionne (retour
+    // au standard) plutôt que de re-sélectionner sur elle-même (sans effet visible).
+    const checkOnclick = sel
+      ? "event.stopPropagation();dtDeselectTuning('" + tp.tuningId + "', '" + renderFn + "')"
+      : "event.stopPropagation();dtSelectTuning('" + tp.tuningId + "', '" + o.id + "', '" + renderFn + "')";
+    return '<div class="tuning-card' + (sel ? ' sel' : '') + '" onclick="dtSelectTuning(\'' + tp.tuningId + '\', \'' + o.id + '\', \'' + renderFn + '\')">' +
+      '<div class="tuning-card-img' + (sel ? ' zoomable' : '') + '" onclick="' + (sel ? "event.stopPropagation();dtOpenLightbox('" + imgSrc + "','')" : '') + '">' + imgHtml + '</div>' +
       '<div class="tuning-card-body">' +
         '<div class="tuning-card-name">' + o.name + '</div>' +
         (o.desc ? '<div class="tuning-card-desc">' + o.desc + '</div>' : '') +
         colorsHtml +
         '<div class="tuning-card-price' + (delta < 0 ? ' negative' : '') + '">' + priceLabel + '</div>' +
       '</div>' +
-      '<div class="tuning-card-check"><i class="ti ti-check"></i></div>' +
+      '<div class="tuning-card-check" onclick="' + checkOnclick + '"><i class="ti ti-check"></i></div>' +
     '</div>';
   }).join('');
 
@@ -2532,20 +2522,27 @@ function renderTuningBox(tp) {
 // Sélectionne une option de tuning. Choisir explicitement "standard" (quand elle
 // est affichée comme choix) revient à vider la sélection — comportement identique
 // à ne rien choisir, mais garde l'affichage cohérent (la carte standard reste "sel").
-function dtSelectTuning(tuningId, optionId) {
+// renderFn : 'dtRenderPosts' ou 'p11RenderPosts' — re-rend le bon écran après coup.
+function dtSelectTuning(tuningId, optionId, renderFn) {
   const opts = TUNING_OPTIONS[tuningId] || [];
   const opt = opts.find(o => o.id === optionId);
   if (!opt) return;
   if (opt.isStandard) { delete selTuning[tuningId]; }
   else { selTuning[tuningId] = optionId; }
-  dtRenderPosts();
+  (renderFn === 'p11RenderPosts' ? p11RenderPosts : dtRenderPosts)();
+}
+
+// Désélection explicite (clic sur la coche d'une carte déjà choisie) -> standard.
+function dtDeselectTuning(tuningId, renderFn) {
+  delete selTuning[tuningId];
+  (renderFn === 'p11RenderPosts' ? p11RenderPosts : dtRenderPosts)();
 }
 
 // Cliquer une couleur sélectionne CETTE option de tuning dans CETTE couleur — même
 // principe que dtSelectColor pour les composants principaux.
-function dtSelectTuningColor(tuningId, optionId, colorIdx) {
+function dtSelectTuningColor(tuningId, optionId, colorIdx, renderFn) {
   selTuningColorIdx[tuningId + '_' + optionId] = colorIdx;
-  dtSelectTuning(tuningId, optionId);
+  dtSelectTuning(tuningId, optionId, renderFn);
 }
 
 function dtSelectColor(postId, optId, colorIdx) {
@@ -5309,7 +5306,7 @@ function p11RenderPosts() {
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise', fourche_kit:'ti-git-fork', potence_kit:'ti-adjustments-horizontal', cintre_kit:'ti-arrows-horizontal', tige_kit:'ti-arrows-vertical' };
   container.innerHTML =
     '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
-    renderCadreCard('p11-cadre-taille-select') + activePostMeta().map(p => {
+    renderCadreCard('p11-cadre-taille-select', 'p11RenderPosts') + activePostMeta().map(p => {
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
@@ -5400,6 +5397,7 @@ function p11RenderPosts() {
         }
       });
     }
+    const tuningHtmlP11 = renderTuningBoxesFor(p.id, 'p11RenderPosts');
 
     const isModified = !!(selOpts[p.id] && window._activePreset && PRESETS[selModel] &&
       PRESETS[selModel][window._activePreset] &&
@@ -5411,7 +5409,7 @@ function p11RenderPosts() {
         (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
-      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + dimsHtmlP11 + '</div>' +
+      '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + tuningHtmlP11 + dimsHtmlP11 + '</div>' +
     '</div>';
   }).join('');
   p11UpdateTotal();
