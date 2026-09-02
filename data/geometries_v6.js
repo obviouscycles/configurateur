@@ -1,4 +1,4 @@
-// Généré automatiquement depuis configurateur_velos_v5.xlsx — NE PAS ÉDITER À LA MAIN
+// Généré automatiquement depuis configurateur_velos_v6.xlsx — NE PAS ÉDITER À LA MAIN
 const TAILLES_CADRE = {
   'route': [
     { 'taille': "XXS", 'stature_min': 155, 'stature_max': 164, 'ej_min': 70, 'ej_max': 81.39999999999999, 'manivelle': 165, 'cintre': 380, 'potence': 80, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null },

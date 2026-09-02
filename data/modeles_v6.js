@@ -1,16 +1,16 @@
-// Généré automatiquement depuis configurateur_velos_v5.xlsx — NE PAS ÉDITER À LA MAIN
+// Généré automatiquement depuis configurateur_velos_v6.xlsx — NE PAS ÉDITER À LA MAIN
 const MODELS = [
-  { id: 'gravel_racing', name: 'ON/OFF', badge: 'Gravel Racing', desc: 'Cadre titane, géométrie sport, fourche carbone, intégration complète', assembly: 300, photo: '/configurateur/assets/velos/ONOFF_2024.webp' },
-  { id: 'gravel_bikepacking', name: 'OUT/QUEST', badge: 'Gravel Aventure', desc: 'Cadre titane, géométrie confort / longue distance, nombreux points d\'accroche', assembly: 300, photo: '/configurateur/assets/velos/OUTQUEST_2024.webp' },
-  { id: 'route', name: 'ON/', badge: 'Route', desc: 'Cadre titane, fourche carbone, sportif et polyvalent. Transmission électronique.', assembly: 300, photo: '/configurateur/assets/velos/ON_2025.webp' },
-  { id: 'vtt_enduro', name: '/OFF', badge: 'Enduro HT', desc: 'Cadre titane semi-rigide, géométrie enduro, fourche 140/150 mm, boost 148 mm', assembly: 300, photo: '/configurateur/assets/velos/OFF_2025.webp' },
+  { id: 'gravel_racing', name: "ON/OFF", badge: "Gravel Racing", desc: "Cadre titane, géométrie sport, fourche carbone, intégration complète", assembly: 300, photo: "/configurateur/assets/velos/ONOFF_2024.webp" },
+  { id: 'gravel_bikepacking', name: "OUT/QUEST", badge: "Gravel Aventure", desc: "Cadre titane, géométrie confort / longue distance, nombreux points d'accroche", assembly: 300, photo: "/configurateur/assets/velos/OUTQUEST_2024.webp" },
+  { id: 'route', name: "ON/", badge: "Route", desc: "Cadre titane, fourche carbone, sportif et polyvalent. Transmission électronique.", assembly: 300, photo: "/configurateur/assets/velos/ON_2025.webp" },
+  { id: 'vtt_enduro', name: "/OFF", badge: "Enduro HT", desc: "Cadre titane semi-rigide, géométrie enduro, fourche 140/150 mm, boost 148 mm", assembly: 300, photo: "/configurateur/assets/velos/OFF_2025.webp" },
 ];
 
 const KIT_CADRE_PHOTOS = {
-  'gravel_racing': '/configurateur/assets/kits/kit_ONOFF.webp',
-  'gravel_bikepacking': '/configurateur/assets/kits/kit_OUTQUEST.webp',
-  'route': '/configurateur/assets/kits/kit_ON.webp',
-  'vtt_enduro': '/configurateur/assets/kits/kit_OFF.webp',
+  'gravel_racing': "/configurateur/assets/kits/kit_ONOFF.webp",
+  'gravel_bikepacking': "/configurateur/assets/kits/kit_OUTQUEST.webp",
+  'route': "/configurateur/assets/kits/kit_ON.webp",
+  'vtt_enduro': "/configurateur/assets/kits/kit_OFF.webp",
 };
 
 const PRESETS = {
@@ -27,7 +27,7 @@ const PRESETS = {
   'gravel_bikepacking': {
     'Signature': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_ob_35', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_ca_re', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_br_b17_ho', tige: 'tige_rd_ob_ti', collier_selle: 'collier_std', pedales: 'ped_no' },
     'Ti1': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_dt_g16', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_821', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_ger_alu', selle: 'selle_gr_arg_x3', tige: 'tige_rd_ob_ti', collier_selle: 'collier_std', pedales: 'ped_no' },
-    'Ti2': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_fu_soa', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_gr_arg_x5', tige: 'tige_rd_de_z1', collier_selle: 'collier_std', pedales: 'ped_no' },
+    'Ti2': { cadre: 'cadre_gra_out', fourche: 'fourche_gr_car_ins', roues: 'roue_gr_fu_rra', pneus: 'pneu_gr_sc_r', transmission: 'trans_gr_sh_cud', power: 'pwr_all', frein: 'frein_all', pilotage: 'pilotage_gr_drp_alu', selle: 'selle_gr_arg_x5', tige: 'tige_rd_de_z1', collier_selle: 'collier_std', pedales: 'ped_no' },
   },
   'vtt_enduro': {
     'Signature': { cadre: 'cadre_vtt_off', fourche: 'fourche_vtt_fox_fac_36_150', jeu_direction: 'jeu_std_ext', roues: 'roue_vtt_ob_30', pneus: 'pneu_vtt_sc_gra', transmission: 'trans_vtt_sr_x0', power: 'pwr_all', frein: 'frein_vtt_sr_mvs', pilotage: 'pilotage_vtt_end', selle: 'selle_vtt_alpt_x5', tige: 'tige_vtt_ou_tel', collier_selle: 'collier_std', pedales: 'ped_no' },
