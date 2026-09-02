@@ -2303,7 +2303,11 @@ function renderCadreCard(selectId, renderFn) {
             if (v === '__sur_mesure__') return 'Sur-mesure (+300 €)';
             const t = TAILLES_CADRE[selModel].find(x => x.taille === v);
             if (!t) return v;
-            return v + '   ' + (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
+            const rangeTxt = (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
+            // Taille à gauche, plage à droite — même logique que les lignes de la liste,
+            // dans un conteneur flex dédié pour ne pas entrer en conflit avec le chevron
+            // (qui doit, lui, rester collé au bord droit du bouton).
+            return '<span class="taille-dd-trigger-label"><span>' + v + '</span><span class="taille-dd-range">' + rangeTxt + '</span></span>';
           };
           const rowsHtml = [
             '<div class="taille-dd-opt' + (current==='__unknown__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__unknown__\')">Je ne sais pas encore</div>',
@@ -2316,7 +2320,7 @@ function renderCadreCard(selectId, renderFn) {
             '<div class="taille-dd-opt' + (current==='__sur_mesure__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__sur_mesure__\')">Sur-mesure (+300 €)</div>',
           ].join('');
           return '<button type="button" class="taille-dd-trigger" id="' + selectId + '" onclick="event.stopPropagation();toggleTailleDD(\'' + selectId + '\')">' +
-              '<span>' + labelFor(current) + '</span><i class="ti ti-chevron-down"></i>' +
+              labelFor(current) + '<i class="ti ti-chevron-down"></i>' +
             '</button>' +
             '<div class="taille-dd-list" id="' + selectId + '-list">' + rowsHtml + '</div>';
         })() +
