@@ -358,6 +358,18 @@ function isTuningActive(tp, opts) {
   return !!current && tp.requiresOptionIn.includes(current);
 }
 
+// Trouve le "standard" applicable à la situation actuelle — une case peut porter
+// PLUSIEURS options is_standard=OUI quand le composant d'origine diffère selon le
+// composant parent (ex: la cassette Campagnolo d'origine n'a pas le même prix selon
+// que la transmission est Record ou Super Record — chacune a SON standard, avec SON
+// propre prix, et l'écart affiché doit se calculer contre le bon des deux).
+function findApplicableStandard(options, currentParentOpt) {
+  const standards = options.filter(o => o.isStandard);
+  if (standards.length <= 1) return standards[0];
+  const matching = standards.find(o => o.requiresOptionIn && currentParentOpt && o.requiresOptionIn.includes(currentParentOpt));
+  return matching || standards.find(o => !o.requiresOptionIn) || standards[0];
+}
+
 // Le xlsx porte des prix ABSOLUS par option de tuning — mais le visiteur ne doit
 // jamais voir que l'ÉCART vs l'option marquée "standard" de la même case (déjà
 // compris dans le prix du composant parent). Rien n'est ajouté si le visiteur n'a
@@ -367,9 +379,9 @@ function computeTuningDelta(opts) {
   (typeof TUNING_POSTS !== 'undefined' ? TUNING_POSTS : []).forEach(tp => {
     if (!isTuningActive(tp, opts)) return;
     const options = TUNING_OPTIONS[tp.tuningId] || [];
-    const standard = options.find(o => o.isStandard);
-    if (!standard) return;
     const currentParentOpt = opts[tp.parentPost];
+    const standard = findApplicableStandard(options, currentParentOpt);
+    if (!standard) return;
     const selectedId = selTuning[tp.tuningId];
     let selected = selectedId ? options.find(o => o.id === selectedId) : standard;
     // Une sélection devenue invalide pour le modèle/composant parent actuel (ex:
@@ -393,9 +405,9 @@ function getSelectedTuningList(opts) {
   (typeof TUNING_POSTS !== 'undefined' ? TUNING_POSTS : []).forEach(tp => {
     if (!isTuningActive(tp, opts)) return;
     const options = TUNING_OPTIONS[tp.tuningId] || [];
-    const standard = options.find(o => o.isStandard);
-    if (!standard) return;
     const currentParentOpt = opts[tp.parentPost];
+    const standard = findApplicableStandard(options, currentParentOpt);
+    if (!standard) return;
     const selectedId = selTuning[tp.tuningId];
     if (!selectedId) return; // rien choisi -> standard implicite, pas de ligne à afficher
     const selected = options.find(o => o.id === selectedId);
@@ -2506,7 +2518,12 @@ function renderTuningBoxesFor(parentPost, renderFn) {
 
 function renderTuningBox(tp, renderFn) {
   const allOpts = TUNING_OPTIONS[tp.tuningId] || [];
-  const standard = allOpts.find(o => o.isStandard);
+  const currentParentOpt = selOpts[tp.parentPost];
+  // Une case peut porter plusieurs options is_standard=OUI si le composant d'origine
+  // diffère selon le composant parent (ex: cassette Campagnolo d'origine différente
+  // entre Record et Super Record) — on prend celle qui correspond à la situation
+  // actuelle, pas juste la première trouvée.
+  const standard = findApplicableStandard(allOpts, currentParentOpt);
   // "standard" n'apparaît comme choix cliquable que si show_standard_as_choice=OUI —
   // sinon, seule(s) l'alternative(s) sont montrées, "standard" restant le choix
   // implicite tant qu'aucune n'est cochée.
@@ -2514,7 +2531,6 @@ function renderTuningBox(tp, renderFn) {
   // + chaque option individuellement, si elle porte sa propre restriction (ex: le
   // collier titane réservé au VTT alors que la case "Collier de selle" reste visible
   // sur tous les modèles).
-  const currentParentOpt = selOpts[tp.parentPost];
   const passesOwnGate = (o) => !o.requiresOptionIn || (currentParentOpt && o.requiresOptionIn.includes(currentParentOpt));
   const visibleOpts = (tp.showStandardAsChoice ? allOpts : allOpts.filter(o => !o.isStandard)).filter(passesOwnGate);
   if (visibleOpts.length === 0) return '';
