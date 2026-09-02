@@ -2295,21 +2295,57 @@ function renderCadreCard(selectId, renderFn) {
     '</div>' +
     '<div class="post-opts open">' +
       renderTuningBoxesFor('cadre', renderFn) +
-      '<div class="dim-field" style="max-width:320px;">' +
-        '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
-        '<select class="size-select size-select-tailles" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
-          '<option value="__unknown__"' + (current === '__unknown__' ? ' selected' : '') + '>Je ne sais pas encore</option>' +
-          TAILLES_CADRE[selModel].map(t => {
-            const label = t.taille.padEnd(4, '\u00A0');
-            const rangeTxt = (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
-            return '<option value="' + t.taille + '"' + (current === t.taille ? ' selected' : '') + '>' + label + '\u00A0\u00A0' + rangeTxt + '</option>';
-          }).join('') +
-          '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
-        '</select>' +
+      '<div class="dim-field" style="max-width:320px;position:relative;">' +
+        '<label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
+        (() => {
+          const labelFor = (v) => v === '__unknown__' ? 'Je ne sais pas encore'
+            : v === '__sur_mesure__' ? 'Sur-mesure (+300 €)'
+            : v;
+          const rowsHtml = [
+            '<div class="taille-dd-opt' + (current==='__unknown__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__unknown__\')">Je ne sais pas encore</div>',
+            ...TAILLES_CADRE[selModel].map(t => {
+              const rangeTxt = (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
+              return '<div class="taille-dd-opt taille-dd-opt-row' + (current===t.taille?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'' + t.taille + '\')">' +
+                '<span>' + t.taille + '</span><span class="taille-dd-range">' + rangeTxt + '</span>' +
+              '</div>';
+            }),
+            '<div class="taille-dd-opt' + (current==='__sur_mesure__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__sur_mesure__\')">Sur-mesure (+300 €)</div>',
+          ].join('');
+          return '<button type="button" class="taille-dd-trigger" id="' + selectId + '" onclick="event.stopPropagation();toggleTailleDD(\'' + selectId + '\')">' +
+              '<span>' + labelFor(current) + '</span><i class="ti ti-chevron-down"></i>' +
+            '</button>' +
+            '<div class="taille-dd-list" id="' + selectId + '-list">' + rowsHtml + '</div>';
+        })() +
       '</div>' +
     '</div>' +
   '</div>';
 }
+
+// Menu déroulant "Taille du cadre" — fait maison plutôt qu'un <select> natif, dont
+// la liste ouverte est dessinée par le système d'exploitation sur plusieurs
+// navigateurs (Safari notamment), rendant tout style CSS (police, alignement)
+// inopérant sur la liste elle-même. Ici, un vrai HTML/CSS contrôlé de bout en bout.
+function toggleTailleDD(id) {
+  const list = document.getElementById(id + '-list');
+  const trigger = document.getElementById(id);
+  if (!list || !trigger) return;
+  const wasOpen = list.classList.contains('open');
+  document.querySelectorAll('.taille-dd-list.open').forEach(l => l.classList.remove('open'));
+  if (wasOpen) return;
+  // position:fixed calculé depuis le bouton — nécessaire car ".post-block" (comme la
+  // plupart des blocs de l'interface) a overflow:hidden pour arrondir ses coins, ce
+  // qui découperait une liste en position:absolute classique avant même qu'elle ne
+  // puisse s'afficher pleinement.
+  const r = trigger.getBoundingClientRect();
+  list.style.position = 'fixed';
+  list.style.top = (r.bottom + 4) + 'px';
+  list.style.left = r.left + 'px';
+  list.style.width = r.width + 'px';
+  list.classList.add('open');
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.taille-dd-list.open').forEach(l => l.classList.remove('open'));
+});
 
 function selectCadreTaille(value) {
   if (value === '__sur_mesure__') {
