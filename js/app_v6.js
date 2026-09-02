@@ -2298,9 +2298,13 @@ function renderCadreCard(selectId, renderFn) {
       '<div class="dim-field" style="max-width:320px;position:relative;">' +
         '<label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
         (() => {
-          const labelFor = (v) => v === '__unknown__' ? 'Je ne sais pas encore'
-            : v === '__sur_mesure__' ? 'Sur-mesure (+300 €)'
-            : v;
+          const labelFor = (v) => {
+            if (v === '__unknown__') return 'Je ne sais pas encore';
+            if (v === '__sur_mesure__') return 'Sur-mesure (+300 €)';
+            const t = TAILLES_CADRE[selModel].find(x => x.taille === v);
+            if (!t) return v;
+            return v + '   ' + (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
+          };
           const rowsHtml = [
             '<div class="taille-dd-opt' + (current==='__unknown__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__unknown__\')">Je ne sais pas encore</div>',
             ...TAILLES_CADRE[selModel].map(t => {
