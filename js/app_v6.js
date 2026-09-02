@@ -2672,6 +2672,7 @@ function p11SelectColor(postId, optId, colorIdx) {
 function dtSelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
+  const previousOptId = selOpts[postId]; // capturée avant écrasement, pour ON_DESELECT
   // Ne pas bloquer les options locked — elles sont sélectionnables
   selOpts[postId] = optId;
   // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
@@ -2687,7 +2688,27 @@ function dtSelectOpt(postId, optId) {
         if (av.find(o => o.id === fid)) selOpts[fp] = fid;
       });
   });
+  applyOnDeselect(postId, previousOptId, optId);
   dtRenderPosts();
+}
+
+// Un couple lié par FORCE_SELECT dans les deux sens (ex: transmission CUES Flat <->
+// cintre Flat) doit aussi se défaire ensemble : si l'option qu'on vient de QUITTER
+// portait une règle ON_DESELECT, et qu'on a bien changé de valeur sur son poste (pas
+// juste re-sélectionné la même), le poste ciblé par la règle retombe sur le repli
+// indiqué — évite de laisser un partenaire orphelin, réglé sur un couple qui n'existe
+// plus, après un changement fait de l'autre côté.
+function applyOnDeselect(postId, previousOptId, newOptId) {
+  if (!previousOptId || previousOptId === newOptId) return;
+  if (typeof ON_DESELECT === 'undefined') return;
+  ON_DESELECT.forEach(rule => {
+    if (rule.if_deselected === previousOptId) {
+      Object.entries(rule.force).forEach(([fp, fid]) => {
+        const av = optionsFor(fp, selModel);
+        if (av.find(o => o.id === fid)) selOpts[fp] = fid;
+      });
+    }
+  });
 }
 
 function dtTogglePost(postId) {
@@ -5557,6 +5578,7 @@ function p11RenderPosts() {
 function p11SelectOpt(postId, optId) {
   const opt = optionsFor(postId, selModel).find(o => o.id === optId);
   if (!opt) return;
+  const previousOptId = selOpts[postId]; // capturée avant écrasement, pour ON_DESELECT
   selOpts[postId] = optId;
   // Combo (ex: Alanera) : le poste absorbé n'a plus de sélection propre — il
   // s'affichera verrouillé au prochain rendu, pas de valeur fantôme à conserver.
@@ -5593,6 +5615,7 @@ function p11SelectOpt(postId, optId) {
       });
     }
   });
+  applyOnDeselect(postId, previousOptId, optId);
 
   // Effacer les sélections incompatibles dans les autres postes
   activePostMeta().forEach(p => {
