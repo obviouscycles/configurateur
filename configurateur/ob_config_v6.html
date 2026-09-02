@@ -806,8 +806,31 @@
      à gauche et la plage de stature à droite. Un <select> natif ne permet aucune mise
      en page interne à une <option> (texte brut uniquement) — l'alignement visuel repose
      donc sur une police à chasse fixe + un espacement calculé en amont dans le JS. */
-  .size-select-tailles { font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-variant-numeric: tabular-nums; }
-  #cadre-taille-select.size-select-tailles, #p11-cadre-taille-select.size-select-tailles { font-size: 15px; }
+  /* Menu "Taille du cadre" — remplace un <select> natif (dont la liste ouverte est
+     dessinée par l'OS sur certains navigateurs, rendant tout style CSS inopérant) par
+     un vrai menu HTML : bouton déclencheur au même look que les autres champs, liste
+     en flexbox pour un alignement gauche/droite fiable, plus de bricolage par espaces. */
+  .taille-dd-trigger {
+    background: var(--bg); border: 0.5px solid var(--border2); color: var(--text1);
+    padding: 8px 10px; font-size: 14px; width: 100%; box-sizing: border-box; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-family: inherit; text-align: left;
+  }
+  .taille-dd-trigger i { font-size: 14px; color: var(--text2); flex-shrink: 0; }
+  .taille-dd-list {
+    display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
+    background: #1a1a1a; border: 0.5px solid var(--border2); border-radius: 6px;
+    max-height: 280px; overflow-y: auto; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+  .taille-dd-list.open { display: block; }
+  .taille-dd-opt {
+    padding: 9px 12px; font-size: 14px; color: var(--text1); cursor: pointer;
+  }
+  .taille-dd-opt:hover { background: rgba(245,196,0,.1); }
+  .taille-dd-opt.sel { color: #F5C400; font-weight: 500; }
+  .taille-dd-opt-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .taille-dd-range { color: var(--text2); font-variant-numeric: tabular-nums; }
+  .taille-dd-opt-row.sel .taille-dd-range { color: #F5C400; }
   .size-btn {
     background: #F5C400; color: #1a1a00; border: none; padding: 10px 24px;
     font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
