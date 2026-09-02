@@ -5240,6 +5240,15 @@ function p11RenderModels() {
     // qu'un mode ait déjà été choisi ou non. Un seul état à suivre désormais
     // (selModel), plus de variable séparée pour l'expansion.
     const isExpanded = sel;
+    // Prix affiché DANS le bouton "Vélo complet" une fois la carte dépliée : doit
+    // suivre la préconfig active (Signature/Ti1/Ti2), pas rester figé sur Ti2 comme
+    // completPrice (qui, lui, reste la référence fixe pour "à partir de" en carte
+    // repliée — comportement volontaire, à ne pas changer). Sans ce calcul séparé,
+    // cliquer une préconfig ne faisait jamais bouger le prix du bouton.
+    let dynamicCompletPrice = completPrice;
+    if (isExpanded && window._activePreset && PRESETS[m.id] && PRESETS[m.id][window._activePreset]) {
+      dynamicCompletPrice = computeTotalsForOpts(m.id, PRESETS[m.id][window._activePreset], false).price;
+    }
     // Préconfigs (Signature/Ti1/Ti2) intégrées DANS la carte dépliée, juste sous les
     // boutons — jamais dans une barre flottante séparée en haut de page, sans lien
     // visuel avec le modèle concerné (source de confusion signalée par Damien).
@@ -5273,7 +5282,7 @@ function p11RenderModels() {
           '<div class="mc-mode-buttons-stack">' +
             '<button class="mc-mode-btn-stack' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
               '<span class="mc-mode-btn-label">Vélo complet</span>' +
-              '<span class="mc-mode-btn-price">' + completPrice.toLocaleString('fr-FR') + ' €</span>' +
+              '<span class="mc-mode-btn-price">' + dynamicCompletPrice.toLocaleString('fr-FR') + ' €</span>' +
             '</button>' +
             '<button class="mc-mode-btn-stack' + (isKitSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', true)">' +
               '<span class="mc-mode-btn-label">Kit cadre</span>' +
