@@ -802,6 +802,11 @@
     background: var(--bg); border: 0.5px solid var(--border2); color: var(--text1);
     padding: 8px 10px; font-size: 14px; width: 100%; box-sizing: border-box; cursor: pointer;
   }
+  /* Menu "Taille du cadre" — chaque option porte "XXS   1.55 / 1.64 m" avec la taille
+     à gauche et la plage de stature à droite. Un <select> natif ne permet aucune mise
+     en page interne à une <option> (texte brut uniquement) — l'alignement visuel repose
+     donc sur une police à chasse fixe + un espacement calculé en amont dans le JS. */
+  .size-select-tailles { font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-variant-numeric: tabular-nums; }
   .size-btn {
     background: #F5C400; color: #1a1a00; border: none; padding: 10px 24px;
     font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
