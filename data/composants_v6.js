@@ -3,7 +3,7 @@
 
 const POST_META = [
   { id: 'fourche', name: 'Fourche', icon: 'ti-git-fork' },
-  { id: 'jeu_direction', name: 'Jeu de direction', icon: 'ti-headset' },
+  { id: 'jeu_direction', name: 'Jeu de direction', icon: 'ti-view-360-arrow' },
   { id: 'roues', name: 'Roues', icon: 'ti-circle' },
   { id: 'pneus', name: 'Pneus', icon: 'ti-circle-dotted' },
   { id: 'transmission', name: 'Transmission', icon: 'ti-settings' },
@@ -12,7 +12,7 @@ const POST_META = [
   { id: 'pilotage', name: 'Poste de pilotage', icon: 'ti-adjustments-horizontal' },
   { id: 'selle', name: 'Selle', icon: 'ti-armchair' },
   { id: 'tige', name: 'Tige de selle', icon: 'ti-arrows-vertical' },
-  { id: 'collier_selle', name: 'Collier de selle', icon: 'ti-clamp' },
+  { id: 'collier_selle', name: 'Collier de selle', icon: 'ti-circle-minus-2' },
   { id: 'pedales', name: 'Pédales', icon: 'ti-rotate-clockwise' },
 ];
 // Postes visibles en mode Kit cadre -- tout poste dont l'id se termine par '_kit'
@@ -20,11 +20,11 @@ const POST_META = [
 // besoin de toucher au code).
 const KIT_CADRE_POST_META = [
   { id: 'fourche_kit', name: 'Fourche', icon: 'ti-git-fork' },
-  { id: 'jeu_direction_kit', name: 'Jeu de direction', icon: 'ti-headset' },
-  { id: 'potence_kit', name: 'Potence', icon: 'ti-stem' },
-  { id: 'cintre_kit', name: 'Cintre', icon: 'ti-bar' },
+  { id: 'jeu_direction_kit', name: 'Jeu de direction', icon: 'ti-view-360-arrow' },
+  { id: 'potence_kit', name: 'Potence', icon: 'ti-connection' },
+  { id: 'cintre_kit', name: 'Cintre', icon: 'ti-chevron-compact-down' },
   { id: 'tige_kit', name: 'Tige de selle', icon: 'ti-arrows-vertical' },
-  { id: 'collier_selle_kit', name: 'Collier de selle', icon: 'ti-clamp' },
+  { id: 'collier_selle_kit', name: 'Collier de selle', icon: 'ti-circle-minus-2' },
 ];
 // "cadre" volontairement EXCLU (jamais affiché en page 2, jamais itéré par les
 // boucles de rendu ni par computeTotals(), qui l'ajoute séparément).
