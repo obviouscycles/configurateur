@@ -2281,7 +2281,6 @@ function renderCadreCard(selectId, renderFn) {
   selectId = selectId || 'cadre-taille-select';
   renderFn = renderFn || 'dtRenderPosts';
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
-  const tailles = TAILLES_CADRE[selModel].map(t => t.taille);
   const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '__unknown__');
   // Cohérence avec les autres postes : on affiche le NOM du composant sélectionné
   // (ici, le cadre lui-même — toujours choisi automatiquement dès le modèle défini),
@@ -2298,9 +2297,13 @@ function renderCadreCard(selectId, renderFn) {
       renderTuningBoxesFor('cadre', renderFn) +
       '<div class="dim-field" style="max-width:320px;">' +
         '<label for="' + selectId + '" style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Taille du cadre</label>' +
-        '<select class="size-select" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
+        '<select class="size-select size-select-tailles" id="' + selectId + '" onchange="selectCadreTaille(this.value)">' +
           '<option value="__unknown__"' + (current === '__unknown__' ? ' selected' : '') + '>Je ne sais pas encore</option>' +
-          tailles.map(t => '<option value="' + t + '"' + (current === t ? ' selected' : '') + '>' + t + '</option>').join('') +
+          TAILLES_CADRE[selModel].map(t => {
+            const label = t.taille.padEnd(4, '\u00A0');
+            const rangeTxt = (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
+            return '<option value="' + t.taille + '"' + (current === t.taille ? ' selected' : '') + '>' + label + '\u00A0\u00A0' + rangeTxt + '</option>';
+          }).join('') +
           '<option value="__sur_mesure__"' + (current === '__sur_mesure__' ? ' selected' : '') + '>Sur-mesure (+300 €)</option>' +
         '</select>' +
       '</div>' +
