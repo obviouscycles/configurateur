@@ -164,20 +164,19 @@
     border: 0.5px solid var(--border); border-radius: var(--radius-lg);
     margin-bottom: 8px; overflow: hidden; background: var(--bg);
   }
-  /* V7 — Gravure, ligne simple entre Cadre et Fourche (case à cocher + prix, champ
-     texte si coché) — volontairement plus légère qu'un vrai poste, pas de vignette. */
-  .gravure-row { border: 0.5px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 8px; background: var(--bg); padding: 12px 16px; }
-  .gravure-row.checked { border-color: #F5C400; }
-  .gravure-row-hdr { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  /* V7 — Gravure, présentée comme un vrai poste (post-block/post-hdr/post-opts déjà
+     stylés par ailleurs) — seul le contenu déplié (photo + coche + champ texte) lui
+     est propre. */
+  .gravure-body { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .gravure-photo { width: 100%; max-width: 240px; aspect-ratio: 3/1; object-fit: cover; border-radius: 6px; border: 0.5px solid #333; cursor: zoom-in; display: block; }
+  .gravure-check-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   .gravure-row-check { width: 18px; height: 18px; border-radius: 4px; border: 0.5px solid #444; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-  .gravure-row.checked .gravure-row-check { background: #F5C400; border-color: #F5C400; }
+  .gravure-row-check.on { background: #F5C400; border-color: #F5C400; }
   .gravure-row-check i { display: none; font-size: 11px; color: #1a1400; }
-  .gravure-row.checked .gravure-row-check i { display: block; }
-  .gravure-row-label { flex: 1; font-size: 14px; color: var(--text1); font-weight: 500; }
-  .gravure-row-thumb { height: 40px; width: auto; aspect-ratio: 3/1; object-fit: cover; border-radius: 4px; border: 0.5px solid #333; cursor: zoom-in; flex-shrink: 0; }
-  .gravure-row-price { font-size: 13px; color: var(--text2); }
-  .gravure-row.checked .gravure-row-price { color: #F5C400; }
-  .gravure-row-input-wrap { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid #222; }
+  .gravure-row-check.on i { display: block; }
+  .gravure-check-label { flex: 1; font-size: 14px; color: var(--text1); font-weight: 500; }
+  .gravure-check-price { font-size: 13px; color: var(--text2); }
+  .gravure-row-input-wrap { padding-top: 10px; border-top: 0.5px solid #222; }
   .gravure-row-input {
     width: 100%; box-sizing: border-box; background: #0d0d0d; border: 0.5px solid #333; color: #f2f2f2;
     padding: 8px 10px; font-size: 13px; font-family: var(--font); text-transform: uppercase; letter-spacing: .03em;
@@ -1784,7 +1783,7 @@
       <div style="display:grid;grid-template-columns:repeat(3,1fr);padding:0 12px;text-align:center;max-width:340px;margin:0 auto;width:100%;">
         <span id="p11-sl-1" style="font-size:8px;color:#F5C400;letter-spacing:.03em;text-transform:uppercase;">Modèle</span>
         <span id="p11-sl-2" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Compos.</span>
-        <span id="p11-sl-3" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Devis</span>
+        <span id="p11-sl-3" style="font-size:8px;color:#888;letter-spacing:.03em;text-transform:uppercase;">Mon devis</span>
       </div>
     </div>
 
@@ -2283,7 +2282,7 @@
     </div>
     <div class="dts-step" id="dts-3" onclick="dtGo(3)">
       <div class="dts-dot" id="dts-dot-3">→</div>
-      <div><div class="dts-label">Devis</div><div class="dts-detail" id="dts-d3"></div></div>
+      <div><div class="dts-label">Demander votre devis</div><div class="dts-detail" id="dts-d3"></div></div>
     </div>
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:0;">
 
