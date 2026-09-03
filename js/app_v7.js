@@ -2098,6 +2098,10 @@ function dtUpdateStep2Footer() {
 // personnalisation (Titanium/Performance/Évolution, tous retirés). Ligne simple entre
 // Cadre et Fourche — case à cocher + prix, avec un champ texte qui n'apparaît que si
 // coché. Pas de vignette photo, volontairement, contrairement aux vrais postes.
+// V7 — Gravure sur tube supérieur : présentée comme un vrai poste (carte repliée
+// avec résumé, dépliée au clic pour révéler photo + coche + champ texte), cohérent
+// avec tous les autres modules de l'étape Composants — plutôt qu'une ligne à part
+// avec une apparence différente.
 function renderGravureRow(renderFn) {
   const opt = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.find(o => o.id === 'evo_gravure') : null;
   if (!opt) return '';
@@ -2105,23 +2109,42 @@ function renderGravureRow(renderFn) {
   const gravureText = evoGravureText || '';
   const gravureError = gravureText.length > 20;
   const examplePhoto = '/configurateur/assets/evolution/votre_nom_mob.webp';
-  return '<div class="gravure-row' + (checked ? ' checked' : '') + '">' +
-    '<div class="gravure-row-hdr" onclick="evoToggleGravure(\'' + renderFn + '\')">' +
-      '<div class="gravure-row-check"><i class="ti ti-check"></i></div>' +
-      '<span class="gravure-row-label">' + opt.label + '</span>' +
-      '<img src="' + examplePhoto + '" alt="Exemple de gravure sur tube supérieur" class="gravure-row-thumb" ' +
-        'onclick="event.stopPropagation();dtOpenLightbox(\'' + examplePhoto + '\',\'Exemple de gravure\')">' +
-      '<span class="gravure-row-price">' + opt.price + ' €</span>' +
+  const isOpen = openPost === 'gravure';
+  const summary = checked
+    ? (gravureText ? '« ' + gravureText + ' »' : 'Incluse (+' + opt.price + ' €)')
+    : 'choisir →';
+  // Desktop utilise la délégation d'événements (data-toggle, géré par le conteneur) ;
+  // mobile utilise un onclick en ligne comme toutes ses propres cartes de poste
+  // (p11TogglePost) — jamais la même mécanique des deux côtés pour l'ouverture/repli.
+  const isMobile = renderFn === 'p11RenderPosts';
+  const hdrAttr = isMobile ? 'onclick="p11TogglePost(\'gravure\')"' : 'data-toggle="gravure"';
+  return '<div class="post-block" data-post-id="gravure">' +
+    '<div class="post-hdr" ' + hdrAttr + '>' +
+      '<i class="ti ti-typography ph-icon"></i>' +
+      '<span class="ph-name">' + opt.label + '</span>' +
+      '<span class="' + (checked ? 'ph-sel' : 'ph-pending') + '">' + summary + '</span>' +
+      '<i class="ti ti-chevron-down ph-chev' + (isOpen ? ' open' : '') + '"></i>' +
     '</div>' +
-    (checked ?
-      '<div class="gravure-row-input-wrap" onclick="event.stopPropagation()">' +
-        '<input type="text" id="gravure-row-input" maxlength="30" value="' + gravureText.replace(/"/g,'&quot;') + '" ' +
-          'placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureTextRow(this.value, \'' + renderFn + '\')" ' +
-          'class="gravure-row-input' + (gravureError ? ' error' : '') + '">' +
-        '<div class="gravure-row-count' + (gravureError ? ' error' : '') + '">' +
-          (gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')) +
+    '<div class="post-opts' + (isOpen ? ' open' : '') + '">' +
+      '<div class="gravure-body">' +
+        '<img src="' + examplePhoto + '" alt="Exemple de gravure sur tube supérieur" class="gravure-photo" ' +
+          'onclick="dtOpenLightbox(\'' + examplePhoto + '\',\'Exemple de gravure\')">' +
+        '<div class="gravure-check-row" onclick="evoToggleGravure(\'' + renderFn + '\')">' +
+          '<div class="gravure-row-check' + (checked ? ' on' : '') + '"><i class="ti ti-check"></i></div>' +
+          '<span class="gravure-check-label">Ajouter la gravure</span>' +
+          '<span class="gravure-check-price">' + opt.price + ' €</span>' +
         '</div>' +
-      '</div>' : '') +
+        (checked ?
+          '<div class="gravure-row-input-wrap">' +
+            '<input type="text" id="gravure-row-input" maxlength="30" value="' + gravureText.replace(/"/g,'&quot;') + '" ' +
+              'placeholder="TEXTE À GRAVER (20 CARACTÈRES MAX)" oninput="evoUpdateGravureTextRow(this.value, \'' + renderFn + '\')" ' +
+              'class="gravure-row-input' + (gravureError ? ' error' : '') + '">' +
+            '<div class="gravure-row-count' + (gravureError ? ' error' : '') + '">' +
+              (gravureError ? 'Maximum 20 caractères, espaces compris' : (gravureText.length + ' / 20 caractères')) +
+            '</div>' +
+          '</div>' : '') +
+      '</div>' +
+    '</div>' +
   '</div>';
 }
 function evoToggleGravure(renderFn) {
@@ -2953,7 +2976,12 @@ function dtRenderS4() {
 // Bloc récap du parcours OOD (cadre standard / évolution / sur mesure / hors gamme)
 function v2EvoRecapBlockHtml(title, showTotal) {
   const checkedOpts = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.filter(o => evoChecked[o.id]) : [];
-  const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
+  // V7 — total simplifié : seule la gravure existe, son propre prix suffit (plus de
+  // forfait EVO_FIXE ajouté en plus, qui n'avait de sens que pour plusieurs options
+  // Évolution simultanées). evoTotalPrice() reste utilisée ailleurs (code hérité,
+  // inerte) mais plus jamais ici pour l'affichage du total.
+  const gravureOpt = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.find(o => o.id === 'evo_gravure') : null;
+  const total = (gravureOpt && evoChecked['evo_gravure']) ? gravureOpt.price : null;
   let lines = '';
   if (checkedOpts.length === 0 && !evoCustomText) {
     lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
