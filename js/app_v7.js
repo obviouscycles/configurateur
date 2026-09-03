@@ -2104,10 +2104,13 @@ function renderGravureRow(renderFn) {
   const checked = evoChecked['evo_gravure'] || false;
   const gravureText = evoGravureText || '';
   const gravureError = gravureText.length > 20;
+  const examplePhoto = '/configurateur/assets/evolution/votre_nom_mob.webp';
   return '<div class="gravure-row' + (checked ? ' checked' : '') + '">' +
     '<div class="gravure-row-hdr" onclick="evoToggleGravure(\'' + renderFn + '\')">' +
       '<div class="gravure-row-check"><i class="ti ti-check"></i></div>' +
       '<span class="gravure-row-label">' + opt.label + '</span>' +
+      '<img src="' + examplePhoto + '" alt="Exemple de gravure sur tube supérieur" class="gravure-row-thumb" ' +
+        'onclick="event.stopPropagation();dtOpenLightbox(\'' + examplePhoto + '\',\'Exemple de gravure\')">' +
       '<span class="gravure-row-price">' + opt.price + ' €</span>' +
     '</div>' +
     (checked ?
@@ -3171,20 +3174,10 @@ function dtInit() {
 
 // ─── OBVIOUS ON DEMAND — DONNÉES ÉVOLUTION ────────────────────────────────────
 const EVO_FIXE = 50;
-const EVO_OPTIONS = [
-  {
-    "id": "evo_gravure",
-    "label": "Gravure sur tube supérieur",
-    "price": 10,
-    "note": "Gravez votre nom, votre groupe sanguin ou autre sur le tube supérieur — 20 caractères maximum.",
-    "modeles": [
-      "route",
-      "gravel_racing",
-      "gravel_bikepacking",
-      "vtt_enduro"
-    ]
-  }
-];
+// EVO_OPTIONS désormais généré depuis le xlsx (onglet 6_EVOLUTION), dans le fichier
+// dédié evolution_v7.js chargé séparément — plus de valeurs codées en dur ici, pour
+// éviter tout risque de désynchronisation entre le xlsx et le code (ex: le prix de la
+// gravure resté à 10€ ici alors qu'il était passé à 80€ dans le fichier source).
 
 
 let evoInsertsChecked = {}; // état des inserts individuels
