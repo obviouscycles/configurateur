@@ -2171,7 +2171,7 @@ function renderCadreCard(selectId, renderFn) {
   selectId = selectId || 'cadre-taille-select';
   renderFn = renderFn || 'dtRenderPosts';
   if (!selModel || !TAILLES_CADRE[selModel]) return '';
-  const current = v2Parcours === 'sur_mesure' ? '__sur_mesure__' : (selSize.taille || '__unknown__');
+  const current = selSize.taille || '__unknown__';
   // Cohérence avec les autres postes : on affiche le NOM du composant sélectionné
   // (ici, le cadre lui-même — toujours choisi automatiquement dès le modèle défini),
   // pas un statut de taille — celle-ci reste visible juste en dessous, dans le menu.
@@ -2190,7 +2190,6 @@ function renderCadreCard(selectId, renderFn) {
         (() => {
           const labelFor = (v) => {
             if (v === '__unknown__') return 'Je ne sais pas encore';
-            if (v === '__sur_mesure__') return 'Sur-mesure (+300 €)';
             const t = TAILLES_CADRE[selModel].find(x => x.taille === v);
             if (!t) return v;
             const rangeTxt = (t.stature_min/100).toFixed(2) + ' / ' + (t.stature_max/100).toFixed(2) + ' m';
@@ -2207,7 +2206,6 @@ function renderCadreCard(selectId, renderFn) {
                 '<span>' + t.taille + '</span><span class="taille-dd-range">' + rangeTxt + '</span>' +
               '</div>';
             }),
-            '<div class="taille-dd-opt' + (current==='__sur_mesure__'?' sel':'') + '" onclick="event.stopPropagation();selectCadreTaille(\'__sur_mesure__\')">Sur-mesure (+300 €)</div>',
           ].join('');
           return '<button type="button" class="taille-dd-trigger" id="' + selectId + '" onclick="event.stopPropagation();toggleTailleDD(\'' + selectId + '\')">' +
               labelFor(current) + '<i class="ti ti-chevron-down"></i>' +
@@ -2246,18 +2244,13 @@ document.addEventListener('click', () => {
 });
 
 function selectCadreTaille(value) {
-  if (value === '__sur_mesure__') {
-    v2Parcours = 'sur_mesure';
-    delete selSize.taille; delete selSizeSource.taille;
-  } else if (value === '__unknown__' || !value) {
+  if (value === '__unknown__' || !value) {
     // "Je ne sais pas encore" — fonctionnellement identique a "rien de choisi", mais
     // garde comme valeur dediee pour que le menu continue d'afficher cette option
     // precise au prochain rendu, plutot que de retomber sur le premier element de
     // la liste par defaut du navigateur.
-    v2Parcours = 'standard';
     delete selSize.taille; delete selSizeSource.taille;
   } else {
-    v2Parcours = 'standard';
     selSize.taille = value; selSizeSource.taille = 'user';
   }
   // La taille de cadre change : les dimensions morphologiques auto-remplies (source 'default')
@@ -3097,11 +3090,10 @@ function dtRenderRecap() {
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   const rows = get('dtr-rows');
   if (!rows) return;
-  const cadreSurMesure = v2Parcours === 'sur_mesure';
-  const cadreVal = cadreSurMesure ? 'Sur-mesure (+300 €)' : (selSize.taille ? 'Taille ' + selSize.taille : 'À déterminer');
-  const cadreRowHtml = '<div class="dtr-row"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '>' +
-    '<span class="dtr-lbl"' + (cadreSurMesure ? ' style="color:#F5C400;"' : '') + '><i class="ti ti-frame" style="font-size:8px;margin-right:3px;"></i>Cadre</span>' +
-    '<span class="dtr-val"' + (cadreSurMesure ? ' style="color:#F5C400;font-weight:600;"' : '') + '>' + cadreVal + '</span>' +
+  const cadreVal = selSize.taille ? 'Taille ' + selSize.taille : 'À déterminer';
+  const cadreRowHtml = '<div class="dtr-row">' +
+    '<span class="dtr-lbl"><i class="ti ti-frame" style="font-size:8px;margin-right:3px;"></i>Cadre</span>' +
+    '<span class="dtr-val">' + cadreVal + '</span>' +
   '</div>';
   rows.innerHTML = cadreRowHtml + activePostMeta().map(p => {
     const comboLock = findComboLock(p.id);
