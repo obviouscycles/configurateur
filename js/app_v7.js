@@ -2223,11 +2223,13 @@ function renderCadreCard(selectId, renderFn) {
 // (toujours affichée en premier, quel que soit le mode vélo complet / kit cadre).
 function buildDelaiGlobalBanner() {
   const d = computeDelaiGlobal(selOpts);
-  return '<div class="delai-global-banner' + (d.contact ? ' contact' : '') + '">' +
+  const val = d.label.replace(/^Délai( estimé)?\s*:\s*/, '').replace(/\s*\(non contractuel\)/, '');
+  const clickAttr = d.contact ? ' onclick="openContactDrawer()" style="cursor:pointer;"' : '';
+  return '<div class="delai-global-banner' + (d.contact ? ' contact' : '') + '"' + clickAttr + '>' +
     '<i class="ti ' + (d.contact ? 'ti-phone' : 'ti-clock') + '"></i>' +
     '<div>' +
       '<div class="delai-global-lbl">Délai de livraison</div>' +
-      '<div class="delai-global-val">' + d.label.replace(/^Délai( estimé)?\s*:\s*/, '') + '</div>' +
+      '<div class="delai-global-val">' + val + '</div>' +
     '</div>' +
   '</div>';
 }
