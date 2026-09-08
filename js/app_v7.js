@@ -2213,22 +2213,24 @@ function renderCadreCard(selectId, renderFn) {
             '<div class="taille-dd-list" id="' + selectId + '-list">' + rowsHtml + '</div>';
         })() +
       '</div>' +
-      buildCadreDelaiBadge(cadreOpt) +
     '</div>' +
+    buildDelaiGlobalBanner() +
   '</div>';
 }
 
-// Le cadre a un délai/statut "nous contacter" propre à l'option (onglet 4), mais son
-// STOCK dépend de la taille (onglet 5, TAILLES_CADRE) — pas de badge tant que la
-// taille n'est pas connue, on ne peut pas savoir si CETTE taille précise est en
-// rupture ou non.
-function buildCadreDelaiBadge(cadreOpt) {
-  if (!cadreOpt || cadreOpt.delaiSemaines == null || !selSize.taille) return '';
-  const tailleInfo = (TAILLES_CADRE[selModel] || []).find(t => t.taille === selSize.taille);
-  if (!tailleInfo || tailleInfo.stock !== 0) return '';
-  return cadreOpt.nousContacter
-    ? '<div class="opc-delai opc-delai-contact" style="margin-top:10px;"><i class="ti ti-phone"></i> Délai : nous contacter</div>'
-    : '<div class="opc-delai" style="margin-top:10px;"><i class="ti ti-clock"></i> Délai estimé : ' + cadreOpt.delaiSemaines + ' semaines (non contractuel)</div>';
+// V7 — Fenêtre unique de délai, remplace les badges individuels (jugés trop lourds,
+// un par vignette) par UN SEUL bandeau bien visible, qui évolue en direct avec
+// chaque changement de composant — recalculé à chaque rendu de la carte Cadre
+// (toujours affichée en premier, quel que soit le mode vélo complet / kit cadre).
+function buildDelaiGlobalBanner() {
+  const d = computeDelaiGlobal(selOpts);
+  return '<div class="delai-global-banner' + (d.contact ? ' contact' : '') + '">' +
+    '<i class="ti ' + (d.contact ? 'ti-phone' : 'ti-clock') + '"></i>' +
+    '<div>' +
+      '<div class="delai-global-lbl">Délai de livraison</div>' +
+      '<div class="delai-global-val">' + d.label.replace(/^Délai( estimé)?\s*:\s*/, '') + '</div>' +
+    '</div>' +
+  '</div>';
 }
 
 // Menu déroulant "Taille du cadre" — fait maison plutôt qu'un <select> natif, dont
@@ -2344,13 +2346,12 @@ function dtRenderPosts() {
           '<div class="opc-name">' + o.name + '</div>' +
           (o.desc?'<div class="opc-desc">'+o.desc+'</div>':'') +
           colorSwatchesHtml +
-          buildDelaiBadge(o) +
           '<div class="opc-price' + (d<0?' negative':'') + '">' + diff + '</div>' +
           '</div></div>';
       } else {
         return '<div class="opt-item' + (sel2?' sel':'') + '" data-pid="' + p.id + '" data-oid="' + o.id + '">' +
           '<div class="opt-radio"><div class="radio-dot"></div></div>' +
-          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + colorSwatchesHtml + buildDelaiBadge(o) + '</div>' +
+          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + colorSwatchesHtml + '</div>' +
           '<div class="oi-meta"><div class="oi-price' + (d<0?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
       }
@@ -5247,7 +5248,6 @@ function p11RenderPosts() {
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
               colorSwatchesHtml +
-              buildDelaiBadge(o) +
               (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
@@ -5264,7 +5264,6 @@ function p11RenderPosts() {
             '<div class="oi-info">' +
               '<div class="oi-name">' + o.name + '</div>' +
               (o.desc ? '<div class="oi-desc">' + o.desc + '</div>' : '') +
-              buildDelaiBadge(o) +
             '</div>' +
             '<div class="oi-meta">' + '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
