@@ -2214,7 +2214,6 @@ function renderCadreCard(selectId, renderFn) {
         })() +
       '</div>' +
     '</div>' +
-    buildDelaiGlobalBanner() +
   '</div>';
 }
 
@@ -3197,7 +3196,7 @@ function dtRenderRecap() {
       '<span class="dtr-lbl"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:8px;margin-right:3px;"></i>'+p.name+(isModified?'<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:#F5C400;margin-left:3px;vertical-align:middle;"></span>':'')+'</span>' +
       '<span class="dtr-val">'+opt.name+'</span>' +
     '</div>';
-  }).join('');
+  }).join('') + buildDelaiGlobalBanner();
 }
 
 // ── Helpers ──
