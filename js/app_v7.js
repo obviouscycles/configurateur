@@ -1207,6 +1207,15 @@ function closeSizeAlert() {
   document.getElementById('size-alert-modal').classList.remove('open');
 }
 
+// V7 — Avertissement au rechargement d'une config sauvegardée avant le retrait des
+// options Inserts/ISCG/Intégration (voir dtLoadSaved).
+function openConfigUpdatedModal() {
+  document.getElementById('config-updated-modal').classList.add('open');
+}
+function closeConfigUpdatedModal() {
+  document.getElementById('config-updated-modal').classList.remove('open');
+}
+
 // ─── PROJET TITANIUM — circuit d'envoi dédié (pas de modèle/prix associé) ──────
 
 
@@ -1963,6 +1972,17 @@ function dtLoadSaved(id) {
   window._activePreset = cfg.preset || null;
   window._singleModel = selModel;
   window.sizeValidated = !!(cfg.selSize && Object.keys(cfg.selSize || {}).length > 0);
+  // V7 — Détection générique d'options Évolution retirées depuis la sauvegarde (ex:
+  // inserts/ISCG/intégration, supprimées avec le reste de l'ancien écran
+  // Personnalisation) : toute clé cochée dans evoChecked qui ne correspond plus à
+  // aucune entrée de EVO_OPTIONS aujourd'hui, ou tout reliquat d'inserts, déclenche
+  // un avertissement — jamais question de laisser croire que le prix affiché est
+  // resté celui d'origine alors que des options ont silencieusement disparu.
+  const oldEvoChecked = cfg.evoChecked || {};
+  const currentEvoIds = (typeof EVO_OPTIONS !== 'undefined') ? EVO_OPTIONS.map(o => o.id) : [];
+  const hasOrphanedEvo = Object.keys(oldEvoChecked).some(k => oldEvoChecked[k] && !currentEvoIds.includes(k));
+  const hasOldInserts = Object.values(cfg.evoInsertsChecked || {}).some(v => v);
+  const configWasUpdated = hasOrphanedEvo || hasOldInserts;
   // Personnalisations (étapes Cadre + Personnalisation) — repli sur un état vide pour
   // les anciennes configs sauvegardées avant ce correctif (n'avaient pas ces champs).
   v2Parcours = cfg.v2Parcours || 'standard';
@@ -1981,6 +2001,7 @@ function dtLoadSaved(id) {
   });
   // Aller directement à l'écran final récapitulatif — pas à l'étape Composants.
   v2GoRecap();
+  if (configWasUpdated) openConfigUpdatedModal();
 }
 
 function dtDeleteSaved(id) {
@@ -2214,6 +2235,7 @@ function renderCadreCard(selectId, renderFn) {
         })() +
       '</div>' +
     '</div>' +
+    (renderFn === 'p11RenderPosts' ? buildDelaiGlobalBanner() : '') +
   '</div>';
 }
 
@@ -4773,11 +4795,9 @@ function p11UpdateStep2Footer() {
   const nextLbl = document.getElementById('p11-next-label');
   const aideLink = document.getElementById('p11-aide-taille-link');
   if (nextLbl) {
-    nextLbl.textContent = v2Parcours === 'sur_mesure' ? 'Continuer'
-      : !selSize.taille ? 'Déterminer ma taille'
-      : 'Personnalisation';
+    nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Récapitulatif';
   }
-  if (aideLink) aideLink.style.display = (v2Parcours !== 'sur_mesure' && selSize.taille) ? 'block' : 'none';
+  if (aideLink) aideLink.style.display = selSize.taille ? 'block' : 'none';
 }
 
 function p11UpdateStep(n) {
@@ -4817,7 +4837,7 @@ function p11UpdateStep(n) {
   if (n === 3) p11InitStep4Bar();
   if (!hasInlineNav && nextLbl) {
     if (n === 2) {
-      nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Ma configuration';
+      nextLbl.textContent = !selSize.taille ? 'Déterminer ma taille' : 'Récapitulatif';
     } else {
       nextLbl.textContent = P11_LABELS[n] || '';
     }
@@ -5443,7 +5463,7 @@ function p11CalcSize() {
     sub.innerHTML = info;
     // Mettre à jour le bouton
     const _nextLbl = document.getElementById('p11-next-label');
-    if (_nextLbl) _nextLbl.textContent = 'Ma configuration';
+    if (_nextLbl) _nextLbl.textContent = 'Récapitulatif';
     return;
   }
   // Chevauchement : l'entrejambe sort-il de la plage combinée des tailles candidates ?
@@ -5509,7 +5529,7 @@ function p11ChooseUsage(usage) {
   document.getElementById('p11-result-sub').innerHTML = 'Stature ' + chosen.stature_min + '–' + chosen.stature_max + ' cm';
   // Mettre à jour le bouton "Continuer sans taille" → "Voir votre configuration"
   const _nextLbl = document.getElementById('p11-next-label');
-  if (_nextLbl && p11CurrentStep === 4) _nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+  if (_nextLbl && p11CurrentStep === 2) _nextLbl.textContent = 'Récapitulatif';
 }
 
 function p11BuildDimsGrid() {
@@ -5660,7 +5680,7 @@ function p11ValidateDims() {
       p11Summary.innerHTML = '✅ <strong>Dimensions enregistrées :</strong><br>' + lines.join(' · ');
       // Mettre à jour le bouton next
       const nextLbl = document.getElementById('p11-next-label');
-      if (nextLbl && p11CurrentStep === 4) nextLbl.textContent = v2Parcours === 'standard_evo' ? 'Mes personnalisations' : 'Ma configuration';
+      if (nextLbl && p11CurrentStep === 2) nextLbl.textContent = 'Récapitulatif';
     }
     p11Summary.classList.add('show');
   }
