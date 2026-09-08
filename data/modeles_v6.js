@@ -1,4 +1,4 @@
-// Généré automatiquement depuis configurateur_velos_v5.xlsx — NE PAS ÉDITER À LA MAIN
+// Généré automatiquement depuis configurateur_velos_v7.xlsx — NE PAS ÉDITER À LA MAIN
 const MODELS = [
   { id: 'gravel_racing', name: 'ON/OFF', badge: 'Gravel Racing', desc: 'Cadre titane, géométrie sport, fourche carbone, intégration complète', assembly: 300, photo: '/configurateur/assets/velos/ONOFF_2024.webp' },
   { id: 'gravel_bikepacking', name: 'OUT/QUEST', badge: 'Gravel Aventure', desc: 'Cadre titane, géométrie confort / longue distance, nombreux points d\'accroche', assembly: 300, photo: '/configurateur/assets/velos/OUTQUEST_2024.webp' },
@@ -7,10 +7,6 @@ const MODELS = [
 ];
 
 const KIT_CADRE_PHOTOS = {
-  'gravel_racing': '/configurateur/assets/kits/kit_ONOFF.webp',
-  'gravel_bikepacking': '/configurateur/assets/kits/kit_OUTQUEST.webp',
-  'route': '/configurateur/assets/kits/kit_ON.webp',
-  'vtt_enduro': '/configurateur/assets/kits/kit_OFF.webp',
 };
 
 const PRESETS = {

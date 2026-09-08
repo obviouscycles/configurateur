@@ -1,4 +1,4 @@
-// Généré automatiquement depuis configurateur_velos_v6.xlsx — NE PAS ÉDITER À LA MAIN
+// Généré automatiquement depuis configurateur_velos_v7.xlsx — NE PAS ÉDITER À LA MAIN
 const TAILLES_CADRE = {
   'route': [
     { 'taille': "XXS", 'stature_min': 155, 'stature_max': 164, 'ej_min': 70, 'ej_max': 81.39999999999999, 'manivelle': 165, 'cintre': 380, 'potence': 80, 'largeur_selle': 145, 'section': 28, 'plateaux': "52x36", 'cassette': "11x34", 'debattement': null, 'stock': 0 },
@@ -19,13 +19,13 @@ const TAILLES_CADRE = {
     { 'taille': "XS", 'stature_min': 160, 'stature_max': 168, 'ej_min': 71.7, 'ej_max': 82, 'manivelle': 165, 'cintre': 400, 'potence': 80, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x51", 'debattement': null, 'stock': 0 },
     { 'taille': "S", 'stature_min': 166, 'stature_max': 174, 'ej_min': 75.1, 'ej_max': 85.39999999999999, 'manivelle': 170, 'cintre': 420, 'potence': 90, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x52", 'debattement': null, 'stock': 0 },
     { 'taille': "M", 'stature_min': 172, 'stature_max': 180, 'ej_min': 78.5, 'ej_max': 88.8, 'manivelle': 170, 'cintre': 420, 'potence': 100, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x53", 'debattement': null, 'stock': 1 },
-    { 'taille': "L", 'stature_min': 178, 'stature_max': 186, 'ej_min': 81.9, 'ej_max': 92.1, 'manivelle': 172.5, 'cintre': 440, 'potence': 110, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x54", 'debattement': null, 'stock': 1 },
+    { 'taille': "L", 'stature_min': 178, 'stature_max': 186, 'ej_min': 81.9, 'ej_max': 92.1, 'manivelle': 172.5, 'cintre': 440, 'potence': 110, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x54", 'debattement': null, 'stock': 2 },
     { 'taille': "XL", 'stature_min': 184, 'stature_max': 194, 'ej_min': 85.3, 'ej_max': 95.5, 'manivelle': 175, 'cintre': 460, 'potence': 120, 'largeur_selle': 145, 'section': 40, 'plateaux': "40", 'cassette': "10x55", 'debattement': null, 'stock': 0 },
   ],
   'vtt_enduro': [
-    { 'taille': "S", 'stature_min': 164, 'stature_max': 172, 'ej_min': 74.2, 'ej_max': 86.69999999999999, 'manivelle': 165, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 0 },
-    { 'taille': "M", 'stature_min': 170, 'stature_max': 178, 'ej_min': 78.8, 'ej_max': 93.19999999999999, 'manivelle': 170, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 0 },
-    { 'taille': "L", 'stature_min': 176, 'stature_max': 184, 'ej_min': 83.4, 'ej_max': 97.8, 'manivelle': 170, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 2 },
+    { 'taille': "S", 'stature_min': 164, 'stature_max': 172, 'ej_min': 74.2, 'ej_max': 86.69999999999999, 'manivelle': 165, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 1 },
+    { 'taille': "M", 'stature_min': 170, 'stature_max': 178, 'ej_min': 78.8, 'ej_max': 93.19999999999999, 'manivelle': 170, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 2 },
+    { 'taille': "L", 'stature_min': 176, 'stature_max': 184, 'ej_min': 83.4, 'ej_max': 97.8, 'manivelle': 170, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 1 },
     { 'taille': "XL", 'stature_min': 182, 'stature_max': 192, 'ej_min': 88, 'ej_max': 102.3, 'manivelle': 172.5, 'cintre': null, 'potence': null, 'largeur_selle': 145, 'section': "2.4\"", 'plateaux': "32", 'cassette': "10x52", 'debattement': 150, 'stock': 0 },
   ],
 };
