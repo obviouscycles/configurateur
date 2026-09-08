@@ -2213,8 +2213,22 @@ function renderCadreCard(selectId, renderFn) {
             '<div class="taille-dd-list" id="' + selectId + '-list">' + rowsHtml + '</div>';
         })() +
       '</div>' +
+      buildCadreDelaiBadge(cadreOpt) +
     '</div>' +
   '</div>';
+}
+
+// Le cadre a un délai/statut "nous contacter" propre à l'option (onglet 4), mais son
+// STOCK dépend de la taille (onglet 5, TAILLES_CADRE) — pas de badge tant que la
+// taille n'est pas connue, on ne peut pas savoir si CETTE taille précise est en
+// rupture ou non.
+function buildCadreDelaiBadge(cadreOpt) {
+  if (!cadreOpt || cadreOpt.delaiSemaines == null || !selSize.taille) return '';
+  const tailleInfo = (TAILLES_CADRE[selModel] || []).find(t => t.taille === selSize.taille);
+  if (!tailleInfo || tailleInfo.stock !== 0) return '';
+  return cadreOpt.nousContacter
+    ? '<div class="opc-delai opc-delai-contact" style="margin-top:10px;"><i class="ti ti-phone"></i> Délai : nous contacter</div>'
+    : '<div class="opc-delai" style="margin-top:10px;"><i class="ti ti-clock"></i> Délai estimé : ' + cadreOpt.delaiSemaines + ' semaines (non contractuel)</div>';
 }
 
 // Menu déroulant "Taille du cadre" — fait maison plutôt qu'un <select> natif, dont
@@ -2330,12 +2344,13 @@ function dtRenderPosts() {
           '<div class="opc-name">' + o.name + '</div>' +
           (o.desc?'<div class="opc-desc">'+o.desc+'</div>':'') +
           colorSwatchesHtml +
+          buildDelaiBadge(o) +
           '<div class="opc-price' + (d<0?' negative':'') + '">' + diff + '</div>' +
           '</div></div>';
       } else {
         return '<div class="opt-item' + (sel2?' sel':'') + '" data-pid="' + p.id + '" data-oid="' + o.id + '">' +
           '<div class="opt-radio"><div class="radio-dot"></div></div>' +
-          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + colorSwatchesHtml + '</div>' +
+          '<div class="oi-info"><div class="oi-name">' + o.name + '</div>' + (o.desc?'<div class="oi-desc">'+o.desc+'</div>':'') + colorSwatchesHtml + buildDelaiBadge(o) + '</div>' +
           '<div class="oi-meta"><div class="oi-price' + (d<0?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
       }
@@ -2407,6 +2422,18 @@ function dtRenderPosts() {
 // Cliquer la photo d'un composant DÉJÀ sélectionné l'agrandit en popup, au lieu de
 // re-sélectionner (sans effet) — clic sur la photo d'un composant pas encore
 // sélectionné continue de le sélectionner normalement (voir délégation ci-dessous).
+// V7 — Badge délai/rupture, réutilisé sur toutes les vignettes (avec ou sans photo,
+// desktop et mobile). Volontairement silencieux si l'option n'a pas de suivi de
+// stock, ou si elle est en stock normal (délai standard de 4 semaines implicite,
+// pas besoin de le répéter sur chaque vignette) — n'apparaît que pour signaler une
+// vraie exception (rupture).
+function buildDelaiBadge(o) {
+  if (!o.delaiSemaines || o.stock !== 0) return '';
+  return o.nousContacter
+    ? '<div class="opc-delai opc-delai-contact"><i class="ti ti-phone"></i> Délai : nous contacter</div>'
+    : '<div class="opc-delai"><i class="ti ti-clock"></i> Délai estimé : ' + o.delaiSemaines + ' semaines (non contractuel)</div>';
+}
+
 function dtOpenLightbox(src, alt) {
   const lb = document.getElementById('dt-lightbox');
   const img = document.getElementById('dt-lightbox-img');
@@ -2891,6 +2918,7 @@ function dtRenderS4() {
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
         (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+        buildDelaiGlobalHtml(selOpts) +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -3048,7 +3076,64 @@ function v2RecapBlock() {
 }
 
 // ── Récap droit ──
-// Calcule le surcoût lié au niveau Obvious On Demand choisi (partagé desktop/mobile)
+function buildDelaiGlobalHtml(opts) {
+  const d = computeDelaiGlobal(opts);
+  return '<div class="devis-delai' + (d.contact ? ' devis-delai-contact' : '') + '"><i class="ti ' + (d.contact ? 'ti-phone' : 'ti-clock') + '"></i> ' + d.label + '</div>';
+}
+
+// V7 — Message de délai global du récapitulatif, calculé sur l'ensemble des
+// composants ACTUELLEMENT sélectionnés (tous postes confondus, kit cadre compris).
+// Algorithme (validé avec Damien) :
+//  1. Parmi les composants suivis et actuellement en rupture (stock=0), on ignore le
+//     cadre si sa taille n'est pas encore connue (son stock dépend de la taille,
+//     onglet 5 — impossible à évaluer sans elle).
+//  2. Aucun en rupture -> délai minimum global (DELAI_MIN_SEMAINES).
+//  3. Sinon, le délai le plus long parmi les composants en rupture :
+//     - s'il est ≤ au minimum, on annonce quand même le minimum
+//     - sinon, si CE composant (ou un autre au même délai maximal) exige "nous
+//       contacter" -> "nous contacter" (priorité à la prudence en cas d'égalité)
+//     - sinon -> on annonce ce délai précis
+//  4. Si la taille du cadre est inconnue ET que le résultat n'est pas déjà "nous
+//     contacter" -> "Selon taille de cadre" à la place (le cadre pourrait, une fois
+//     la taille connue, changer la donne).
+function computeDelaiGlobal(opts) {
+  const tailleConnue = !!selSize.taille;
+  let worstDelai = -1;
+  let worstContact = false;
+  Object.keys(opts).forEach(postId => {
+    const optId = opts[postId];
+    if (!optId) return;
+    const opt = (ALL_OPTIONS[postId] || []).find(o => o.id === optId);
+    if (!opt || !opt.delaiSemaines) return; // delai vide ou 0 ("néant"/option incluse) -> jamais un vrai délai à annoncer
+    let stock = opt.stock;
+    if (postId === 'cadre' || postId === 'cadre_kit') {
+      if (!tailleConnue) return; // stock du cadre inconnu tant que la taille ne l'est pas
+      const tailleInfo = (TAILLES_CADRE[selModel] || []).find(t => t.taille === selSize.taille);
+      stock = tailleInfo ? tailleInfo.stock : null;
+    }
+    if (stock !== 0) return; // en stock -> ne pèse pas sur le délai
+    if (opt.delaiSemaines > worstDelai) {
+      worstDelai = opt.delaiSemaines;
+      worstContact = !!opt.nousContacter;
+    } else if (opt.delaiSemaines === worstDelai && opt.nousContacter) {
+      worstContact = true; // égalité -> priorité à "nous contacter" par prudence
+    }
+  });
+
+  let result;
+  if (worstDelai <= DELAI_MIN_SEMAINES) {
+    result = { label: 'Délai estimé : ' + DELAI_MIN_SEMAINES + ' semaines (non contractuel)', contact: false };
+  } else if (worstContact) {
+    result = { label: 'Délai : nous contacter', contact: true };
+  } else {
+    result = { label: 'Délai estimé : ' + worstDelai + ' semaines (non contractuel)', contact: false };
+  }
+  if (!tailleConnue && !result.contact) {
+    result = { label: 'Délai : selon taille de cadre', contact: false, unknown: true };
+  }
+  return result;
+}
+
 function computeOodSurcharge() {
   // V7 — plus de parcours sur_mesure/hors_gamme (retirés), plus de forfait "mise en
   // plan mutualisée" (EVO_FIXE, pensé pour plusieurs options Évolution simultanées) —
@@ -5162,6 +5247,7 @@ function p11RenderPosts() {
               '<div class="opc-name">' + o.name + '</div>' +
               (o.desc ? '<div class="opc-desc">' + o.desc + '</div>' : '') +
               colorSwatchesHtml +
+              buildDelaiBadge(o) +
               (diff ? '<div class="opc-price' + (pc==='neg'?' negative':'') + '">' + diff + '</div>' : '') +
             '</div>' +
           '</div>';
@@ -5178,6 +5264,7 @@ function p11RenderPosts() {
             '<div class="oi-info">' +
               '<div class="oi-name">' + o.name + '</div>' +
               (o.desc ? '<div class="oi-desc">' + o.desc + '</div>' : '') +
+              buildDelaiBadge(o) +
             '</div>' +
             '<div class="oi-meta">' + '<div class="oi-price' + (diffNeg?' negative':'') + '">' + diff + '</div></div>' +
           '</div>';
@@ -5597,6 +5684,7 @@ function p11RenderFinalRecap() {
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
       '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
       (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+      buildDelaiGlobalHtml(selOpts) +
     '</div>' +
     '</div>';
   activePostMeta().forEach(p => {
