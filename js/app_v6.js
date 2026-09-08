@@ -3285,6 +3285,22 @@ function computeDelaiGlobal(opts) {
     }
   });
 
+  // Options Évolution cochées (Personnalisation) — pas de notion de stock pour ces
+  // options (toujours une opération de personnalisation faite sur-mesure quand
+  // cochée) : leur délai compte systématiquement dès qu'elles sont sélectionnées,
+  // sans avoir besoin d'être "en rupture" pour peser sur le résultat.
+  if (typeof EVO_OPTIONS !== 'undefined' && typeof evoChecked !== 'undefined') {
+    EVO_OPTIONS.forEach(e => {
+      if (!evoChecked[e.id] || !e.delaiSemaines) return;
+      if (e.delaiSemaines > worstDelai) {
+        worstDelai = e.delaiSemaines;
+        worstContact = !!e.nousContacter;
+      } else if (e.delaiSemaines === worstDelai && e.nousContacter) {
+        worstContact = true;
+      }
+    });
+  }
+
   let result;
   if (worstDelai <= DELAI_MIN_SEMAINES) {
     result = { label: 'Délai estimé : ' + DELAI_MIN_SEMAINES + ' semaines (non contractuel)', contact: false };
@@ -3385,6 +3401,8 @@ const EVO_OPTIONS = [
     "label": "Ajout d'inserts",
     "price": 10,
     "note": "Ajout d'inserts taraudés pour fixations sur cadre — porte-bidons, bagagerie, porte-bagages, garde-boue. Prix unique quelle que soit la quantité.",
+    "delaiSemaines": 16,
+    "nousContacter": true,
     "modeles": [
       "route",
       "gravel_racing",
@@ -3397,6 +3415,8 @@ const EVO_OPTIONS = [
     "label": "Fixation ISCG05",
     "price": 20,
     "note": "Ajout d'une patte de fixation pour guide-chaîne ISCG05 sur VTT.",
+    "delaiSemaines": 16,
+    "nousContacter": true,
     "modeles": [
       "vtt_enduro"
     ]
@@ -3406,6 +3426,8 @@ const EVO_OPTIONS = [
     "label": "Intégration direction",
     "price": 50,
     "note": "Intégration des gaines et durites dans la direction.",
+    "delaiSemaines": 16,
+    "nousContacter": true,
     "modeles": [
       "gravel_bikepacking"
     ]
@@ -3415,6 +3437,8 @@ const EVO_OPTIONS = [
     "label": "Gravure sur tube supérieur",
     "price": 10,
     "note": "Gravez votre nom, votre groupe sanguin ou autre sur le tube supérieur — 20 caractères maximum.",
+    "delaiSemaines": 6,
+    "nousContacter": false,
     "modeles": [
       "route",
       "gravel_racing",
@@ -5717,7 +5741,7 @@ function p11UpdateTotal() {
   // latéral comme sur desktop, ce bandeau fixe est le seul endroit visible en
   // permanence ici).
   const delaiStrip = document.getElementById('p11-delai-strip');
-  if (delaiStrip) delaiStrip.innerHTML = (p11CurrentStep === 2) ? buildDelaiGlobalBanner() : '';
+  if (delaiStrip) delaiStrip.innerHTML = (p11CurrentStep === 2 || p11CurrentStep === 3) ? buildDelaiGlobalBanner() : '';
   // Compteur de modifications vs préconfig
   if (window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset]) {
     const preset = PRESETS[selModel][window._activePreset];
