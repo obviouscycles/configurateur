@@ -626,18 +626,19 @@
   .opc-delai-contact { color:#e0a030; }
   /* V7 — Message global de délai/rupture dans le récapitulatif final. */
   .devis-delai { font-size:12px; color:#F5C400; display:flex; align-items:center; gap:5px; margin-top:6px; }
-  /* V7 — Fenêtre unique et bien visible du délai de livraison, en haut de l'étape
-     Composants (sous la carte Cadre) — remplace les badges individuels par vignette,
-     jugés trop lourds. Se recalcule en direct à chaque changement de composant. */
+  /* V7 — Fenêtre unique de délai de livraison, dans le bandeau de droite sous la
+     liste des modules choisis — remplace les badges individuels par vignette, jugés
+     trop lourds. Se recalcule en direct à chaque changement de composant. Coins
+     droits et tailles de police harmonisées avec le reste du bandeau (dtr-row). */
   .delai-global-banner {
-    display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 14px 16px;
-    background: rgba(245,196,0,.08); border: 1px solid rgba(245,196,0,.35); border-radius: 8px;
+    display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 10px;
+    background: rgba(245,196,0,.08); border: 0.5px solid rgba(245,196,0,.35); border-radius: 0;
   }
-  .delai-global-banner i { font-size: 22px; color: #F5C400; flex-shrink: 0; }
+  .delai-global-banner i { font-size: 14px; color: #F5C400; flex-shrink: 0; }
   .delai-global-banner.contact { background: rgba(224,160,48,.1); border-color: rgba(224,160,48,.4); }
   .delai-global-banner.contact i { color: #e0a030; }
-  .delai-global-lbl { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-  .delai-global-val { font-size: 16px; font-weight: 700; color: #F5C400; }
+  .delai-global-lbl { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1px; }
+  .delai-global-val { font-size: 11px; font-weight: 600; color: #F5C400; }
   .delai-global-banner.contact .delai-global-val { color: #e0a030; }
   .devis-delai i { font-size:12px; flex-shrink:0; }
   .devis-delai-contact { color:#e0a030; }
