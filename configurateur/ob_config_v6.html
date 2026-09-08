@@ -588,8 +588,11 @@
      pour fermer, croix positionnée sur la fenêtre elle-même. */
   #dt-lightbox { position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; padding:40px; cursor:pointer; }
   #dt-lightbox.open { display:flex; }
-  #dt-lightbox-box { position:relative; background:#111; border:0.5px solid #333; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,.6); padding:16px; width:min(560px,85vw); max-height:85vh; min-height:200px; cursor:default; display:flex; align-items:center; justify-content:center; }
-  #dt-lightbox-box img { display:block; max-width:100%; max-height:calc(85vh - 32px); object-fit:contain; border-radius:6px; }
+  /* Pas de largeur fixe : la boîte épouse la taille naturelle de l'image, plafonnée
+     par l'écran disponible — le but est de mieux voir la photo, pas de l'agrandir
+     au-delà de sa résolution réelle (ce qui la rendrait floue). */
+  #dt-lightbox-box { position:relative; background:#111; border:0.5px solid #333; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,.6); padding:16px; max-width:90vw; max-height:90vh; min-height:120px; min-width:120px; cursor:default; display:flex; align-items:center; justify-content:center; }
+  #dt-lightbox-box img { display:block; width:auto; height:auto; max-width:calc(90vw - 32px); max-height:calc(90vh - 32px); object-fit:contain; border-radius:6px; }
   #dt-lightbox-close { position:absolute; top:-14px; right:-14px; width:32px; height:32px; border-radius:50%; background:#1a1a1a; border:0.5px solid #333; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:.95; }
   #dt-lightbox-close:hover { opacity:1; background:#F5C400; color:#1a1400; border-color:#F5C400; }
   .opc-img-wrap.zoomable { cursor:zoom-in; }
