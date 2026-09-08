@@ -3017,6 +3017,7 @@ function dtRenderS4() {
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-size:28px;font-weight:700;color:#F5C400;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
+        buildDelaiGlobalHtml(selOpts) +
         (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#F5C400;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#F5C400;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
@@ -3233,7 +3234,69 @@ function dtRenderRecap() {
       '<span class="dtr-lbl"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:8px;margin-right:3px;"></i>'+p.name+(isModified?'<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:#F5C400;margin-left:3px;vertical-align:middle;"></span>':'')+'</span>' +
       '<span class="dtr-val">'+opt.name+'</span>' +
     '</div>';
-  }).join('');
+  }).join('') + buildDelaiGlobalBanner();
+}
+
+// V7 (portée en V6) — Fenêtre unique de délai de livraison, dans le bandeau de
+// droite sous la liste des modules choisis. Algorithme validé avec Damien : parmi
+// les composants ACTUELLEMENT sélectionnés et suivis (stock renseigné), on ne
+// retient que ceux en rupture (stock=0), en ignorant le cadre tant que sa taille
+// n'est pas connue (son stock dépend de la taille, onglet 5). Aucun en rupture ->
+// délai minimum (DELAI_MIN_SEMAINES) ; sinon le pire délai parmi les ruptures, ou
+// "nous contacter" si ce pire délai l'exige ; taille inconnue -> repli "selon
+// taille de cadre" sauf si un autre composant impose déjà "nous contacter".
+function buildDelaiGlobalBanner() {
+  const d = computeDelaiGlobal(selOpts);
+  const val = d.label.replace(/^Délai( estimé)?\s*:\s*/, '').replace(/\s*\(non contractuel\)/, '');
+  const clickAttr = d.contact ? ' onclick="openContactDrawer()" style="cursor:pointer;"' : '';
+  return '<div class="delai-global-banner' + (d.contact ? ' contact' : '') + '"' + clickAttr + '>' +
+    '<i class="ti ' + (d.contact ? 'ti-phone' : 'ti-clock') + '"></i>' +
+    '<div>' +
+      '<div class="delai-global-lbl">Délai de livraison</div>' +
+      '<div class="delai-global-val">' + val + '</div>' +
+    '</div>' +
+  '</div>';
+}
+function buildDelaiGlobalHtml(opts) {
+  const d = computeDelaiGlobal(opts);
+  return '<div class="devis-delai' + (d.contact ? ' devis-delai-contact' : '') + '"><i class="ti ' + (d.contact ? 'ti-phone' : 'ti-clock') + '"></i> ' + d.label + '</div>';
+}
+function computeDelaiGlobal(opts) {
+  const tailleConnue = !!selSize.taille;
+  let worstDelai = -1;
+  let worstContact = false;
+  Object.keys(opts).forEach(postId => {
+    const optId = opts[postId];
+    if (!optId) return;
+    const opt = (ALL_OPTIONS[postId] || []).find(o => o.id === optId);
+    if (!opt || !opt.delaiSemaines) return; // delai vide ou 0 ("néant"/option incluse) -> jamais un vrai délai à annoncer
+    let stock = opt.stock;
+    if (postId === 'cadre' || postId === 'cadre_kit') {
+      if (!tailleConnue) return; // stock du cadre inconnu tant que la taille ne l'est pas
+      const tailleInfo = (TAILLES_CADRE[selModel] || []).find(t => t.taille === selSize.taille);
+      stock = tailleInfo ? tailleInfo.stock : null;
+    }
+    if (stock !== 0) return; // en stock -> ne pèse pas sur le délai
+    if (opt.delaiSemaines > worstDelai) {
+      worstDelai = opt.delaiSemaines;
+      worstContact = !!opt.nousContacter;
+    } else if (opt.delaiSemaines === worstDelai && opt.nousContacter) {
+      worstContact = true; // égalité -> priorité à "nous contacter" par prudence
+    }
+  });
+
+  let result;
+  if (worstDelai <= DELAI_MIN_SEMAINES) {
+    result = { label: 'Délai estimé : ' + DELAI_MIN_SEMAINES + ' semaines (non contractuel)', contact: false };
+  } else if (worstContact) {
+    result = { label: 'Délai : nous contacter', contact: true };
+  } else {
+    result = { label: 'Délai estimé : ' + worstDelai + ' semaines (non contractuel)', contact: false };
+  }
+  if (!tailleConnue && !result.contact) {
+    result = { label: 'Délai : selon taille de cadre', contact: false, unknown: true };
+  }
+  return result;
 }
 
 // ── Helpers ──
@@ -5649,6 +5712,12 @@ function p11UpdateTotal() {
   if (strip) strip.textContent = formatted;
   const stripBar = document.getElementById('p11-price-strip');
   if (stripBar && selModel) stripBar.style.display = 'flex';
+  // V7 (porté en V6) — Fenêtre de délai, dans le bandeau fixe du bas, juste
+  // au-dessus du prix — uniquement en page Composants (mobile n'a pas de bandeau
+  // latéral comme sur desktop, ce bandeau fixe est le seul endroit visible en
+  // permanence ici).
+  const delaiStrip = document.getElementById('p11-delai-strip');
+  if (delaiStrip) delaiStrip.innerHTML = (p11CurrentStep === 2) ? buildDelaiGlobalBanner() : '';
   // Compteur de modifications vs préconfig
   if (window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset]) {
     const preset = PRESETS[selModel][window._activePreset];
@@ -5960,6 +6029,7 @@ function p11RenderFinalRecap() {
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
       '<div style="font-size:20px;font-weight:700;color:#F5C400;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
+      buildDelaiGlobalHtml(selOpts) +
       (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
     '</div>';
