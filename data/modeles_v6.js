@@ -7,6 +7,10 @@ const MODELS = [
 ];
 
 const KIT_CADRE_PHOTOS = {
+  'gravel_racing': '/configurateur/assets/kits/kit_ONOFF.webp',
+  'gravel_bikepacking': '/configurateur/assets/kits/kit_OUTQUEST.webp',
+  'route': '/configurateur/assets/kits/kit_ON.webp',
+  'vtt_enduro': '/configurateur/assets/kits/kit_OFF.webp',
 };
 
 const PRESETS = {
