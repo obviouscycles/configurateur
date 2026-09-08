@@ -295,8 +295,9 @@ function getIncompatFromSelections(excludePostId) {
 }
 
 function isRecommended(opt, modelId) {
-  const c = opt.compat.find(x => x.mid === modelId);
-  return c ? c.rec : false;
+  // "Recommandé" = même donnée que lockedFor (l'option "verrouillée"/suggérée pour ce
+  // modèle) — pas de colonne dédiée dans le xlsx, c'est la même source pour les deux.
+  return !!(opt.lockedFor && opt.lockedFor.includes(modelId));
 }
 
 function autoSelectLocked(modelId) {
