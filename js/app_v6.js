@@ -583,7 +583,7 @@ function renderModels() {
     const isSingle = !!window._singleModel;
     const hasPresets = isSingle && PRESETS[m.id];
     return `<div class="model-card ${selModel === m.id ? 'sel' : ''}" onclick="selectModel('${m.id}')">
-      ${m.photo ? `<img class="mc-photo" src="${m.photo}" alt="${m.name}" loading="lazy">` : ''}
+      ${m.photo ? `<img class="mc-photo" src="${m.photo}" alt="${m.name}" loading="lazy"${selModel === m.id ? ` onclick="event.stopPropagation();dtOpenLightbox('${m.photo}','${m.name}')" style="cursor:zoom-in;"` : ''}>` : ''}
       <div class="mc-text">
         <span class="mc-badge">${m.badge}</span>
         <span class="mc-name">${m.name}</span>
@@ -1895,7 +1895,7 @@ function dtRenderS1() {
     const completPrice = tiMinPrice(m.id);
     const kitPrice = kitMinPrice(m.id);
     return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
-      '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
+      '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy"' + (sel ? ' onclick="event.stopPropagation();dtOpenLightbox(\'' + (m.photo||'') + '\',\'' + m.name + '\')" style="cursor:zoom-in;"' : '') + '>' +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
@@ -2179,7 +2179,7 @@ function dtRenderS2() {
   if (left && model) {
     const photo = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
     left.innerHTML =
-      '<img class="mc-photo" src="' + (photo||'') + '" alt="' + model.name + '" loading="lazy">' +
+      '<img class="mc-photo" src="' + (photo||'') + '" alt="' + model.name + '" loading="lazy" onclick="dtOpenLightbox(\'' + (photo||'') + '\',\'' + model.name + '\')" style="cursor:zoom-in;">' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
@@ -3013,7 +3013,7 @@ function dtRenderS4() {
     '<div style="display:grid;grid-template-columns:'+(document.body.classList.contains('config-shared-mode')?'340px':'280px')+' 1fr;gap:2rem;align-items:start;">' +
       // Colonne gauche : photo + infos
       '<div>' +
-        (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;">' : '') +
+        (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #222;margin-bottom:1rem;cursor:zoom-in;" onclick="dtOpenLightbox(\''+photoS4+'\',\''+model.name+'\')">' : '') +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-size:20px;font-weight:500;color:#f2f2f2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
@@ -3193,6 +3193,8 @@ function dtRenderRecap() {
   if (get('dtr-thumb')) {
     const photoRecap = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
     get('dtr-thumb').src = photoRecap||''; get('dtr-thumb').style.display = photoRecap?'block':'none';
+    get('dtr-thumb').style.cursor = 'zoom-in';
+    get('dtr-thumb').onclick = () => dtOpenLightbox(photoRecap||'', model.name);
   }
   if (get('dtr-model')) { get('dtr-model').textContent = model.name; get('dtr-model').style.display = 'block'; }
   if (get('dtr-preset')) get('dtr-preset').textContent = window._activePreset || '';
@@ -5445,7 +5447,7 @@ function p11RenderModels() {
       '</div>' : '';
     return '<div class="p11-model-card' + (sel ? ' sel' : '') + (isExpanded ? ' expanded' : '') + '"' +
       (isExpanded ? '' : ' onclick="p11ToggleModelCard(\'' + m.id + '\')"') + '>' +
-      '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy">' +
+      '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy"' + (isExpanded ? ' onclick="dtOpenLightbox(\'' + (m.photo||'') + '\',\'' + m.name + '\')" style="cursor:zoom-in;"' : '') + '>' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
@@ -6049,7 +6051,7 @@ function p11RenderFinalRecap() {
   const photoP11 = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#111;border:0.5px solid #222;display:flex;align-items:center;gap:12px;">' +
-    (photoP11 ? '<img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;">' : '') +
+    (photoP11 ? '<img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;cursor:zoom-in;" onclick="dtOpenLightbox(\'' + photoP11 + '\',\'' + model.name + '\')">' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-size:15px;font-weight:600;color:#f2f2f2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
