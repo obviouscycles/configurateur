@@ -2235,7 +2235,6 @@ function renderCadreCard(selectId, renderFn) {
         })() +
       '</div>' +
     '</div>' +
-    (renderFn === 'p11RenderPosts' ? buildDelaiGlobalBanner() : '') +
   '</div>';
 }
 
@@ -5392,6 +5391,11 @@ function p11UpdateTotal() {
   if (strip) strip.textContent = formatted;
   const stripBar = document.getElementById('p11-price-strip');
   if (stripBar && selModel) stripBar.style.display = 'flex';
+  // V7 — Fenêtre de délai, dans le bandeau fixe du bas, juste au-dessus du prix —
+  // uniquement en page Composants (mobile n'a pas de bandeau latéral comme sur
+  // desktop, ce bandeau fixe est le seul endroit visible en permanence ici).
+  const delaiStrip = document.getElementById('p11-delai-strip');
+  if (delaiStrip) delaiStrip.innerHTML = (p11CurrentStep === 2) ? buildDelaiGlobalBanner() : '';
   // Compteur de modifications vs préconfig
   if (window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset]) {
     const preset = PRESETS[selModel][window._activePreset];
