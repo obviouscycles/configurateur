@@ -640,6 +640,10 @@
   .delai-global-lbl { font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1px; }
   .delai-global-val { font-size: 11px; font-weight: 600; color: #F5C400; }
   .delai-global-banner.contact .delai-global-val { color: #e0a030; }
+  /* Contexte bandeau fixe mobile (#p11-delai-strip) : pas de marge flottante, prend
+     toute la largeur, coins droits et bordure uniquement en haut pour s'enchaîner
+     proprement avec la barre de prix juste en dessous. */
+  #p11-delai-strip .delai-global-banner { margin-top: 0; border-radius: 0; border-width: 0.5px 0 0 0; padding: 8px 1rem; }
   .devis-delai i { font-size:12px; flex-shrink:0; }
   .devis-delai-contact { color:#e0a030; }
   .opc-price.negative { color:var(--green); }
@@ -1952,6 +1956,7 @@
 
     <!-- Bouton next fixe + prix -->
     <div id="p11-bottom-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:990;display:none;">
+      <div id="p11-delai-strip"></div>
       <div id="p11-price-strip" style="display:none;background:#1a1a1a;border-top:0.5px solid #333;padding:6px 1rem;display:flex;justify-content:space-between;align-items:center;gap:10px;">
         <div style="display:flex;flex-direction:column;gap:1px;">
           <span style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.08em;">Prix total</span>
@@ -2467,6 +2472,23 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSizeAlert()">Annuler</button>
       <button class="btn-send" onclick="closeSizeAlert(); openOrderModal();"><i class="ti ti-send"></i> Recevoir mon devis personnalisé</button>
+    </div>
+  </div>
+</div>
+
+<!-- V7 — Avertissement affiché au rechargement d'une config sauvegardée avant le
+     retrait des options Inserts/ISCG/Intégration : le prix affiché peut différer de
+     celui d'origine, on ne veut jamais laisser croire que rien n'a changé. -->
+<div class="modal-overlay" id="config-updated-modal" style="z-index:200">
+  <div class="modal" style="max-width:400px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:1rem;"><i class="ti ti-info-circle" style="color:#F5C400;"></i></div>
+    <h2 style="font-size:16px;margin-bottom:1rem;">Configuration mise à jour</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
+      Certaines options que vous aviez sélectionnées ne sont plus disponibles et ont été retirées de votre configuration.<br><br>
+      Le prix affiché a été recalculé en conséquence — n'hésitez pas à nous contacter si vous avez une question.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-send" onclick="closeConfigUpdatedModal()">Compris</button>
     </div>
   </div>
 </div>
