@@ -3015,9 +3015,9 @@ function dtRenderS4() {
       '<div>' +
         (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #1F2024;margin-bottom:1rem;cursor:zoom-in;" onclick="dtOpenLightbox(\''+photoS4+'\',\''+model.name+'\')">' : '') +
         '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
-        '<div style="font-size:20px;font-weight:500;color:#EDEAE2;margin-bottom:4px;">'+model.name+'</div>' +
+        '<div style="font-family:var(--font-brand);text-transform:lowercase;letter-spacing:.01em;font-size:31px;font-weight:400;color:#EDEAE2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
-        '<div style="font-size:28px;font-weight:700;color:#B08D57;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
+        '<div style="font-family:var(--font);font-size:26px;font-weight:600;color:#B08D57;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
         buildDelaiGlobalHtml(selOpts) +
         (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#B08D57;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#B08D57;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
@@ -6054,8 +6054,8 @@ function p11RenderFinalRecap() {
     (photoP11 ? '<img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;cursor:zoom-in;" onclick="dtOpenLightbox(\'' + photoP11 + '\',\'' + model.name + '\')">' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
-      '<div style="font-size:15px;font-weight:600;color:#EDEAE2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
-      '<div style="font-size:20px;font-weight:700;color:#B08D57;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
+      '<div style="font-family:var(--font-brand);text-transform:lowercase;letter-spacing:.01em;font-size:24px;font-weight:400;color:#EDEAE2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
+      '<div style="font-family:var(--font);font-size:19px;font-weight:600;color:#B08D57;">' + (priceIsMin?'Dès ':'') + price.toLocaleString('fr-FR') + ' €</div>' +
       buildDelaiGlobalHtml(selOpts) +
       (oodSurcharge > 0 ? '<div style="font-size:11px;color:#888;margin-top:2px;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Performance':v2Parcours==='hors_gamme'?'Titanium':'Évolution')+' '+(priceIsMin?'dès ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
     '</div>' +
