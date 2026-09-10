@@ -99,6 +99,11 @@
     z-index: 10;
   }
   .logo { font-family: var(--font-brand); font-size: 25px; font-weight: 400; font-style: normal; color: #ffffff; letter-spacing: .02em; text-transform: uppercase; }
+  /* Mobile — 90% de la taille desktop : à 25px, le logo empiétait sur le bouton
+     "Aide - Contact" du bandeau supérieur sur petit écran. */
+  @media (max-width: 767px) {
+    .logo { font-size: 22.5px; }
+  }
   .logo span { color: #ffffff; }
 
   .main { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
@@ -1162,7 +1167,7 @@
     .mc-preset-inline-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .mc-preset-inline-hdr span { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .08em; }
     .mc-preset-inline-hdr button { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
-    .p11-model-card .mc-name { font-size:14px; font-weight:500; color:#EDEAE2; }
+    .p11-model-card .mc-name { font-size:18px; font-weight:500; color:#EDEAE2; }
     .p11-model-card.sel .mc-name { color:#E9D9B8; }
     .p11-model-card .mc-desc { font-size:11px; color:#aaa; line-height:1.35; margin-top:2px; }
     .p11-model-card.sel .mc-desc { color:#A89268; }
@@ -1353,7 +1358,7 @@
   }
   #dt-s1 .model-card { cursor: pointer; }
   #dt-s1 .mc-photo { width: 100% !important; height: auto !important; aspect-ratio: 655/460; object-fit: contain !important; background: #141519; padding: 12px; box-sizing: border-box; display: block; }
-  #dt-s1 .mc-name { font-size: 16px !important; }
+  #dt-s1 .mc-name { font-size: 20px !important; }
   #dt-s1 .preset-bar { background: #141519 !important; border: 0.5px solid #1F2024 !important; border-top: none !important; padding: 10px 12px !important; margin: 0 !important; }
 
   /* ── Étape 2 : split 50/50 modèle|composants ── */
@@ -1371,7 +1376,7 @@
   #dt-s2-left .mc-photo { width: 100%; height: 220px; object-fit: cover; display: block; }
   #dt-s2-left .mc-text { padding: 14px 0 0; }
   #dt-s2-left .mc-badge { display: block; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
-  #dt-s2-left .mc-name { display: block; font-size: 18px; font-weight: 500; color: #EDEAE2; margin-bottom: 4px; }
+  #dt-s2-left .mc-name { display: block; font-size: 23px; font-weight: 500; color: #EDEAE2; margin-bottom: 4px; }
   #dt-s2-left .mc-desc { display: block; font-size: 12px; color: #888; line-height: 1.5; margin-bottom: 8px; }
   #dt-s2-left .mc-price { display: block; font-size: 12px; color: #666; }
   #dt-s2-left .preset-bar { margin-top: 0; padding: 12px; background: #161616; border-top: 0.5px solid #333; display: block !important; }
@@ -1412,7 +1417,7 @@
     display: flex; flex-direction: column;
   }
   .dtr-thumb { width: 100%; height: 80px; object-fit: cover; display: block; margin-bottom: .75rem; border: 0.5px solid #1F2024; }
-  .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 19px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
+  .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 22px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
   .dtr-preset { font-size: 10px; color: #666; margin-bottom: .5rem; min-height: 1.2em; }
   .dtr-price { font-family: var(--font); font-size: 24px; font-weight: 600; color: #B08D57; letter-spacing: -.01em; margin-bottom: 4px; }
   .dtr-modif { font-size: 11px; color: #444; margin-bottom: .75rem; display: none; align-items: center; gap: 5px; }
@@ -1443,7 +1448,7 @@
   @media (min-width: 768px) {
     #dt-s1 .mc-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
     #dt-s1 .mc-badge { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .08em; display: block; }
-    #dt-s1 .mc-name { font-size: 18px; font-weight: 600; color: #EDEAE2; display: block; }
+    #dt-s1 .mc-name { font-size: 23px; font-weight: 600; color: #EDEAE2; display: block; }
     #dt-s1 .model-card.sel .mc-name { color: #E9D9B8; }
     #dt-s1 .mc-desc { font-size: 12px; color: #888; line-height: 1.5; display: block; margin-top: 2px; }
     #dt-s1 .mc-price { font-size: 12px; color: #666; display: block; margin-top: 4px; }
@@ -1494,7 +1499,7 @@
       border: none !important;
     }
     #dt-s2-left .mc-badge { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 4px; }
-    #dt-s2-left .mc-name { font-size: 18px; font-weight: 500; color: #EDEAE2; display: block; margin-bottom: 4px; }
+    #dt-s2-left .mc-name { font-size: 23px; font-weight: 500; color: #EDEAE2; display: block; margin-bottom: 4px; }
     #dt-s2-left .mc-desc { font-size: 12px; color: #888; line-height: 1.5; display: block; margin-bottom: 8px; }
     #dt-s2-left .mc-price { font-size: 12px; color: #666; display: block; }
     /* Carte vélo step 2 : gris foncé + contour jaune + marge */
