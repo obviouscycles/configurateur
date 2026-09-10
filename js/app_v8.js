@@ -4967,13 +4967,13 @@ function openGeomModal(modelId) {
   } else {
     const rowsHtml = GEOM_ROWS.filter(r => geom.valeurs[r.key] !== null).map(r => {
       const cells = geom.valeurs[r.key].map(v => '<td>' + v + '</td>').join('');
-      return '<tr><th>' + r.label + '</th>' + cells + '</tr>';
+      return '<tr><td class="geom-modal-letter">' + (r.lettre || '') + '</td><th>' + r.label + '</th>' + cells + '</tr>';
     }).join('');
     const headerCells = geom.tailles.map(t => '<th>' + t + '</th>').join('');
     body.innerHTML =
       (img ? '<img src="' + img + '" alt="Plan géométrie ' + model.name + '" class="geom-modal-img" onclick="dtOpenLightbox(\'' + img + '\',\'Géométrie ' + model.name + '\')">' : '') +
       (geom.note ? '<p class="geom-modal-note">' + geom.note + '</p>' : '') +
-      '<div class="geom-modal-table-wrap"><table class="geom-modal-table"><thead><tr><th></th>' + headerCells + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+      '<div class="geom-modal-table-wrap"><table class="geom-modal-table"><thead><tr><th></th><th></th>' + headerCells + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
   }
   document.getElementById('geom-modal-title').textContent = 'Géométrie du cadre — ' + (model.name || '');
   document.getElementById('geom-modal').classList.add('open');
