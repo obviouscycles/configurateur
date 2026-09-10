@@ -1,0 +1,105 @@
+// Cotes de géométrie de cadre — transcrites depuis les tableaux du site
+// obviouscycles.com (captures fournies et validées par Damien), pas extraites du
+// xlsx (colonne dédiée absente à ce jour). À terme, si un onglet xlsx est créé pour
+// ces données, ce fichier redeviendra généré automatiquement comme les autres.
+const GEOM_IMAGES = {
+  'gravel_racing': '/configurateur/assets/geometrie/onoff_geom.png',
+  'gravel_bikepacking': '/configurateur/assets/geometrie/outquest_geom.png',
+  'route': '/configurateur/assets/geometrie/on_geom.png',
+  'vtt_enduro': '/configurateur/assets/geometrie/off_geom.png',
+};
+
+const GEOM_ROWS = [
+  { key: 'stature', label: 'Taille du cycliste (cm)' },
+  { key: 'selle_h', label: 'Hauteur de selle (mm)' },
+  { key: 'stack', label: 'Stack (mm)' },
+  { key: 'reach', label: 'Reach (mm)' },
+  { key: 'tube_selle', label: 'Longueur tube de selle (mm)' },
+  { key: 'tube_sup', label: 'Longueur tube supérieur (mm)' },
+  { key: 'douille', label: 'Hauteur douille de direction (mm)' },
+  { key: 'douille_jeu', label: 'Hauteur douille + jeu (mm)' },
+  { key: 'angle_direction', label: 'Angle de direction (°)' },
+  { key: 'angle_selle', label: 'Angle de tube de selle (°)' },
+  { key: 'bases', label: 'Longueur des bases (mm)' },
+  { key: 'boitier', label: 'Hauteur boîtier - axe de roues (mm)' },
+  { key: 'empattement', label: 'Empattement (mm)' },
+];
+
+const GEOM_DATA = {
+  'route': {
+    note: null,
+    tailles: ['XXS', 'XS', 'S', 'M', 'L', 'XL'],
+    valeurs: {
+      'stature': ['155-164', '163-171', '170-177', '176-182', '181-187', '186-194'],
+      'selle_h': ['620-720', '650-750', '680-780', '710-810', '740-840', '770-870'],
+      'stack': [515, 528, 543, 563, 577, 596],
+      'reach': [374, 379, 387, 392, 398, 402],
+      'tube_selle': [440, 470, 500, 530, 560, 590],
+      'tube_sup': [512, 530, 548, 559, 569, 579],
+      'douille': [115, 125, 140, 160, 175, 195],
+      'douille_jeu': null,
+      'angle_direction': [71.0, 72.0, 73.0, 73.0, 73.0, 73.0],
+      'angle_selle': [75.0, 74.0, 73.5, 73.5, 73.5, 73.5],
+      'bases': [410, 410, 410, 410, 410, 410],
+      'boitier': [74, 74, 72, 72, 72, 72],
+      'empattement': [977, 977, 982, 993, 1003, 1013],
+    },
+  },
+  'gravel_racing': {
+    note: null,
+    tailles: ['XS', 'S', 'M', 'L', 'XL'],
+    valeurs: {
+      'stature': ['160-168', '166-174', '172-180', '178-186', '184-194'],
+      'selle_h': ['645-735', '675-765', '705-795', '735-825', '765-855'],
+      'stack': [522, 545, 570, 589, 608],
+      'reach': [374, 377, 379, 387, 396],
+      'tube_selle': [445, 475, 505, 535, 565],
+      'tube_sup': [519, 533, 548, 561, 576],
+      'douille': [90, 110, 135, 155, 175],
+      'douille_jeu': [102, 122, 147, 167, 187],
+      'angle_direction': [70, 71, 71.5, 71.5, 71.5],
+      'angle_selle': [74.5, 74, 73.5, 73.5, 73.5],
+      'bases': [425, 425, 425, 425, 425],
+      'boitier': [72, 72, 72, 72, 72],
+      'empattement': [1010, 1012, 1017, 1032, 1047],
+    },
+  },
+  'gravel_bikepacking': {
+    note: null,
+    tailles: ['XS', 'S', 'M', 'L', 'XL'],
+    valeurs: {
+      'stature': ['160-168', '166-174', '172-180', '178-186', '184-194'],
+      'selle_h': ['635-725', '665-755', '695-785', '725-815', '755-845'],
+      'stack': [532, 552, 575, 594, 613],
+      'reach': [368, 370, 374, 381, 390],
+      'tube_selle': [445, 475, 505, 535, 565],
+      'tube_sup': [515, 528, 544, 557, 572],
+      'douille': [90, 110, 130, 150, 170],
+      'douille_jeu': [102, 122, 142, 162, 182],
+      'angle_direction': [70.5, 71, 72, 72, 72],
+      'angle_selle': [74.5, 74, 73.5, 73.5, 73.5],
+      'bases': [435, 435, 435, 435, 435],
+      'boitier': [75, 75, 75, 75, 75],
+      'empattement': [1010, 1014, 1018, 1031, 1046],
+    },
+  },
+  'vtt_enduro': {
+    note: 'Données valides avec fourche 150 mm',
+    tailles: ['S', 'M', 'L', 'XL'],
+    valeurs: {
+      'stature': ['164-172', '170-178', '176-184', '182-192'],
+      'selle_h': ['650-758', '690-815', '730-855', '770-895'],
+      'stack': [630, 640, 658, 676],
+      'reach': [418, 437, 455, 475],
+      'tube_selle': [420, 430, 470, 510],
+      'tube_sup': [600, 628, 652, 677],
+      'douille': [80, 90, 110, 130],
+      'douille_jeu': [92, 102, 122, 142],
+      'angle_direction': [64.7, 64.7, 64.7, 64.7],
+      'angle_selle': [74, 73.5, 73.5, 73.5],
+      'bases': [435, 435, 435, 435],
+      'boitier': [60, 60, 60, 60],
+      'empattement': [1167, 1189, 1216, 1244],
+    },
+  },
+};
