@@ -2184,6 +2184,7 @@ function dtRenderS2() {
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
+        '<button type="button" class="mc-geom-btn" onclick="openGeomModal(\'' + model.id + '\')"><i class="ti ti-ruler-2"></i> Géométrie du cadre</button>' +
         '<span class="mc-price">à partir de ' + ((window._kitCadre ? kitMinPrice(model.id) : tiMinPrice(model.id)).toLocaleString('fr-FR')) + ' €</span>' +
         '<div class="mc-switch-mode">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="dtSwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
       '</div>' +
@@ -4952,6 +4953,37 @@ function validateDims() {
 }
 
 // ─── DRAWER AIDE-CONTACT (mobile) ─────────────────────────────────────────────
+// V8 — Popup géométrie de cadre : plan + tableau des cotes par taille, pour le
+// modèle actuellement affiché. Données transcrites manuellement (voir
+// geometrie_cadre_v8.js) — pas encore une colonne xlsx dédiée.
+function openGeomModal(modelId) {
+  const model = MODELS.find(m => m.id === modelId);
+  const geom = (typeof GEOM_DATA !== 'undefined') ? GEOM_DATA[modelId] : null;
+  const img = (typeof GEOM_IMAGES !== 'undefined') ? GEOM_IMAGES[modelId] : null;
+  const body = document.getElementById('geom-modal-body');
+  if (!body || !model) return;
+  if (!geom) {
+    body.innerHTML = '<p style="color:var(--text2);font-size:13px;">Géométrie non disponible pour ce modèle.</p>';
+  } else {
+    const rowsHtml = GEOM_ROWS.filter(r => geom.valeurs[r.key] !== null).map(r => {
+      const cells = geom.valeurs[r.key].map(v => '<td>' + v + '</td>').join('');
+      return '<tr><th>' + r.label + '</th>' + cells + '</tr>';
+    }).join('');
+    const headerCells = geom.tailles.map(t => '<th>' + t + '</th>').join('');
+    body.innerHTML =
+      (img ? '<img src="' + img + '" alt="Plan géométrie ' + model.name + '" class="geom-modal-img" onclick="dtOpenLightbox(\'' + img + '\',\'Géométrie ' + model.name + '\')">' : '') +
+      (geom.note ? '<p class="geom-modal-note">' + geom.note + '</p>' : '') +
+      '<div class="geom-modal-table-wrap"><table class="geom-modal-table"><thead><tr><th></th>' + headerCells + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+  }
+  document.getElementById('geom-modal-title').textContent = 'Géométrie du cadre — ' + (model.name || '');
+  document.getElementById('geom-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeGeomModal() {
+  document.getElementById('geom-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function openContactDrawer() {
   document.getElementById('contact-drawer').classList.add('open');
   document.getElementById('contact-drawer-overlay').classList.add('open');
@@ -5556,6 +5588,7 @@ function p11RenderPosts() {
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise', fourche_kit:'ti-git-fork', potence_kit:'ti-adjustments-horizontal', cintre_kit:'ti-arrows-horizontal', tige_kit:'ti-arrows-vertical' };
   container.innerHTML =
     '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
+    '<button type="button" class="mc-geom-btn" style="margin:0 0 12px;width:100%;justify-content:center;" onclick="openGeomModal(\'' + selModel + '\')"><i class="ti ti-ruler-2"></i> Géométrie du cadre</button>' +
     renderCadreCard('p11-cadre-taille-select', 'p11RenderPosts') + activePostMeta().map(p => {
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
