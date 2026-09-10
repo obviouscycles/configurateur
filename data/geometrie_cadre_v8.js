@@ -8,18 +8,18 @@ const GEOM_IMAGES = {
 };
 
 const GEOM_ROWS = [
-  { key: 'selle_h', label: 'Hauteur de selle (mm)' },
-  { key: 'stack', label: 'Stack (mm)' },
-  { key: 'reach', label: 'Reach (mm)' },
-  { key: 'tube_selle', label: 'Longueur tube de selle (mm)' },
-  { key: 'tube_sup', label: 'Longueur tube supérieur (mm)' },
-  { key: 'douille', label: 'Hauteur douille de direction (mm)' },
-  { key: 'douille_jeu', label: 'Hauteur douille + jeu (mm)' },
-  { key: 'angle_direction', label: 'Angle de direction (°)' },
-  { key: 'angle_selle', label: 'Angle de tube de selle (°)' },
-  { key: 'bases', label: 'Longueur des bases (mm)' },
-  { key: 'boitier', label: 'Hauteur boîtier - axe de roues (mm)' },
-  { key: 'empattement', label: 'Empattement (mm)' },
+  { key: 'selle_h', label: 'Hauteur de selle (mm)', lettre: 'A' },
+  { key: 'stack', label: 'Stack (mm)', lettre: 'B' },
+  { key: 'reach', label: 'Reach (mm)', lettre: 'C' },
+  { key: 'tube_selle', label: 'Longueur tube de selle (mm)', lettre: 'D' },
+  { key: 'tube_sup', label: 'Longueur tube supérieur (mm)', lettre: 'E' },
+  { key: 'douille', label: 'Hauteur douille de direction (mm)', lettre: 'F' },
+  { key: 'douille_jeu', label: 'Hauteur douille + jeu (mm)', lettre: 'F' },
+  { key: 'angle_direction', label: 'Angle de direction (°)', lettre: 'G' },
+  { key: 'angle_selle', label: 'Angle de tube de selle (°)', lettre: 'H' },
+  { key: 'bases', label: 'Longueur des bases (mm)', lettre: 'I' },
+  { key: 'boitier', label: 'Hauteur boîtier - axe de roues (mm)', lettre: 'J' },
+  { key: 'empattement', label: 'Empattement (mm)', lettre: 'K' },
 ];
 
 const GEOM_DATA = {
