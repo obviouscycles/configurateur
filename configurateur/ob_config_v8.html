@@ -166,7 +166,6 @@
   }
   .mc-geom-btn:hover { color: var(--text1); border-color: #B08D57; }
   .mc-geom-btn i { font-size: 13px; }
-  .geom-modal-box { max-width: 720px; width: 92vw; max-height: 86vh; overflow-y: auto; text-align: left; position: relative; }
   .geom-modal-close {
     position: absolute; top: 14px; right: 14px; background: none; border: none;
     color: var(--text2); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px;
@@ -375,6 +374,15 @@
     padding: 1.5rem; width: 100%; max-width: 480px;
     border: 0.5px solid var(--border);
     max-height: 90vh; overflow-y: auto;
+  }
+  /* Placée après .modal pour l'emporter à spécificité égale (même ordre de cascade
+     qui avait plafonné la popup à 480px malgré la règle définie plus haut). */
+  .geom-modal-box { max-width: 1040px !important; width: 95vw; max-height: 86vh; overflow-y: auto; text-align: left; position: relative; }
+  @media (max-width: 767px) {
+    .geom-modal-box { width: 96vw; max-height: 90vh; }
+    .geom-modal-table { font-size: 11.5px; }
+    .geom-modal-table th, .geom-modal-table td { padding: 6px 8px; }
+    .geom-modal-table tbody th { min-width: 110px; white-space: normal; }
   }
   .modal h3 { font-size: 16px; font-weight: 500; margin-bottom: .25rem; }
   .modal p { font-size: 13px; color: var(--text2); margin-bottom: .75rem; }
