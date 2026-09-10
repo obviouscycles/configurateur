@@ -1,7 +1,5 @@
-// Cotes de géométrie de cadre — transcrites depuis les tableaux du site
-// obviouscycles.com (captures fournies et validées par Damien), pas extraites du
-// xlsx (colonne dédiée absente à ce jour). À terme, si un onglet xlsx est créé pour
-// ces données, ce fichier redeviendra généré automatiquement comme les autres.
+// Généré depuis configurateur_velos_v8.xlsx, onglet 11_GEOMETRIE_CADRE — NE PAS
+// ÉDITER À LA MAIN.
 const GEOM_IMAGES = {
   'gravel_racing': '/configurateur/assets/geometrie/onoff_geom.png',
   'gravel_bikepacking': '/configurateur/assets/geometrie/outquest_geom.png',
@@ -10,7 +8,6 @@ const GEOM_IMAGES = {
 };
 
 const GEOM_ROWS = [
-  { key: 'stature', label: 'Taille du cycliste (cm)' },
   { key: 'selle_h', label: 'Hauteur de selle (mm)' },
   { key: 'stack', label: 'Stack (mm)' },
   { key: 'reach', label: 'Reach (mm)' },
@@ -30,7 +27,6 @@ const GEOM_DATA = {
     note: null,
     tailles: ['XXS', 'XS', 'S', 'M', 'L', 'XL'],
     valeurs: {
-      'stature': ['155-164', '163-171', '170-177', '176-182', '181-187', '186-194'],
       'selle_h': ['620-720', '650-750', '680-780', '710-810', '740-840', '770-870'],
       'stack': [515, 528, 543, 563, 577, 596],
       'reach': [374, 379, 387, 392, 398, 402],
@@ -38,8 +34,8 @@ const GEOM_DATA = {
       'tube_sup': [512, 530, 548, 559, 569, 579],
       'douille': [115, 125, 140, 160, 175, 195],
       'douille_jeu': null,
-      'angle_direction': [71.0, 72.0, 73.0, 73.0, 73.0, 73.0],
-      'angle_selle': [75.0, 74.0, 73.5, 73.5, 73.5, 73.5],
+      'angle_direction': [71, 72, 73, 73, 73, 73],
+      'angle_selle': [75, 74, 73.5, 73.5, 73.5, 73.5],
       'bases': [410, 410, 410, 410, 410, 410],
       'boitier': [74, 74, 72, 72, 72, 72],
       'empattement': [977, 977, 982, 993, 1003, 1013],
@@ -49,7 +45,6 @@ const GEOM_DATA = {
     note: null,
     tailles: ['XS', 'S', 'M', 'L', 'XL'],
     valeurs: {
-      'stature': ['160-168', '166-174', '172-180', '178-186', '184-194'],
       'selle_h': ['645-735', '675-765', '705-795', '735-825', '765-855'],
       'stack': [522, 545, 570, 589, 608],
       'reach': [374, 377, 379, 387, 396],
@@ -68,7 +63,6 @@ const GEOM_DATA = {
     note: null,
     tailles: ['XS', 'S', 'M', 'L', 'XL'],
     valeurs: {
-      'stature': ['160-168', '166-174', '172-180', '178-186', '184-194'],
       'selle_h': ['635-725', '665-755', '695-785', '725-815', '755-845'],
       'stack': [532, 552, 575, 594, 613],
       'reach': [368, 370, 374, 381, 390],
@@ -87,7 +81,6 @@ const GEOM_DATA = {
     note: 'Données valides avec fourche 150 mm',
     tailles: ['S', 'M', 'L', 'XL'],
     valeurs: {
-      'stature': ['164-172', '170-178', '176-184', '182-192'],
       'selle_h': ['650-758', '690-815', '730-855', '770-895'],
       'stack': [630, 640, 658, 676],
       'reach': [418, 437, 455, 475],
