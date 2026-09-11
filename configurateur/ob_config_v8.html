@@ -1305,7 +1305,7 @@
     padding: 0 !important;
     margin: 0 !important;
     display: grid !important;
-    grid-template-columns: 180px 1fr 260px !important;
+    grid-template-columns: 180px 1fr 320px !important;
     grid-template-rows: 1fr !important;
     min-height: calc(100vh - 56px) !important;
     align-items: stretch !important;
@@ -1345,13 +1345,13 @@
   }
   .dts-step.done  .dts-dot { background: #1D1913; border-color: #B08D57; color: #B08D57; }
   .dts-step.active .dts-dot { background: #B08D57; border-color: #B08D57; color: #211C12; font-weight: 700; }
-  .dts-label { font-size: 12px; font-weight: 500; color: #777; transition: color .2s; line-height: 1.3; }
+  .dts-label { font-size: 15px; font-weight: 500; color: #777; transition: color .2s; line-height: 1.3; }
   .dts-step.done  .dts-label { color: #999; }
   .dts-step.active .dts-label { color: #EDEAE2; }
-  .dts-detail { font-size: 10px; color: #232428; margin-top: 2px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 128px; }
+  .dts-detail { font-size: 12.5px; color: #232428; margin-top: 2px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 128px; }
   .dts-step.done  .dts-detail { color: #444; }
   .dts-step.active .dts-detail { color: #666; }
-  .dts-modif { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #B08D57; margin-top: 3px; }
+  .dts-modif { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: #B08D57; margin-top: 3px; }
   .dts-modif-dot { width: 5px; height: 5px; border-radius: 50%; background: #B08D57; flex-shrink: 0; }
 
   /* ── Colonne centrale : contenu ── */
@@ -1453,17 +1453,17 @@
     display: flex; flex-direction: column;
   }
   .dtr-thumb { width: 100%; height: 80px; object-fit: cover; display: block; margin-bottom: .75rem; border: 0.5px solid #1F2024; }
-  .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 22px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
+  .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 25px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
   .dtr-preset { font-size: 10px; color: #666; margin-bottom: .5rem; min-height: 1.2em; }
-  .dtr-price { font-family: var(--font); font-size: 24px; font-weight: 600; color: #B08D57; letter-spacing: -.01em; margin-bottom: 4px; }
+  .dtr-price { font-family: var(--font); font-size: 27px; font-weight: 600; color: #B08D57; letter-spacing: -.01em; margin-bottom: 4px; }
   .dtr-modif { font-size: 11px; color: #444; margin-bottom: .75rem; display: none; align-items: center; gap: 5px; }
   .dtr-modif.show { display: flex; }
   .dtr-modif-dot { width: 6px; height: 6px; border-radius: 50%; background: #B08D57; flex-shrink: 0; }
   .dtr-sep { border: none; border-top: 0.5px solid #1D1F23; margin: .5rem 0; }
   .dtr-rows { flex: 1; overflow-y: auto; min-height: 0; }
-  .dtr-row { display: flex; justify-content: space-between; font-size: 10px; padding: 3px 0; border-bottom: 0.5px solid #17181B; gap: 4px; }
+  .dtr-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 0.5px solid #17181B; gap: 4px; }
   .dtr-lbl { color: #444; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-  .dtr-val { color: #777; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+  .dtr-val { color: #777; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 175px; }
   .dtr-row.mod .dtr-lbl { color: #888; }
   .dtr-row.mod .dtr-val { color: #B08D57; }
   .dtr-actions { padding-top: 1rem; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
