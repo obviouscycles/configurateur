@@ -1797,7 +1797,7 @@
   <div class="obv-loader-text">Chargement en cours…</div>
 </div>
 <header>
-  <div class="logo" style="display:flex;align-items:center;gap:10px;">
+  <div class="logo" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openLeaveConfirmModal()">
     <img src="https://www.obviouscycles.com/wp-content/uploads/2023/04/favicon-512.png" alt="Obvious Cycles" style="height:32px;width:32px;object-fit:contain;">
     <span>OBVIOUS ON DEMAND</span>
   </div>
@@ -1808,10 +1808,10 @@
     <span id="proto-badge"></span>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
-    <a id="dt-header-back" href="https://www.obviouscycles.com/velos-titane/" target="_top" style="display:none;align-items:center;gap:6px;color: #948E7C;font-size:12px;text-decoration:none;border:0.5px solid #333;padding:6px 12px;transition:color .15s,border-color .15s;" onmouseover="this.style.color='#ccc';this.style.borderColor='#555'" onmouseout="this.style.color='#666';this.style.borderColor='#333'">
+    <a id="dt-header-back" href="https://www.obviouscycles.com/velos-titane/" target="_top" onclick="event.preventDefault();openLeaveConfirmModal();" style="display:none;align-items:center;gap:6px;color: #948E7C;font-size:12px;text-decoration:none;border:0.5px solid #333;padding:6px 12px;transition:color .15s,border-color .15s;cursor:pointer;" onmouseover="this.style.color='#ccc';this.style.borderColor='#555'" onmouseout="this.style.color='#666';this.style.borderColor='#333'">
       <i class="ti ti-arrow-left"></i> Retour au site
     </a>
-    <a id="p11-header-back" href="https://www.obviouscycles.com/velos-titane/" target="_top" style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:transparent;border:0.5px solid #444;color:#888;text-decoration:none;font-size:16px;" title="Retour au site">
+    <a id="p11-header-back" href="https://www.obviouscycles.com/velos-titane/" target="_top" onclick="event.preventDefault();openLeaveConfirmModal();" style="display:none;align-items:center;justify-content:center;width:36px;height:36px;background:transparent;border:0.5px solid #444;color:#888;text-decoration:none;font-size:16px;cursor:pointer;" title="Retour au site">
       <i class="ti ti-arrow-left"></i>
     </a>
     <button id="btn-fullscreen" onclick="toggleFullscreen()" title="Plein écran"><i class="ti ti-maximize" id="fs-icon"></i></button>
@@ -2891,6 +2891,21 @@
   </div>
 </div>
 
+<!-- V8 — Confirmation avant de quitter le configurateur (bouton "Retour au site" et clic sur le logo). -->
+<div class="modal-overlay" id="leave-confirm-modal" style="z-index:270;" onclick="if(event.target===this) closeLeaveConfirmModal()">
+  <div class="modal" style="max-width:420px;text-align:center;position:relative;">
+    <button type="button" class="geom-modal-close" onclick="closeLeaveConfirmModal()"><i class="ti ti-x"></i></button>
+    <h2 style="font-size:17px;margin-bottom:1rem;">Vous souhaitez quitter le configurateur ?</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
+      Vos choix ne seront pas enregistrés. Vous devrez recommencer à créer votre vélo.
+      Souhaitez-vous continuer ?
+    </p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="confirmLeaveConfigurator()">Quitter le configurateur</button>
+      <button class="btn-send" onclick="closeLeaveConfirmModal()">Continuer à créer mon vélo</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="titanium-modal">
   <div class="modal">
