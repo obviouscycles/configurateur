@@ -1524,7 +1524,7 @@ function openChangeModelModal() {
     return '<div onclick="changeModelTo(\'' + m.id + '\')" style="border:' + (isCurrent ? '2px solid #B08D57' : '0.5px solid #333') + ';background:' + (isCurrent ? '#1D1913' : '#17181B') + ';cursor:pointer;overflow:hidden;transition:border-color .15s;" onmouseover="this.style.borderColor=\'#555\';" onmouseout="this.style.borderColor=\'' + (isCurrent ? '#B08D57' : '#333') + '\';">' +
       (m.photo ? '<img src="' + m.photo + '" style="width:100%;height:100px;object-fit:cover;display:block;">' : '') +
       '<div style="padding:10px 12px;">' +
-        '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">' + m.badge + '</div>' +
+        '<div style="font-size:10px;color: #948E7C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">' + m.badge + '</div>' +
         '<div style="font-size:14px;font-weight:500;color:' + (isCurrent ? '#E9D9B8' : '#EDEAE2') + ';margin-bottom:2px;">' + m.name + (isCurrent ? ' <span style="font-size:10px;color:#B08D57;">✓ actuel</span>' : '') + '</div>' +
         '<div style="font-size:11px;color:#888;line-height:1.3;margin-bottom:6px;">' + m.desc + '</div>' +
         '<div style="font-size:12px;color:' + (isCurrent ? '#B08D57' : '#888') + ';">à partir de ' + (m.basePrice + (m.assembly||0)).toLocaleString('fr-FR') + ' €</div>' +
@@ -2029,7 +2029,7 @@ function dtToggleOOD() {
     popup.id = 'dt-ood-popup';
     popup.style.cssText = 'display:none;position:fixed;width:280px;background:#1B1C20;border:0.5px solid #444;padding:1.5rem;z-index:2000;box-shadow:0 8px 40px rgba(0,0,0,.7);';
     popup.innerHTML =
-      '<button onclick="dtToggleOOD()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#666;font-size:18px;cursor:pointer;line-height:1;padding:0;">×</button>' +
+      '<button onclick="dtToggleOOD()" style="position:absolute;top:10px;right:12px;background:none;border:none;color: #948E7C;font-size:18px;cursor:pointer;line-height:1;padding:0;">×</button>' +
       '<div style="font-size:10px;color:#B08D57;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">OBVIOUS ON DEMAND — Pour aller plus loin</div>' +
       '<p style="font-size:13px;color:#EDEAE2;line-height:1.6;margin-bottom:.5rem;font-weight:500;">Géométrie personnalisée, adaptations cadre, sur-mesure total.</p>' +
       '<p style="font-size:12px;color:#888;line-height:1.5;margin-bottom:1.25rem;">OBVIOUS ON DEMAND propose 3 niveaux supplémentaires de personnalisation.</p>' +
@@ -2082,7 +2082,7 @@ function dtShowSaved() {
   
   const configs = savedConfigs || [];
   if (configs.length === 0) {
-    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#EDEAE2;margin-bottom:1rem;">Mes configurations</p><p style="color:#666;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#999;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
+    inner.innerHTML = '<div style="padding:2rem 0;"><p class="section-title" style="color:#EDEAE2;margin-bottom:1rem;">Mes configurations</p><p style="color: #948E7C;font-size:14px;">Aucune configuration sauvegardée.<br><span style="font-size:12px;color:#999;">Utilisez le bouton \"Sauvegarder\" pour en enregistrer une.</span></p></div>';
   } else {
     inner.innerHTML = '<p class="section-title" style="color:#EDEAE2;margin-bottom:1.5rem;">Mes configurations (' + configs.length + ')</p>' +
       configs.map((c, idx) => {
@@ -2099,10 +2099,10 @@ function dtShowSaved() {
           (photo ? '<img src="' + photo + '" style="width:60px;height:40px;object-fit:cover;flex-shrink:0;border:0.5px solid #1F2024;">' : '') +
           '<div style="flex:1;min-width:0;">' +
             '<div style="font-size:14px;font-weight:500;color:#EDEAE2;margin-bottom:2px;display:flex;align-items:center;">' + c.name + devisBadge + '</div>' +
-            '<div style="font-size:11px;color:#666;">' + (model ? model.name : '') + (c.preset ? ' · ' + c.preset : '') + (c.date ? ' · ' + c.date : '') + '</div>' +
+            '<div style="font-size:11px;color: #948E7C;">' + (model ? model.name : '') + (c.preset ? ' · ' + c.preset : '') + (c.date ? ' · ' + c.date : '') + '</div>' +
           '</div>' +
           '<button onclick="dtLoadSaved(\'' + cid + '\')" style="background:#B08D57;border:none;color:#211C12;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);">Charger</button>' +
-          '<button onclick="dtDeleteSaved(\'' + cid + '\')" style="background:none;border:0.5px solid #444;color:#666;padding:7px 10px;font-size:12px;cursor:pointer;margin-left:4px;font-family:var(--font);">✕</button>' +
+          '<button onclick="dtDeleteSaved(\'' + cid + '\')" style="background:none;border:0.5px solid #444;color: #948E7C;padding:7px 10px;font-size:12px;cursor:pointer;margin-left:4px;font-family:var(--font);">✕</button>' +
         '</div>';
       }).join('');
   }
@@ -3015,12 +3015,12 @@ function dtRenderS4() {
       // Colonne gauche : photo + infos
       '<div>' +
         (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #1F2024;margin-bottom:1rem;cursor:zoom-in;" onclick="dtOpenLightbox(\''+photoS4+'\',\''+model.name+'\')">' : '') +
-        '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
+        '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-family:var(--font-brand);text-transform:lowercase;letter-spacing:.01em;font-size:31px;font-weight:400;color:#EDEAE2;margin-bottom:4px;">'+model.name+'</div>' +
-        (window._activePreset ? '<div style="font-size:11px;color:#666;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
+        (window._activePreset ? '<div style="font-size:11px;color: #948E7C;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
         '<div style="font-family:var(--font);font-size:26px;font-weight:600;color:#B08D57;margin-bottom:.25rem;">'+(priceIsMin?'À partir de ':'')+price.toLocaleString('fr-FR')+' €</div>' +
         buildDelaiGlobalHtml(selOpts) +
-        (oodSurcharge > 0 ? '<div style="font-size:11px;color:#666;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
+        (oodSurcharge > 0 ? '<div style="font-size:11px;color: #948E7C;margin-bottom:.5rem;">Vélo '+bikePrice.toLocaleString('fr-FR')+' € + '+(v2Parcours==='sur_mesure'?'Niveau Performance':v2Parcours==='hors_gamme'?'Niveau Titanium':'Options Évolution')+' '+(priceIsMin?'à partir de ':'')+oodSurcharge.toLocaleString('fr-FR')+' €</div>' : '') +
         (mc > 0 ? '<div style="font-size:13px;color:#B08D57;display:flex;align-items:center;gap:6px;margin-bottom:1rem;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:#B08D57;display:inline-block;flex-shrink:0;"></span>'+mc+' personnalisation'+(mc>1?'s':'')+' · '+window._activePreset+'</div>' : '') +
         (!document.body.classList.contains('config-shared-mode') ?
           '<div style="display:flex;flex-direction:column;gap:8px;margin-top:1rem;">' +
@@ -3032,12 +3032,12 @@ function dtRenderS4() {
       '</div>' +
       // Colonne droite : composants
       '<div>' +
-        '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;">Votre configuration</div>' +
+        '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;">Votre configuration</div>' +
         activePostMeta().map(p => {
           const comboLock = findComboLock(p.id);
           if (comboLock) {
             return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #1D1F23;">' +
-              '<div style="font-size:13px;color:#666;display:flex;align-items:center;gap:8px;"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:11px;color:#B08D57;"></i>' + p.name + '</div>' +
+              '<div style="font-size:13px;color: #948E7C;display:flex;align-items:center;gap:8px;"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:11px;color:#B08D57;"></i>' + p.name + '</div>' +
               '<div style="font-size:13px;font-style:italic;color:#777;">' + comboLock.comboWithLabel + '</div>' +
             '</div>';
           }
@@ -3057,9 +3057,9 @@ function dtRenderS4() {
     '</div>' +
     // Dimensions si validées
     '<div style="margin-top:1.5rem;padding:1rem;background:#1D1F23;border:0.5px solid #333;">' +
-      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
+      '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Dimensions</div>' +
       ((!Object.keys(selSize).some(k => selSize[k])) ?
-        '<div style="font-size:13px;color:#555;font-style:italic;">Non renseignées — nous vous contacterons pour affiner et valider vos cotes.</div>' :
+        '<div style="font-size:13px;color: #948E7C;font-style:italic;">Non renseignées — nous vous contacterons pour affiner et valider vos cotes.</div>' :
         (() => {
           const parts = [];
           if (selSize.taille)        parts.push('<span><strong>Taille :</strong> ' + selSize.taille + '</span>');
@@ -3081,7 +3081,7 @@ function dtRenderS4() {
       const tuningList = getSelectedTuningList(selOpts);
       if (tuningList.length === 0) return '';
       return '<div style="margin-top:1rem;padding:1rem;background:#1D1F23;border:0.5px solid #333;">' +
-        '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Personnalisations</div>' +
+        '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Personnalisations</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px;">' +
           tuningList.map(t =>
             '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
@@ -3102,7 +3102,7 @@ function v2EvoRecapBlockHtml(title, showTotal) {
   const total = (typeof evoTotalPrice === 'function') ? evoTotalPrice() : null;
   let lines = '';
   if (checkedOpts.length === 0 && !evoCustomText) {
-    lines = '<div style="font-size:13px;color:#555;font-style:italic;">Aucune option sélectionnée.</div>';
+    lines = '<div style="font-size:13px;color: #948E7C;font-style:italic;">Aucune option sélectionnée.</div>';
   } else {
     lines = '<div style="font-size:13px;color:#EDEAE2;line-height:1.8;display:flex;flex-direction:column;gap:2px;">' +
       checkedOpts.map(o => {
@@ -3120,10 +3120,10 @@ function v2EvoRecapBlockHtml(title, showTotal) {
     '</div>';
   }
   const customBlock = evoCustomText
-    ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #232428;"><div style="font-size:11px;color:#666;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#EDEAE2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
+    ? '<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #232428;"><div style="font-size:11px;color: #948E7C;margin-bottom:4px;">Demande particulière :</div><div style="font-size:13px;color:#EDEAE2;white-space:pre-wrap;">' + evoCustomText.replace(/</g,'&lt;') + '</div></div>'
     : '';
   return '<div style="margin-top:1rem;padding:1rem;background:#1D1F23;border:0.5px solid #333;">' +
-    '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">' + title + '</div>' +
+    '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">' + title + '</div>' +
     lines +
     customBlock +
     (showTotal && total !== null ? '<div style="font-size:13px;color:#B08D57;font-weight:500;margin-top:8px;padding-top:8px;border-top:0.5px solid #333;">Total options : ' + total + ' €</div>' : '') +
@@ -3152,8 +3152,8 @@ function v2RecapBlock() {
     const fileInput = document.getElementById('v2-mesure-file');
     const fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '';
     return '<div style="margin-top:1rem;padding:1rem;background:#1D1F23;border:0.5px solid #333;">' +
-      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
-      (msg ? '<div style="font-size:13px;color:#EDEAE2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+      '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cadre sur mesure — Niveau Performance</div>' +
+      (msg ? '<div style="font-size:13px;color:#EDEAE2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color: #948E7C;font-style:italic;">Aucune description fournie.</div>') +
       (fileName ? '<div style="font-size:12px;color:#B08D57;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileName.replace(/</g,'&lt;') + '</div>' : '') +
     '</div>' + v2EvoRecapBlockHtml('Options Évolution incluses', false);
   }
@@ -3163,8 +3163,8 @@ function v2RecapBlock() {
     const fileInputH = document.getElementById('v2-horsgamme-file');
     const fileNameH = (fileInputH && fileInputH.files && fileInputH.files[0]) ? fileInputH.files[0].name : '';
     return '<div style="margin-top:1rem;padding:1rem;background:#1D1F23;border:0.5px solid #333;">' +
-      '<div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
-      (msg ? '<div style="font-size:13px;color:#EDEAE2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color:#555;font-style:italic;">Aucune description fournie.</div>') +
+      '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Projet spécifique — Niveau Titanium</div>' +
+      (msg ? '<div style="font-size:13px;color:#EDEAE2;line-height:1.6;white-space:pre-wrap;">' + msg.replace(/</g,'&lt;') + '</div>' : '<div style="font-size:13px;color: #948E7C;font-style:italic;">Aucune description fournie.</div>') +
       (fileNameH ? '<div style="font-size:12px;color:#B08D57;margin-top:8px;"><i class="ti ti-paperclip"></i> ' + fileNameH.replace(/</g,'&lt;') + '</div>' : '') +
     '</div>';
   }
@@ -3662,7 +3662,7 @@ function evoRenderInsertsSubList(evoInsertsChecked_unused, priceLabel, showPrice
       const iName = EVO_ICONS[item.id] || 'ti-plug';
       if (isIncluded) {
         return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
-          <i class="ti ${iName}" style="font-size:13px;color:#666;flex-shrink:0;"></i>
+          <i class="ti ${iName}" style="font-size:13px;color: #948E7C;flex-shrink:0;"></i>
           <span style="font-size:12px;color:#888;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
           <span style="font-size:11px;color:#999;margin-left:auto;">sur cadre standard</span>
         </div>`;
@@ -3775,12 +3775,12 @@ function evoUpdateTotal() {
   const totalEl = document.getElementById(totalId);
   if (!totalEl) return;
   if (isMesure) {
-    totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Ces options sont incluses dans le forfait Performance — 300 €</span>';
+    totalEl.innerHTML = '<span style="color: #948E7C;font-size:13px;">Ces options sont incluses dans le forfait Performance — 300 €</span>';
     return;
   }
   const total = evoTotalPrice();
   if (total === null) {
-    totalEl.innerHTML = '<span style="color:#666;font-size:13px;">Sélectionnez les options souhaitées</span>';
+    totalEl.innerHTML = '<span style="color: #948E7C;font-size:13px;">Sélectionnez les options souhaitées</span>';
   } else {
     totalEl.innerHTML = 'Total options : <strong style="color:#B08D57;">' + total + ' €</strong>';
   }
@@ -5333,7 +5333,7 @@ function p11EvoRenderInsertsSubList(priceLabel, showPrices) {
       const iName = EVO_ICONS[item.id] || 'ti-plug';
       if (isIncluded) {
         return `<div style="display:flex;align-items:center;gap:8px;opacity:.7;">
-          <i class="ti ${iName}" style="font-size:14px;color:#666;flex-shrink:0;"></i>
+          <i class="ti ${iName}" style="font-size:14px;color: #948E7C;flex-shrink:0;"></i>
           <span style="font-size:13px;color:#999;flex:1;">${item.label}${item.note ? ' — ' + item.note : ''}</span>
           <span style="font-size:11px;color:#999;">sur cadre standard</span>
         </div>`;
@@ -5356,7 +5356,7 @@ function p11EvoRenderCustomText() {
   return `<div style="margin-top:.5rem;padding:1rem;background:#141519;border:0.5px dashed #333;border-radius:8px;">
     <div style="font-size:13px;color:#888;margin-bottom:6px;">Une demande particulière non listée ci-dessus ?</div>
     <textarea id="p11-evo-custom-text" rows="2" placeholder="Décrivez votre besoin..." oninput="evoCustomText=this.value" style="width:100%;box-sizing:border-box;background:#17181B;border:0.5px solid #333;color:#EDEAE2;padding:10px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5;border-radius:6px;">${evoCustomText}</textarea>
-    <div style="font-size:11px;color:#666;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
+    <div style="font-size:11px;color: #948E7C;margin-top:6px;">Cette demande sera soumise à validation de faisabilité par notre équipe.</div>
   </div>`;
 }
 
@@ -5410,7 +5410,7 @@ function p11EvoUpdateTotal() {
   }
   const total = evoTotalPrice();
   totalEl.innerHTML = total === null
-    ? '<span style="color:#666;">Sélectionnez les options souhaitées</span>'
+    ? '<span style="color: #948E7C;">Sélectionnez les options souhaitées</span>'
     : 'Total options : <strong style="color:#B08D57;">' + total + ' €</strong>';
 }
 
@@ -5469,7 +5469,7 @@ function p11RenderModels() {
           Object.entries(PRESET_DESCS).reverse().map(([k,v]) =>
             '<div><span style="color:#B08D57;font-weight:600;">' + k + '</span> — ' + v + '</div>'
           ).join('') +
-          '<div style="margin-top:6px;color:#666;font-size:11px;">Tout reste modifiable après sélection.</div>' +
+          '<div style="margin-top:6px;color: #948E7C;font-size:11px;">Tout reste modifiable après sélection.</div>' +
         '</div>' +
         '<div class="preset-btns">' +
           ['Signature','Ti1','Ti2'].map(decl =>
@@ -5953,7 +5953,7 @@ function p11BuildDimsGrid() {
   // choisis désormais directement sur la page Composants (étape 2)
 
   if (fields.length === 0) {
-    grid.innerHTML = '<p style="color:#666;font-size:13px;">Sélectionnez d\'abord vos composants à l\'étape 2.</p>';
+    grid.innerHTML = '<p style="color: #948E7C;font-size:13px;">Sélectionnez d\'abord vos composants à l\'étape 2.</p>';
     return;
   }
 
@@ -6100,7 +6100,7 @@ function p11RenderFinalRecap() {
     html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #1B1C20;">' +
       '<i class="ti ' + (icons[p.id]||'ti-point') + '" style="color:#B08D57;font-size:14px;width:18px;"></i>' +
       '<div style="flex:1;">' +
-        '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;">' + p.name + '</div>' +
+        '<div style="font-size:10px;color: #948E7C;text-transform:uppercase;letter-spacing:.06em;">' + p.name + '</div>' +
         '<div style="font-size:13px;color:#EDEAE2;">' + opt.name + '</div>' +
       '</div>' +
     '</div>';
@@ -6109,7 +6109,7 @@ function p11RenderFinalRecap() {
   const tuningListP11 = getSelectedTuningList(selOpts);
   if (tuningListP11.length > 0) {
     html += '<div style="margin-top:1rem;padding:.75rem 1rem;background:#1D1F23;border:0.5px solid #333;">' +
-      '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Personnalisations</div>' +
+      '<div style="font-size:10px;color: #948E7C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Personnalisations</div>' +
       '<div style="display:flex;flex-direction:column;gap:5px;">' +
         tuningListP11.map(t =>
           '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">' +
@@ -6124,7 +6124,7 @@ function p11RenderFinalRecap() {
   const sizeText = buildSizeText();
   if (sizeText) {
     html += '<div style="margin-top:1rem;padding:.75rem 1rem;background:#0a1520;border:0.5px solid #333;">' +
-      '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Dimensions</div>' +
+      '<div style="font-size:10px;color: #948E7C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Dimensions</div>' +
       '<div style="font-size:12px;color:#aaa;line-height:1.8;">' + sizeText.replace(/\n/g,'<br>') + '</div>' +
     '</div>';
   }
