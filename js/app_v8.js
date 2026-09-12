@@ -3970,11 +3970,27 @@ renderModels();
       }
     }
   } catch (e) { /* referrer invalide ou absent -> on garde le repli */ }
+  window._backToSiteUrl = backUrl; // source unique, réutilisée par le logo + la popup de confirmation
   ['dt-header-back', 'p11-header-back'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.href = backUrl;
   });
 })();
+
+// V8 — Popup de confirmation avant de quitter le configurateur, déclenchée par le
+// bouton "Retour au site" (desktop/mobile) ET par un clic sur le logo/titre du
+// bandeau. `target="_top"` est important en mode embed (iframe) — la navigation
+// programmatique doit viser `window.top`, pas la fenêtre courante, sinon le clic ne
+// fait que naviguer à l'intérieur de l'iframe.
+function openLeaveConfirmModal() {
+  document.getElementById('leave-confirm-modal').classList.add('open');
+}
+function closeLeaveConfirmModal() {
+  document.getElementById('leave-confirm-modal').classList.remove('open');
+}
+function confirmLeaveConfigurator() {
+  window.top.location.href = window._backToSiteUrl || 'https://www.obviouscycles.com/';
+}
 
 dtInit();
 v2UpdateStepper(); // initialise entre autres la visibilité du bouton "Retour au site" (page 1 uniquement)
