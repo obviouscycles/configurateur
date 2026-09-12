@@ -411,6 +411,13 @@
   }
   .field input:focus, .field textarea:focus { border-color: #B08D57; }
   .modal-actions { display: flex; gap: 8px; margin-top: 1rem; }
+  /* V8 — Boutons empilés (plutôt que côte à côte) pour cette popup spécifiquement :
+     ses deux libellés sont plus longs que la moyenne ("Continuer à créer mon vélo"),
+     et les serrer côte à côte les faisait passer sur 2 lignes dans un espace étroit —
+     lisible en théorie (contraste correct), mais inconfortable en pratique. */
+  #leave-confirm-modal .modal-actions { flex-direction: column; }
+  #leave-confirm-modal .btn-send { color: #17181B; font-weight: 600; padding: 12px 16px; }
+  #leave-confirm-modal .btn-cancel { padding: 12px 16px; }
   .modal-actions button {
     flex: 1; padding: 11px; font-size: 13px; font-weight: 500;
     border-radius: var(--radius-md); cursor: pointer; font-family: var(--font);
