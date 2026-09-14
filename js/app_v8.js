@@ -5147,7 +5147,11 @@ function p11Init() {
   p11RenderModels();
   v2Parcours = 'standard';
   p11InitHistory();
-  p11UpdateStep(1);
+  // Repartir de l'étape où était le visiteur côté desktop (dtStep), pas toujours de
+  // l'étape 1 — sinon un simple zoom/redimensionnement qui bascule en mobile le
+  // renvoie au début du parcours, perte de repère bien plus grave qu'un simple
+  // changement d'affichage.
+  p11UpdateStep(dtStep || 1);
   p11InitSwipe();
 }
 
@@ -6316,12 +6320,16 @@ function p11TryInit() {
       p11Init();
     }
   } else {
-    // Repassé en desktop : reset le flag pour permettre un re-init si on revient mobile
+    // Repassé en desktop : reset le flag pour permettre un re-init si on revient mobile.
+    // dtInitHistory() seul ne suffit pas : rien ne redessinait vraiment le panneau
+    // desktop (étape, sélections en cours...) après un passage par le mode mobile —
+    // le panneau restait vide/périmé. dtRender() repeint l'état réel actuel.
     if (p11Initialized) {
       p11Initialized = false;
       document.getElementById('p11-container').style.display = 'none';
     }
     dtInitHistory();
+    dtRender();
   }
 }
 
