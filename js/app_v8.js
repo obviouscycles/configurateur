@@ -6410,13 +6410,19 @@ if (document.readyState === 'loading') {
   v3InitTitaniumStickyMobile();
 }
 
-// Resize : utiliser un debounce et vérifier que la largeur a vraiment changé
+// Resize : debounce réel (le commentaire d'origine l'annonçait, mais rien ne
+// l'implémentait vraiment — chaque tick de redimensionnement appelait p11TryInit()
+// immédiatement, potentiellement des dizaines de fois pendant un zoom fluide du
+// navigateur). Attendre que le redimensionnement se stabilise avant d'agir.
 // (le clavier iOS change la HAUTEUR, pas la largeur — on ignore les changements de hauteur)
 let p11LastWidth = window.innerWidth;
+let p11ResizeDebounce = null;
 window.addEventListener('resize', () => {
   const newWidth = window.innerWidth;
-  if (newWidth !== p11LastWidth) {
-    p11LastWidth = newWidth;
+  if (newWidth === p11LastWidth) return;
+  clearTimeout(p11ResizeDebounce);
+  p11ResizeDebounce = setTimeout(() => {
+    p11LastWidth = window.innerWidth;
     p11TryInit();
-  }
+  }, 150);
 });
