@@ -1312,7 +1312,7 @@
     padding: 0 !important;
     margin: 0 !important;
     display: grid !important;
-    grid-template-columns: 180px 1fr 260px !important;
+    grid-template-columns: 180px 1fr 300px !important;
     grid-template-rows: 1fr !important;
     min-height: calc(100vh - 56px) !important;
     align-items: stretch !important;
@@ -1452,14 +1452,14 @@
     grid-column: 3;
     background: #141519;
     border-left: 0.5px solid #1D1F23;
-    padding: 1.5rem 1.25rem;
+    padding: 1.1rem 1.25rem;
     position: sticky; top: 56px;
     height: calc(100vh - 56px);
     overflow-y: auto;
     box-sizing: border-box;
     display: flex; flex-direction: column;
   }
-  .dtr-thumb { width: 100%; height: 80px; object-fit: cover; display: block; margin-bottom: .75rem; border: 0.5px solid #1F2024; }
+  .dtr-thumb { width: 100%; height: 60px; object-fit: cover; display: block; margin-bottom: .5rem; border: 0.5px solid #1F2024; }
   .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 13px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
   .dtr-preset { font-size: 10px; color: #948E7C; margin-bottom: .5rem; min-height: 1.2em; }
   .dtr-price { font-family: var(--font); font-size: 27px; font-weight: 600; color: #B08D57; letter-spacing: -.01em; margin-bottom: 4px; }
@@ -1468,15 +1468,15 @@
   .dtr-modif-dot { width: 6px; height: 6px; border-radius: 50%; background: #B08D57; flex-shrink: 0; }
   .dtr-sep { border: none; border-top: 0.5px solid #1D1F23; margin: .5rem 0; }
   .dtr-rows { flex: 1; overflow-y: auto; min-height: 0; }
-  .dtr-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 0.5px solid #17181B; gap: 4px; }
+  .dtr-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 0.5px solid #17181B; gap: 4px; }
   .dtr-lbl { color: #8F8977; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-  .dtr-val { color: #9C978D; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px; }
+  .dtr-val { color: #9C978D; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
   .dtr-row.mod .dtr-lbl { color: #888; }
   .dtr-row.mod .dtr-val { color: #B08D57; }
-  .dtr-actions { padding-top: 1rem; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-  .dtr-btn-main { background: #B08D57; border: none; color: #211C12; padding: 10px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .dtr-actions { padding-top: .75rem; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+  .dtr-btn-main { background: #B08D57; border: none; color: #211C12; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 6px; }
   .dtr-btn-main:hover { opacity: .88; }
-  .dtr-btn-sec { background: none; border: 0.5px solid #333; color: #948E7C; padding: 8px 14px; font-size: 11px; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .dtr-btn-sec { background: none; border: 0.5px solid #333; color: #948E7C; padding: 6px 14px; font-size: 11px; cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; gap: 5px; }
   .dtr-btn-sec:hover { border-color: #555; color: #aaa; }
 
   /* Masquer anciens éléments desktop */
