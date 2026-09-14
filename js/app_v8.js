@@ -1813,6 +1813,7 @@ function dtGo(n) {
 function dtRender() {
   if (window.innerWidth < 768) return;
   const n = dtStep;
+  dtSyncSidebarDevisBtn();
   // Activer "Nouvelle configuration" dès qu'un modèle est sélectionné
   const resetBtn = document.getElementById('dtr-btn-reset');
   if (resetBtn) {
@@ -2255,6 +2256,40 @@ function renderComponentDimField(key, label, options, refreshFn, defaultValue) {
 }
 
 // ─── DESTINATION DEPUIS L'ÉTAPE 2 SELON LE CHOIX CADRE ─────────────────────────
+// V8 — Le bouton "Recevoir mon devis personnalisé" du bandeau droit restait
+// disabled en permanence sur les pages Composants/Personnalisation (jamais activé
+// avant l'étape finale, où le bandeau disparaît de toute façon) — un bouton mort,
+// proposant une action à un stade où le visiteur n'y est pas encore. Remplacé par un
+// miroir du bouton "suivant" réellement affiché en bas de la page courante, avec la
+// même action.
+function dtSyncSidebarDevisBtn() {
+  const btn = document.getElementById('dtr-btn-devis');
+  if (!btn) return;
+  if (dtStep === 2) {
+    if (v2Parcours === 'sur_mesure') {
+      btn.innerHTML = '<i class="ti ti-arrow-right"></i> Continuer';
+      btn.onclick = v3GoSurMesureFromS2;
+    } else if (!selSize.taille) {
+      btn.innerHTML = '<i class="ti ti-arrow-right"></i> Déterminer ma taille';
+      btn.onclick = v3EnterGuideOnly;
+    } else {
+      btn.innerHTML = '<i class="ti ti-arrow-right"></i> Personnalisation';
+      btn.onclick = v3GoPersoFromS2;
+    }
+    btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+  } else if (dtStep === 3) {
+    btn.innerHTML = '<i class="ti ti-arrow-right"></i> Ma configuration';
+    btn.onclick = v2GoDevis;
+    btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+  } else {
+    // Étape 1 (aucune action de progression pertinente à refléter) ou étape 4
+    // (bandeau déjà masqué) — repli inerte, comme le comportement d'origine.
+    btn.innerHTML = '<i class="ti ti-send"></i> Recevoir mon devis personnalisé';
+    btn.onclick = openOrderModal;
+    btn.style.opacity = '.3'; btn.style.pointerEvents = 'none';
+  }
+}
+
 function dtUpdateStep2Footer() {
   const zone = document.getElementById('dt-s2-footer-actions');
   if (!zone) return;
@@ -2267,6 +2302,7 @@ function dtUpdateStep2Footer() {
       '<button onclick="v3EnterGuideOnly()" style="background:none;border:none;color:#888;font-size:12px;cursor:pointer;text-decoration:underline;padding:0;">Besoin d\'aide pour ajuster les tailles ?</button>' +
       '<button class="dt-btn-next" id="dt-s2-btn-main" onclick="v3GoPersoFromS2()">Personnalisation <i class="ti ti-arrow-right"></i></button>';
   }
+  dtSyncSidebarDevisBtn();
 }
 
 function v3GoSurMesureFromS2() {
