@@ -3220,6 +3220,7 @@ function computeOodSurcharge() {
 
 function dtRenderRecap() {
   if (window.innerWidth < 768) return;
+  dtSyncSidebarDevisBtn();
   const model = MODELS.find(m => m.id === selModel);
   const get = id => document.getElementById(id);
   if (!model) {
