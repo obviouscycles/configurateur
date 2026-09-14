@@ -2277,13 +2277,18 @@ function dtSyncSidebarDevisBtn() {
       btn.onclick = v3GoPersoFromS2;
     }
     btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
-  } else if (dtStep === 3) {
+  } else if (dtStep === 3 || ((v2Parcours === 'sur_mesure' || v2Parcours === 'hors_gamme') && !document.body.classList.contains('dt-step-4'))) {
+    // dtStep === 3 : écran "Personnalisation" standard.
+    // v2Parcours sur_mesure/hors_gamme : les écrans "Cadre sur mesure" (Performance) et
+    // "Projet spécifique" (Titanium) utilisent en interne dtStep = 4 — même valeur que
+    // le VRAI écran final (qui, lui, ajoute la classe body.dt-step-4 et masque ce
+    // bandeau entièrement). Sans cette distinction, ces deux écrans intermédiaires se
+    // font passer pour l'écran final et gardent à tort le libellé d'avant.
     btn.innerHTML = '<i class="ti ti-arrow-right"></i> Ma configuration';
     btn.onclick = v2GoDevis;
     btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
   } else {
-    // Étape 1 (aucune action de progression pertinente à refléter) ou étape 4
-    // (bandeau déjà masqué) — repli inerte, comme le comportement d'origine.
+    // Étape 1, ou véritable écran final (bandeau déjà masqué) — repli inerte.
     btn.innerHTML = '<i class="ti ti-send"></i> Recevoir mon devis personnalisé';
     btn.onclick = openOrderModal;
     btn.style.opacity = '.3'; btn.style.pointerEvents = 'none';
