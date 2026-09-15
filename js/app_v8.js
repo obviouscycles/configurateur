@@ -1696,7 +1696,7 @@ function v3InitTitaniumSticky() {
     const realHeight = Math.round(bannerR.height) || 78;
 
     if (dtStep !== 1) {
-      morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '12px';
+      morph.style.width = realHeight + 'px'; morph.style.height = realHeight + 'px'; morph.style.borderRadius = '0';
       morph.style.opacity = '0'; morph.style.pointerEvents = 'none';
       if (text) text.style.opacity = '0';
       return;
@@ -1720,11 +1720,11 @@ function v3InitTitaniumSticky() {
 
     if (expanded) {
       morph.style.width = bannerR.width + 'px';
-      morph.style.borderRadius = '10px';
+      morph.style.borderRadius = '0';
       if (text) text.style.opacity = '1';
     } else {
       morph.style.width = realHeight + 'px'; // carré parfait : largeur = hauteur
-      morph.style.borderRadius = '12px';
+      morph.style.borderRadius = '0';
       if (text) text.style.opacity = '0';
     }
   }
