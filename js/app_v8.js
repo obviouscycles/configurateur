@@ -1797,6 +1797,10 @@ function dtGo(n) {
   // Personnalisation, atteinte directement depuis Composants.
   if (n === 4) { v2GoRecap(); return; }
   if (n === 3) { v3GoPersoFromS2(); return; }
+  // Retour depuis le récapitulatif final (étape 4) : cette classe masque le bandeau
+  // droit (#dt-recap) — sans la retirer ici, il restait invisible en revenant sur
+  // Modèle/Composants via le sommaire de gauche.
+  document.body.classList.remove('dt-step-4');
   dtStep = n;
   dtRender();
   v2UpdateStepper();
