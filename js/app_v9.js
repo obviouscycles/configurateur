@@ -2210,7 +2210,7 @@ function buildStatBars(modelId) {
   if (!s) return '';
   const rows = [
     ['Rigidité', s.rigidite], ['Confort', s.confort],
-    ['Aérodynamisme', s.aero], ['Polyvalence', s.polyvalence],
+    ['Aérodynamique', s.aero], ['Polyvalence', s.polyvalence],
   ];
   return '<div class="v9-stats">' + rows.map(([label, val]) =>
     '<div class="v9-stat-row">' +
