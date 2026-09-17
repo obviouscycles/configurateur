@@ -2228,7 +2228,6 @@ function dtRenderS2() {
     const photo = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
     left.innerHTML =
       '<div class="v9-viewer">' +
-        '<div class="v9-viewer-grid"></div>' +
         '<div class="v9-crosshair"></div>' +
         '<span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span>' +
         '<span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' +
