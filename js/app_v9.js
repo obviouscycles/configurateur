@@ -2022,6 +2022,7 @@ function dtLoadPreset(decl) {
     });
   });
   dtRender();
+  refreshTelemetryHud();
 }
 
 
