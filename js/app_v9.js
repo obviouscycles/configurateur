@@ -2227,7 +2227,13 @@ function dtRenderS2() {
   if (left && model) {
     const photo = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
     left.innerHTML =
-      '<img class="mc-photo" src="' + (photo||'') + '" alt="' + model.name + '" loading="lazy" onclick="dtOpenLightbox(\'' + (photo||'') + '\',\'' + model.name + '\')" style="cursor:zoom-in;">' +
+      '<div class="v9-viewer">' +
+        '<div class="v9-viewer-grid"></div>' +
+        '<div class="v9-crosshair"></div>' +
+        '<span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span>' +
+        '<span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' +
+        '<img class="mc-photo" src="' + (photo||'') + '" alt="' + model.name + '" loading="lazy" onclick="dtOpenLightbox(\'' + (photo||'') + '\',\'' + model.name + '\')" style="cursor:zoom-in;">' +
+      '</div>' +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + model.badge + '</span>' +
         '<span class="mc-name">' + model.name + '</span>' +
