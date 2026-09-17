@@ -2190,11 +2190,18 @@ function buildTelemetryHud(modelId) {
 }
 function telemetryHudInner(modelId) {
   const { weight } = computeTotals(modelId, selOpts);
-  const posts = activePostMeta();
+  // Le poste "power" ne compte dans le total que si la transmission actuellement
+  // choisie accepte réellement une mesure de puissance — sinon il n'existe tout
+  // simplement pas de choix possible pour ce poste dans cette configuration
+  // (optionsFor ne renvoie alors que "Sans mesure de puissance").
+  const posts = activePostMeta().filter(p => p.id !== 'power' || optionsFor('power', modelId).length > 1);
   // Un poste ne compte comme "rempli" que si l'option choisie est un vrai produit —
   // les options "Sans X" (sans pédales, sans fourche...) sont des valeurs réelles en
   // base (nécessaires au calcul de prix), mais ne représentent aucun choix actif du
-  // visiteur, donc ne doivent pas gonfler artificiellement le compteur.
+  // visiteur, donc ne doivent pas gonfler artificiellement le compteur. "Freins inclus
+  // avec la transmission" (frein_all) N'EST PAS dans ce cas — c'est un vrai choix
+  // (le frein est bien déterminé), juste sans coût additionnel ; son nom ne commence
+  // pas par "Sans ", donc il compte normalement.
   const filled = posts.filter(p => {
     const optId = selOpts[p.id];
     if (!optId) return false;
