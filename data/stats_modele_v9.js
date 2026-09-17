@@ -1,4 +1,4 @@
-// V9 — Notes de caractère par modèle (rigidité/confort/aérodynamisme/polyvalence,
+// V9 — Notes de caractère par modèle (rigidité/confort/aérodynamique/polyvalence,
 // 0-100) et poids de base hors composants variables (cadre + peinture + petite
 // visserie fixe). DONNÉES PROVISOIRES — en attente d'un onglet xlsx dédié (voir
 // Damien : gradation à définir précisément par modèle). Ne pas considérer ces
