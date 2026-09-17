@@ -2191,7 +2191,16 @@ function buildTelemetryHud(modelId) {
 function telemetryHudInner(modelId) {
   const { weight } = computeTotals(modelId, selOpts);
   const posts = activePostMeta();
-  const filled = posts.filter(p => selOpts[p.id]).length;
+  // Un poste ne compte comme "rempli" que si l'option choisie est un vrai produit —
+  // les options "Sans X" (sans pédales, sans fourche...) sont des valeurs réelles en
+  // base (nécessaires au calcul de prix), mais ne représentent aucun choix actif du
+  // visiteur, donc ne doivent pas gonfler artificiellement le compteur.
+  const filled = posts.filter(p => {
+    const optId = selOpts[p.id];
+    if (!optId) return false;
+    const opt = (ALL_OPTIONS[p.id] || []).find(o => o.id === optId);
+    return !(opt && opt.name && opt.name.indexOf('Sans ') === 0);
+  }).length;
   const total = posts.length;
   const statutLabel = filled === 0 ? 'Départ' : filled < total ? 'En cours' : 'Complet';
   return '<div class="v9-hud-item"><div class="v9-hud-lbl">Poids est.</div><div class="v9-hud-val">' + (weight/1000).toFixed(1) + ' kg</div></div>' +
