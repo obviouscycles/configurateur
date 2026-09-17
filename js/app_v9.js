@@ -2190,11 +2190,13 @@ function buildTelemetryHud(modelId) {
 }
 function telemetryHudInner(modelId) {
   const { weight } = computeTotals(modelId, selOpts);
-  // Le poste "power" ne compte dans le total que si la transmission actuellement
-  // choisie accepte réellement une mesure de puissance — sinon il n'existe tout
-  // simplement pas de choix possible pour ce poste dans cette configuration
-  // (optionsFor ne renvoie alors que "Sans mesure de puissance").
-  const posts = activePostMeta().filter(p => p.id !== 'power' || optionsFor('power', modelId).length > 1);
+  // Un poste ne compte dans le total QUE s'il propose au moins une vraie option pour
+  // le contexte actuel (modèle + transmission, via optionsFor) — certains postes
+  // n'existent tout simplement pas pour certains modèles (ex: jeu_direction sur
+  // route), ou dépendent d'un autre poste (ex: power selon la transmission choisie).
+  // Règle générale plutôt qu'un cas particulier "power" isolé, pour couvrir aussi les
+  // cas similaires non encore identifiés.
+  const posts = activePostMeta().filter(p => optionsFor(p.id, modelId).some(o => o.name.indexOf('Sans ') !== 0));
   // Un poste ne compte comme "rempli" que si l'option choisie est un vrai produit —
   // les options "Sans X" (sans pédales, sans fourche...) sont des valeurs réelles en
   // base (nécessaires au calcul de prix), mais ne représentent aucun choix actif du
@@ -2205,8 +2207,12 @@ function telemetryHudInner(modelId) {
   const filled = posts.filter(p => {
     const optId = selOpts[p.id];
     if (!optId) return false;
-    const opt = (ALL_OPTIONS[p.id] || []).find(o => o.id === optId);
-    return !(opt && opt.name && opt.name.indexOf('Sans ') === 0);
+    // optionsFor() (pas ALL_OPTIONS globalement) — une sélection qui n'apparaît plus
+    // dans les choix valides pour le contexte actuel (ex: transmission changée entre
+    // temps) ne doit pas compter comme "remplie", même si elle existe encore en base.
+    const opt = optionsFor(p.id, modelId).find(o => o.id === optId);
+    if (!opt) return false;
+    return opt.name.indexOf('Sans ') !== 0;
   }).length;
   const total = posts.length;
   const statutLabel = filled === 0 ? 'Départ' : filled < total ? 'En cours' : 'Complet';
@@ -2802,6 +2808,19 @@ function dtSelectOpt(postId, optId) {
         if (av.find(o => o.id === fid)) selOpts[fp] = fid;
       });
   });
+  // Transmission VTT : le frein "inclus" (frein_all) n'existe pas avec une transmission
+  // SRAM (freins vendus à part) — sans ce filet, changer de transmission laissait une
+  // sélection de frein périmée en place (silencieusement absente de la liste des choix
+  // valides), avec son prix à 0€ jamais recalculé tant que le visiteur ne rouvrait pas
+  // le poste Freins pour re-choisir manuellement.
+  if (postId === 'transmission' && selModel === 'vtt_enduro') {
+    const isSramVtt = optId && optId.startsWith('trans_vtt_sr_');
+    if (isSramVtt) {
+      if (!selOpts['frein'] || selOpts['frein'] === 'frein_all') selOpts['frein'] = 'frein_vtt_sr_db8';
+    } else {
+      if (!selOpts['frein'] || ['frein_vtt_sr_db8','frein_vtt_sr_mvs','frein_vtt_sr_mvu'].includes(selOpts['frein'])) selOpts['frein'] = 'frein_all';
+    }
+  }
   applyOnDeselect(postId, previousOptId, optId);
   dtRenderPosts();
   refreshTelemetryHud();
