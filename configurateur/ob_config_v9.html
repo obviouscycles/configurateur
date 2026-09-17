@@ -222,6 +222,23 @@
     margin-bottom: 0;
     display: block;
   }
+  /* V9 — Habillage "viseur" autour de la photo (texture de grille en fond, réticule
+     central, coins techniques) — repris du concept "Garage de course". */
+  .v9-viewer { position: relative; overflow: hidden; background: #121316; }
+  .v9-viewer-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(237,234,226,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(237,234,226,.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .v9-crosshair { position: absolute; inset: 0; pointer-events: none; }
+  .v9-crosshair::before, .v9-crosshair::after { content: ''; position: absolute; background: rgba(237,234,226,.07); }
+  .v9-crosshair::before { left: 0; right: 0; top: 50%; height: 1px; }
+  .v9-crosshair::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+  .v9-corner { position: absolute; width: 16px; height: 16px; border: 1.5px solid #B08D57; opacity: .75; pointer-events: none; }
+  .v9-corner-tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+  .v9-corner-tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+  .v9-corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+  .v9-corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
   .model-card.sel .mc-photo { opacity: 1; }
   .model-card.sel .mc-price { color: #5C4A2E; }
 
@@ -1429,6 +1446,7 @@
     position: sticky; top: 0;
   }
   #dt-s2-left .mc-photo { width: 100%; height: 220px; object-fit: cover; display: block; }
+  #dt-s2-left .v9-viewer { height: 220px; }
   #dt-s2-left .mc-text { padding: 14px 0 0; }
   #dt-s2-left .mc-badge { display: block; font-size: 10px; color: #948E7C; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
   #dt-s2-left .mc-name { display: block; font-size: 23px; font-weight: 500; color: #EDEAE2; margin-bottom: 4px; }
@@ -1542,10 +1560,13 @@
   }
 
   @media (min-width: 768px) {
+    #dt-s2-left .v9-viewer {
+      width: 100%; aspect-ratio: 655/460; height: auto;
+      background: #141519; box-sizing: border-box;
+    }
     #dt-s2-left .mc-photo {
-      width: 100% !important; height: auto !important;
-      aspect-ratio: 655/460;
-      object-fit: contain !important; background: #141519; display: block;
+      width: 100% !important; height: 100% !important;
+      object-fit: contain !important; background: transparent; display: block;
       padding: 12px; box-sizing: border-box;
     }
     #dt-s2-left .mc-text {
