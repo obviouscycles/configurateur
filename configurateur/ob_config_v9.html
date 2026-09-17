@@ -225,11 +225,6 @@
   /* V9 — Habillage "viseur" autour de la photo (texture de grille en fond, réticule
      central, coins techniques) — repris du concept "Garage de course". */
   .v9-viewer { position: relative; overflow: hidden; background: #121316; }
-  .v9-viewer-grid {
-    position: absolute; inset: 0; pointer-events: none;
-    background-image: linear-gradient(rgba(237,234,226,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(237,234,226,.05) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
   .v9-crosshair { position: absolute; inset: 0; pointer-events: none; }
   .v9-crosshair::before, .v9-crosshair::after { content: ''; position: absolute; background: rgba(237,234,226,.07); }
   .v9-crosshair::before { left: 0; right: 0; top: 50%; height: 1px; }
@@ -1395,7 +1390,9 @@
     grid-column: 2;
     overflow-y: auto;
     display: flex; flex-direction: column;
-    background: #141414;
+    background-color: #141414;
+    background-image: linear-gradient(rgba(237,234,226,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(237,234,226,.035) 1px, transparent 1px);
+    background-size: 28px 28px;
     border-left: 0.5px solid #1D1F23;
     border-right: 0.5px solid #1D1F23;
   }
