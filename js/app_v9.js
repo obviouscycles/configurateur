@@ -2226,21 +2226,55 @@ function telemetryHudInner(modelId) {
 function refreshTelemetryHud() {
   const box = document.getElementById('v9-hud-box');
   if (box && selModel) box.innerHTML = telemetryHudInner(selModel);
+  const statsBox = document.getElementById('v9-stats-box');
+  if (statsBox && selModel) statsBox.innerHTML = statBarsInner(selModel);
+}
+// V9 — Les 4 notes de caractère sont calculées EN DIRECT, pas fixes par modèle :
+// chaque option porte une note par critère (0-100, 0 = non-impactant — voir
+// composants_v9.js, champ `carac`), chaque poste porte un coefficient d'importance
+// par critère (POST_CARAC_COEF, généré depuis 3_POSTES) — moyenne pondérée sur les
+// postes actuellement sélectionnés (le cadre compte toujours, sélection obligatoire).
+function computeCharacterStats(modelId, opts) {
+  const crits = ['rigidite', 'confort', 'aero', 'polyvalence'];
+  const sums = { rigidite: 0, confort: 0, aero: 0, polyvalence: 0 };
+  const weights = { rigidite: 0, confort: 0, aero: 0, polyvalence: 0 };
+
+  function accumulate(postId, optId) {
+    if (!optId) return;
+    const coef = POST_CARAC_COEF[postId];
+    if (!coef) return;
+    const opt = (ALL_OPTIONS[postId] || []).find(o => o.id === optId) ||
+                (postId === 'cadre' ? (ALL_OPTIONS.cadre || []).find(o => o.id === optId) : null);
+    if (!opt || !opt.carac) return;
+    crits.forEach(cr => {
+      if (coef[cr] > 0) { sums[cr] += opt.carac[cr] * coef[cr]; weights[cr] += coef[cr]; }
+    });
+  }
+
+  accumulate('cadre', opts.cadre);
+  activePostMeta().forEach(p => accumulate(p.id, opts[p.id]));
+
+  const out = {};
+  crits.forEach(cr => { out[cr] = weights[cr] > 0 ? Math.round(sums[cr] / weights[cr]) : 0; });
+  return out;
 }
 function buildStatBars(modelId) {
-  const s = (typeof MODEL_STATS !== 'undefined') ? MODEL_STATS[modelId] : null;
-  if (!s) return '';
+  return '<div class="v9-stats" id="v9-stats-box">' + statBarsInner(modelId) + '</div>';
+}
+function statBarsInner(modelId) {
+  if (typeof POST_CARAC_COEF === 'undefined') return '';
+  const s = computeCharacterStats(modelId, selOpts);
   const rows = [
     ['Rigidité', s.rigidite], ['Confort', s.confort],
     ['Aérodynamique', s.aero], ['Polyvalence', s.polyvalence],
   ];
-  return '<div class="v9-stats">' + rows.map(([label, val]) =>
+  return rows.map(([label, val]) =>
     '<div class="v9-stat-row">' +
       '<div class="v9-stat-lbl">' + label + '</div>' +
       '<div class="v9-stat-bar"><div class="v9-stat-fill" style="width:' + val + '%;"></div></div>' +
       '<div class="v9-stat-val">' + val + '</div>' +
     '</div>'
-  ).join('') + '</div>';
+  ).join('');
 }
 
 function dtRenderS2() {
