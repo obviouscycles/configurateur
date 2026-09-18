@@ -284,7 +284,7 @@ const POST_CARAC_COEF = {
   "power": { rigidite: 0, confort: 0, aero: 0, polyvalence: 0 },
   "frein": { rigidite: 0, confort: 0, aero: 2, polyvalence: 4 },
   "pilotage": { rigidite: 7, confort: 5, aero: 5, polyvalence: 6 },
-  "selle": { rigidite: 2, confort: 5, aero: 0, polyvalence: 5 },
+  "selle": { rigidite: 0, confort: 5, aero: 0, polyvalence: 5 },
   "tige": { rigidite: 3, confort: 4, aero: 2, polyvalence: 2 },
   "collier_selle": { rigidite: 0, confort: 0, aero: 0, polyvalence: 0 },
   "pedales": { rigidite: 0, confort: 0, aero: 0, polyvalence: 0 },
