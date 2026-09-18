@@ -2247,7 +2247,11 @@ function computeCharacterStats(modelId, opts) {
                 (postId === 'cadre' ? (ALL_OPTIONS.cadre || []).find(o => o.id === optId) : null);
     if (!opt || !opt.carac) return;
     crits.forEach(cr => {
-      if (coef[cr] > 0) { sums[cr] += opt.carac[cr] * coef[cr]; weights[cr] += coef[cr]; }
+      // Une note à 0 sur cette option précise (y compris les options "Sans X") n'est
+      // pas une "vraie" note de 0 à faire peser dans la moyenne — c'est l'absence
+      // d'impact de CETTE option sur CE critère, à ignorer complètement (numérateur
+      // ET dénominateur), pas juste un score bas qui tire la moyenne vers le bas.
+      if (coef[cr] > 0 && opt.carac[cr] > 0) { sums[cr] += opt.carac[cr] * coef[cr]; weights[cr] += coef[cr]; }
     });
   }
 
