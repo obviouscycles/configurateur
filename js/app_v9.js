@@ -815,7 +815,7 @@ function renderPosts() {
           }).join('') +
         '</div>';
 
-    return '<div class="post-block" data-post-id="' + p.id + '">' +
+    return '<div class="post-block' + (isPostEquipped(selOpt) ? ' v9-equipped' : '') + '" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" onclick="togglePost(\'' + p.id + '\')">' +
         '<i class="ti ' + p.icon + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + '</span>' +
@@ -2186,7 +2186,11 @@ function dtShowAllModels() {
 // xlsx dédié (voir stats_modele_v9.js).
 function buildTelemetryHud(modelId) {
   if (typeof MODEL_STATS === 'undefined') return '';
-  return '<div class="v9-hud" id="v9-hud-box">' + telemetryHudInner(modelId) + '</div>';
+  return '<div class="v9-hud v9-corners-subtle" id="v9-hud-box-wrap">' +
+    '<span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span>' +
+    '<span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' +
+    '<div id="v9-hud-box" style="display:contents;">' + telemetryHudInner(modelId) + '</div>' +
+  '</div>';
 }
 function telemetryHudInner(modelId) {
   const { weight } = computeTotals(modelId, selOpts);
@@ -2377,6 +2381,12 @@ function renderComponentDimField(key, label, options, refreshFn, defaultValue) {
 // proposant une action à un stade où le visiteur n'y est pas encore. Remplacé par un
 // miroir du bouton "suivant" réellement affiché en bas de la page courante, avec la
 // même action.
+// V9 — Un poste est "équipé" si l'option choisie est un vrai produit, pas une valeur
+// "Sans X" par défaut (même convention que le compteur du HUD).
+function isPostEquipped(selOpt) {
+  return !!(selOpt && selOpt.name && selOpt.name.indexOf('Sans ') !== 0);
+}
+
 function dtSyncSidebarDevisBtn() {
   const btn = document.getElementById('dtr-btn-devis');
   if (!btn) return;
@@ -2445,7 +2455,7 @@ function renderCadreCard(selectId, renderFn) {
   // pas un statut de taille — celle-ci reste visible juste en dessous, dans le menu.
   const cadreOpt = (ALL_OPTIONS.cadre || []).find(o => o.id === selOpts.cadre);
   const summary = cadreOpt ? cadreOpt.name : 'À déterminer';
-  return '<div class="post-block" data-post-id="cadre">' +
+  return '<div class="post-block' + (isPostEquipped(cadreOpt) ? ' v9-equipped' : '') + '" data-post-id="cadre">' +
     '<div class="post-hdr" style="cursor:default;">' +
       '<i class="ti ti-frame ph-icon"></i>' +
       '<span class="ph-name">Cadre</span>' +
@@ -2550,7 +2560,7 @@ function dtRenderPosts() {
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
-      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+      return '<div class="post-block post-block-combo-locked v9-equipped" data-post-id="' + p.id + '">' +
         '<div class="post-hdr" style="cursor:default;">' +
           '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
           '<span class="ph-name">' + p.name + '</span>' +
@@ -2632,7 +2642,7 @@ function dtRenderPosts() {
 
     const _isModDt = !!(window._activePreset && PRESETS[selModel] && PRESETS[selModel][window._activePreset] && PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
     const tuningHtml = renderTuningBoxesFor(p.id, 'dtRenderPosts');
-    return '<div class="post-block" data-post-id="' + p.id + '">' +
+    return '<div class="post-block' + (isPostEquipped(selOpt) ? ' v9-equipped' : '') + '" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
         '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (_isModDt ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#B08D57;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
@@ -2862,6 +2872,15 @@ function dtSelectOpt(postId, optId) {
   applyOnDeselect(postId, previousOptId, optId);
   dtRenderPosts();
   refreshTelemetryHud();
+  v9FlashEquipped(postId);
+}
+// V9 — Bref flash bronze sur la carte qui vient d'être "équipée", pour donner un
+// vrai retour visuel au moment du choix plutôt qu'un changement instantané silencieux.
+function v9FlashEquipped(postId) {
+  const el = document.querySelector('.post-block[data-post-id="' + postId + '"]');
+  if (!el) return;
+  el.classList.remove('v9-flash'); void el.offsetWidth; // force le redémarrage de l'animation
+  el.classList.add('v9-flash');
 }
 
 // Un couple lié par FORCE_SELECT dans les deux sens (ex: transmission CUES Flat <->
