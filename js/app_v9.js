@@ -1902,7 +1902,9 @@ function dtRenderS1() {
     const completPrice = tiMinPrice(m.id);
     const kitPrice = kitMinPrice(m.id);
     return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
+      (sel ? '<div class="v9-corners-subtle" style="position:relative;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' : '') +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy"' + (sel ? ' onclick="event.stopPropagation();dtOpenLightbox(\'' + (m.photo||'') + '\',\'' + m.name + '\')" style="cursor:zoom-in;"' : '') + '>' +
+      (sel ? '</div>' : '') +
       '<div class="mc-body">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
@@ -1938,6 +1940,7 @@ function dtHighlightCard(e, cardEl, modelId) {
   selModel = modelId;
   window._kitCadre = null; // focus sans choix de mode
   dtRenderS1(); // reconstruction complète : l'ancien modèle perd focus + bouton actif
+  v9FlashEl(document.querySelector('.model-card.sel'));
 }
 
 function dtSelectModelMode(id, isKit) {
@@ -2023,6 +2026,7 @@ function dtLoadPreset(decl) {
   });
   dtRender();
   refreshTelemetryHud();
+  v9FlashAllEquipped();
 }
 
 
@@ -2882,6 +2886,22 @@ function v9FlashEquipped(postId) {
   el.classList.remove('v9-flash'); void el.offsetWidth; // force le redémarrage de l'animation
   el.classList.add('v9-flash');
 }
+// V9 — Flashe tous les postes actuellement équipés (ex: après chargement d'un
+// préconfig, qui change plusieurs postes d'un coup) — léger décalage entre chaque
+// carte plutôt qu'un flash simultané, pour un effet de "balayage" plus lisible.
+function v9FlashAllEquipped() {
+  document.querySelectorAll('.post-block.v9-equipped').forEach((el, i) => {
+    setTimeout(() => {
+      el.classList.remove('v9-flash'); void el.offsetWidth;
+      el.classList.add('v9-flash');
+    }, i * 40);
+  });
+}
+function v9FlashEl(el) {
+  if (!el) return;
+  el.classList.remove('v9-flash'); void el.offsetWidth;
+  el.classList.add('v9-flash');
+}
 
 // Un couple lié par FORCE_SELECT dans les deux sens (ex: transmission CUES Flat <->
 // cintre Flat) doit aussi se défaire ensemble : si l'option qu'on vient de QUITTER
@@ -3203,7 +3223,7 @@ function dtRenderS4() {
     '<div style="display:grid;grid-template-columns:'+(document.body.classList.contains('config-shared-mode')?'340px':'280px')+' 1fr;gap:2rem;align-items:start;">' +
       // Colonne gauche : photo + infos
       '<div>' +
-        (photoS4 ? '<img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #1F2024;margin-bottom:1rem;cursor:zoom-in;" onclick="dtOpenLightbox(\''+photoS4+'\',\''+model.name+'\')">' : '') +
+        (photoS4 ? '<div class="v9-corners-subtle" style="position:relative;margin-bottom:1rem;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span><img src="'+photoS4+'" style="width:100%;height:'+(document.body.classList.contains('config-shared-mode')?'280px':'180px')+';object-fit:cover;display:block;border:0.5px solid #1F2024;cursor:zoom-in;" onclick="dtOpenLightbox(\''+photoS4+'\',\''+model.name+'\')"></div>' : '') +
         '<div style="font-size:11px;color: #948E7C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">'+model.badge+'</div>' +
         '<div style="font-family:var(--font-brand);text-transform:lowercase;letter-spacing:.01em;font-size:25px;font-weight:400;color:#EDEAE2;margin-bottom:4px;">'+model.name+'</div>' +
         (window._activePreset ? '<div style="font-size:11px;color: #948E7C;margin-bottom:.75rem;">'+window._activePreset+'</div>' : '<div style="min-height:1.4em;"></div>') +
@@ -3803,7 +3823,7 @@ function evoRender() {
     const gravureError = gravureText.length > 20;
 
     const iconName = EVO_ICONS[opt.id] || 'ti-adjustments';
-    return `<div style="background:#17181B;border:0.5px solid ${checked ? '#B08D57' : '#1F2024'};padding:.9rem 1rem;border-radius:8px;transition:border-color .15s;">
+    return `<div data-evo-id="${opt.id}" style="background:#17181B;border:0.5px solid ${checked ? '#B08D57' : '#1F2024'};padding:.9rem 1rem;border-radius:8px;transition:border-color .15s;">
       <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="evoToggle('${opt.id}')"`}>
         <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#B08D57' : '#666'};flex-shrink:0;margin-top:1px;"></i>
         <div style="flex:1;">
@@ -3813,7 +3833,11 @@ function evoRender() {
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:12px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
         </div>
-        ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" onclick="event.stopPropagation();openGravurePhotoModal()" style="height:112px;width:auto;aspect-ratio:3/1;object-fit:cover;border-radius:4px;flex-shrink:0;border:0.5px solid #333;cursor:pointer;">` : ''}
+        ${isGravure ? `<div class="v9-corners-subtle" style="position:relative;flex-shrink:0;">
+          <span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span>
+          <span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>
+          <img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" onclick="event.stopPropagation();openGravurePhotoModal()" style="height:112px;width:auto;aspect-ratio:3/1;object-fit:cover;border-radius:4px;border:0.5px solid #333;cursor:pointer;display:block;">
+        </div>` : ''}
         ${isInserts ? '' : `<div style="width:16px;height:16px;border-radius:4px;border:0.5px solid ${checked ? '#B08D57' : '#444'};background:${checked ? '#B08D57' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:10px;color:#211C12;"></i>' : ''}
         </div>`}
@@ -3955,8 +3979,10 @@ function evoToggle(id) {
   } else {
     evoOrder = evoOrder.filter(x => x !== id);
   }
+  const wasChecked = evoChecked[id];
   evoRender();
   dtRenderRecap();
+  if (wasChecked) v9FlashEl(document.querySelector('[data-evo-id="' + id + '"]'));
 }
 
 function evoUpdateTotal() {
