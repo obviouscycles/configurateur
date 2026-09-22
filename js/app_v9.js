@@ -3932,6 +3932,7 @@ function evoToggleInsert(id) {
   }
   evoRender();
   dtRenderRecap();
+  v9FlashEl(document.querySelector('[data-evo-id="evo_inserts"]'));
 }
 
 // ─── DROPZONE FICHIER (drag & drop) ────────────────────────────────────────────
