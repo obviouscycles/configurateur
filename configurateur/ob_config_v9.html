@@ -234,6 +234,21 @@
   .v9-corner-tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
   .v9-corner-bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
   .v9-corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+  /* V9 — flash bronze bref sur une carte qui vient d'être "équipée". */
+  @keyframes v9-flash-anim {
+    0% { box-shadow: inset 0 0 0 1px rgba(176,141,87,0), -2px 0 8px -2px rgba(176,141,87,0); background: #1B1C20; }
+    30% { box-shadow: inset 0 0 0 1px rgba(176,141,87,.6), -2px 0 14px -1px rgba(176,141,87,.6); background: #242019; }
+    100% { box-shadow: inset 0 0 0 1px rgba(176,141,87,0), -2px 0 8px -2px rgba(176,141,87,0); background: #1B1C20; }
+  }
+  .v9-flash { animation: v9-flash-anim .6s ease-out; }
+  /* V9 — coins techniques réutilisés (mêmes classes que le viseur photo), en plus
+     discret, sur d'autres blocs clés pour unifier le langage visuel. */
+  .v9-corners-subtle { position: relative; }
+  .v9-corners-subtle .v9-corner { opacity: .45; width: 10px; height: 10px; border-width: 1px; }
+  .v9-corners-subtle .v9-corner-tl, .v9-corners-subtle .v9-corner-tr { top: 6px; }
+  .v9-corners-subtle .v9-corner-bl, .v9-corners-subtle .v9-corner-br { bottom: 6px; }
+  .v9-corners-subtle .v9-corner-tl, .v9-corners-subtle .v9-corner-bl { left: 6px; }
+  .v9-corners-subtle .v9-corner-tr, .v9-corners-subtle .v9-corner-br { right: 6px; }
   .model-card.sel .mc-photo { opacity: 1; }
   .model-card.sel .mc-price { color: #5C4A2E; }
 
@@ -243,9 +258,13 @@
   .prog-step.done { background: #B08D57; }
 
   .post-block {
-    border: 0.5px solid var(--border); border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border); border-left: 3px solid #3A3D42; border-radius: var(--radius-lg);
     margin-bottom: 8px; overflow: hidden; background: var(--bg);
+    transition: border-left-color .2s;
   }
+  /* V9 — trait bronze lumineux = poste "équipé" (une vraie option choisie, pas une
+     valeur "Sans X" par défaut — même logique que le compteur du HUD). */
+  .post-block.v9-equipped { border-left-color: #B08D57; }
   .post-hdr {
     display: flex; align-items: center; gap: 10px;
     padding: 12px 16px; cursor: pointer;
@@ -1601,7 +1620,9 @@
 
   @media (min-width: 768px) {
     /* Modules composants : fond sombre */
-    #dt-s2-right .post-block { background: #1B1C20 !important; border-color: #232428 !important; }
+    #dt-s2-right .post-block { background: #1B1C20 !important; border-top-color: #232428 !important; border-right-color: #232428 !important; border-bottom-color: #232428 !important; }
+    #dt-s2-right .post-block.v9-equipped { border-left-color: #B08D57 !important; }
+    #dt-s2-right .post-block:not(.v9-equipped) { border-left-color: #3A3D42 !important; }
     #dt-s2-right .post-hdr { background: #1B1C20 !important; color: #EDEAE2 !important; }
     #dt-s2-right .post-hdr:hover { background: #1F2024 !important; }
     #dt-s2-right .ph-name { color: #EDEAE2 !important; }
@@ -2878,7 +2899,11 @@
 
   <!-- Récap droit -->
   <aside id="dt-recap">
-    <img id="dtr-thumb" class="dtr-thumb" src="" alt="" style="display:none;">
+    <div class="v9-corners-subtle" style="position:relative;">
+      <span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span>
+      <span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>
+      <img id="dtr-thumb" class="dtr-thumb" src="" alt="" style="display:none;">
+    </div>
     <div id="dtr-model" class="dtr-model" style="display:none;"></div>
     <div id="dtr-preset" class="dtr-preset"></div>
     <div id="dtr-price" class="dtr-price" style="display:none;"></div>
