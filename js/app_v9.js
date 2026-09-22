@@ -3979,10 +3979,9 @@ function evoToggle(id) {
   } else {
     evoOrder = evoOrder.filter(x => x !== id);
   }
-  const wasChecked = evoChecked[id];
   evoRender();
   dtRenderRecap();
-  if (wasChecked) v9FlashEl(document.querySelector('[data-evo-id="' + id + '"]'));
+  v9FlashEl(document.querySelector('[data-evo-id="' + id + '"]'));
 }
 
 function evoUpdateTotal() {
