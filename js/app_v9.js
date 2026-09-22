@@ -2026,7 +2026,7 @@ function dtLoadPreset(decl) {
   });
   dtRender();
   refreshTelemetryHud();
-  v9FlashAllEquipped();
+  v9FlashEl(document.getElementById('dt-s2-left'));
 }
 
 
