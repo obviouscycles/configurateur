@@ -5526,7 +5526,7 @@ function p11EvoRender() {
     const gravureText = evoGravureText || '';
     const gravureError = gravureText.length > 20;
 
-    return `<div style="background:#17181B;border:0.5px solid ${checked ? '#B08D57' : '#1F2024'};padding:.9rem 1rem;border-radius:8px;">
+    return `<div data-evo-id="${opt.id}" style="background:#17181B;border:0.5px solid ${checked ? '#B08D57' : '#1F2024'};padding:.9rem 1rem;border-radius:8px;">
       <div style="display:flex;align-items:flex-start;gap:.65rem;${isInserts ? '' : 'cursor:pointer;'}" ${isInserts ? '' : `onclick="p11EvoToggle('${opt.id}')"`}>
         <i class="ti ${iconName}" style="font-size:16px;color:${checked ? '#B08D57' : '#666'};flex-shrink:0;margin-top:1px;"></i>
         <div style="flex:1;">
@@ -5535,7 +5535,7 @@ function p11EvoRender() {
             ${(isInserts || !showPrices) ? '' : `<span style="font-size:13px;font-weight:500;color:${checked ? '#B08D57' : firstId ? '#aaa' : '#666'};white-space:nowrap;">${priceLabel}</span>`}
           </div>
           ${opt.note && !isInserts ? `<div style="font-size:13px;color:#999;line-height:1.5;margin-top:4px;">${opt.note}</div>` : ''}
-          ${isGravure ? `<img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" style="width:100%;aspect-ratio:3/1;object-fit:cover;border-radius:4px;margin-top:8px;border:0.5px solid #333;display:block;">` : ''}
+          ${isGravure ? `<div class="v9-corners-subtle" style="position:relative;margin-top:8px;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span><img src="/configurateur/assets/evolution/votre_nom_mob.webp" alt="Exemple de gravure sur tube supérieur" onclick="event.stopPropagation();openGravurePhotoModal()" style="width:100%;aspect-ratio:3/1;object-fit:cover;border-radius:4px;border:0.5px solid #333;display:block;cursor:zoom-in;"></div>` : ''}
         </div>
         ${isInserts ? '' : `<div style="width:18px;height:18px;border-radius:5px;border:0.5px solid ${checked ? '#B08D57' : '#444'};background:${checked ? '#B08D57' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
           ${checked ? '<i class="ti ti-check" style="font-size:11px;color:#211C12;"></i>' : ''}
@@ -5602,6 +5602,7 @@ function p11EvoToggleInsert(id) {
   else { evoOrder = evoOrder.filter(x => x !== 'evo_inserts'); }
   p11EvoRender();
   p11UpdateTotal();
+  v9FlashEl(document.querySelector('[data-evo-id="evo_inserts"]'));
 }
 
 function p11EvoToggle(id) {
@@ -5610,6 +5611,7 @@ function p11EvoToggle(id) {
   else { evoOrder = evoOrder.filter(x => x !== id); }
   p11EvoRender();
   p11UpdateTotal();
+  v9FlashEl(document.querySelector('[data-evo-id="' + id + '"]'));
 }
 
 function p11EvoUpdateGravureText(val) {
@@ -5711,7 +5713,9 @@ function p11RenderModels() {
       '</div>' : '';
     return '<div class="p11-model-card' + (sel ? ' sel' : '') + (isExpanded ? ' expanded' : '') + '"' +
       (isExpanded ? '' : ' onclick="p11ToggleModelCard(\'' + m.id + '\')"') + '>' +
+      (isExpanded ? '<div class="v9-corners-subtle" style="position:relative;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' : '') +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy"' + (isExpanded ? ' onclick="dtOpenLightbox(\'' + (m.photo||'') + '\',\'' + m.name + '\')" style="cursor:zoom-in;"' : '') + '>' +
+      (isExpanded ? '</div>' : '') +
       '<div class="mc-text">' +
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
@@ -5781,6 +5785,7 @@ function p11LoadPreset(decl) {
     });
   });
   p11RenderModels();   // met à jour la surbrillance des boutons preset
+  v9FlashEl(document.querySelector('.p11-model-card.sel'));
   // Activer le bouton next (un modèle est sélectionné)
   const btn = document.getElementById('p11-next-btn');
   if (btn) btn.style.opacity = '1';
@@ -5804,6 +5809,7 @@ function p11SelectModel(id) {
   }
   p11RenderModels();
   p11RenderPresets();
+  v9FlashEl(document.querySelector('.p11-model-card.sel'));
   // Activer bouton next
   const btn = document.getElementById('p11-next-btn');
   if (btn) btn.style.opacity = '1';
@@ -5825,7 +5831,7 @@ function p11RenderPosts() {
     // Poste absorbé par un combo (ex: Cintre inclus avec la potence Alanera)
     const comboLock = findComboLock(p.id);
     if (comboLock) {
-      return '<div class="post-block post-block-combo-locked" data-post-id="' + p.id + '">' +
+      return '<div class="post-block post-block-combo-locked v9-equipped" data-post-id="' + p.id + '">' +
         '<div class="post-hdr" style="cursor:default;">' +
           '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
           '<span class="ph-name">' + p.name + '</span>' +
@@ -5917,7 +5923,7 @@ function p11RenderPosts() {
     const isModified = !!(selOpts[p.id] && window._activePreset && PRESETS[selModel] &&
       PRESETS[selModel][window._activePreset] &&
       PRESETS[selModel][window._activePreset][p.id] !== selOpts[p.id]);
-    return '<div class="post-block" data-post-id="' + p.id + '">' +
+    return '<div class="post-block' + (isPostEquipped(selOpt) ? ' v9-equipped' : '') + '" data-post-id="' + p.id + '">' +
       '<div class="post-hdr" onclick="p11TogglePost(\'' + p.id + '\')">' +
         '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (isModified ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#B08D57;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
@@ -5985,6 +5991,7 @@ function p11SelectOpt(postId, optId) {
   });
 
   p11RenderPosts();
+  v9FlashEquipped(postId);
 }
 
 function p11TogglePost(id) {
@@ -6316,7 +6323,7 @@ function p11RenderFinalRecap() {
   const photoP11 = (window._kitCadre && KIT_CADRE_PHOTOS[model.id]) ? KIT_CADRE_PHOTOS[model.id] : model.photo;
   const icons = {fourche:'ti-git-fork',roues:'ti-circle',pneus:'ti-circle-dotted',transmission:'ti-settings',power:'ti-activity',frein:'ti-hand-stop',pilotage:'ti-adjustments-horizontal',potence:'ti-adjustments-horizontal',cintre:'ti-arrows-horizontal',selle:'ti-armchair',tige:'ti-arrows-vertical',pedales:'ti-rotate-clockwise',fourche_kit:'ti-git-fork',potence_kit:'ti-adjustments-horizontal',cintre_kit:'ti-arrows-horizontal',tige_kit:'ti-arrows-vertical'};
   let html = '<div style="margin-bottom:1rem;padding:1rem;background:#17181B;border:0.5px solid #1F2024;display:flex;align-items:center;gap:12px;">' +
-    (photoP11 ? '<img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;flex-shrink:0;border:0.5px solid #333;cursor:zoom-in;" onclick="dtOpenLightbox(\'' + photoP11 + '\',\'' + model.name + '\')">' : '') +
+    (photoP11 ? '<div class="v9-corners-subtle" style="position:relative;flex-shrink:0;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span><img src="' + photoP11 + '" alt="' + model.name + '" style="width:80px;height:54px;object-fit:cover;display:block;border:0.5px solid #333;cursor:zoom-in;" onclick="dtOpenLightbox(\'' + photoP11 + '\',\'' + model.name + '\')"></div>' : '') +
     '<div style="flex:1;min-width:0;">' +
       '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px;">' + model.badge + '</div>' +
       '<div style="font-family:var(--font-brand);text-transform:lowercase;letter-spacing:.01em;font-size:19px;font-weight:400;color:#EDEAE2;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + model.name + '</div>' +
