@@ -819,7 +819,7 @@ function renderPosts() {
       '<div class="post-hdr" onclick="togglePost(\'' + p.id + '\')">' +
         '<i class="ti ' + p.icon + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + '</span>' +
-        (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
+        (selOpt ? '<span class="ph-sel">' + (p.id === 'frein' ? freinDisplayName(selOpt) : selOpt.name) + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev ' + (isOpen ? 'open' : '') + '"></i>' +
       '</div>' +
       '<div class="post-opts ' + (isOpen ? 'open' : '') + '">' +
@@ -1212,7 +1212,23 @@ function closeSizeAlert() {
 
 // ─── PROJET TITANIUM — circuit d'envoi dédié (pas de modèle/prix associé) ──────
 function openTitaniumModal() {
+  // Deux champs possibles selon la plateforme (desktop : v2-horsgamme-message,
+  // mobile : p11-horsgamme-message) — un seul existe réellement dans le DOM à la fois.
+  // offsetParent (pas juste getElementById) : les deux champs existent dans le DOM
+  // en permanence (l'un masqué par CSS selon la largeur d'écran) — prendre le premier
+  // trouvé sans vérifier sa visibilité réelle lisait systématiquement le champ desktop,
+  // toujours vide sur mobile.
+  const msgEl = window.innerWidth < 768
+    ? document.getElementById('p11-horsgamme-message')
+    : document.getElementById('v2-horsgamme-message');
+  if (!msgEl || !msgEl.value.trim()) {
+    document.getElementById('titanium-empty-modal').classList.add('open');
+    return;
+  }
   document.getElementById('titanium-modal').classList.add('open');
+}
+function closeTitaniumEmptyModal() {
+  document.getElementById('titanium-empty-modal').classList.remove('open');
 }
 function closeTitaniumModal() {
   document.getElementById('titanium-modal').classList.remove('open');
@@ -1223,8 +1239,16 @@ async function sendTitaniumProject() {
   const email   = document.getElementById('titanium-email').value.trim();
   const phone   = document.getElementById('titanium-phone').value.trim();
   const address = document.getElementById('titanium-address').value.trim();
-  const message = document.getElementById('v2-horsgamme-message')?.value.trim() || '';
-  const fileInput = document.getElementById('v2-horsgamme-file');
+  const message = (window.innerWidth < 768
+    ? document.getElementById('p11-horsgamme-message')
+    : document.getElementById('v2-horsgamme-message'))?.value.trim() || '';
+  // Les deux champs fichier sont "display:none" par construction sur les deux
+  // plateformes (déclenchés via une zone de dépôt stylée, jamais affichés
+  // directement) — offsetParent ne peut donc pas les distinguer ici, contrairement
+  // au champ texte. Détection directe de la plateforme active à la place.
+  const fileInput = window.innerWidth < 768
+    ? document.getElementById('p11-horsgamme-file')
+    : document.getElementById('v2-horsgamme-file');
   const errorEl = document.getElementById('titanium-send-error');
   errorEl.style.display = 'none';
 
@@ -1794,6 +1818,14 @@ function v3GoTitaniumFromS1() {
   dtRenderRecap();
   const main = document.getElementById('dt-main');
   if (main) main.scrollTop = 0;
+}
+// V9 — Écran Titanium mobile : ne fait pas partie du parcours numéroté standard
+// (p11CurrentStep n'a jamais été mis à jour en y entrant), donc p11Back() ne
+// fonctionnait pas — il croyait toujours être à l'étape où le visiteur se trouvait
+// avant d'ouvrir cet écran. Retour explicite vers l'étape 1 (Modèle), d'où ces
+// déclencheurs sont toujours accessibles.
+function p11BackFromTitanium() {
+  p11UpdateStep(1);
 }
 
 function dtGo(n) {
@@ -2398,6 +2430,21 @@ function isPostEquipped(selOpt) {
   return !!(selOpt && selOpt.name && selOpt.name.indexOf('Sans ') !== 0);
 }
 
+// V9 — Quand le frein est "inclus avec la transmission" (frein_all), afficher le nom
+// de la transmission réellement choisie plutôt qu'un texte générique — plus parlant
+// pour le visiteur. Le nombre de vitesses (1x12v, 2x13v...) est coupé en fin de nom :
+// motif suffisamment régulier sur toutes les transmissions actuelles (route/gravel
+// l'ont toutes, VTT n'en a aucune — donc rien ne change pour elles) pour rester fiable
+// si de nouvelles références sont ajoutées suivant la même convention. Un nom de
+// transmission qui s'écarterait de ce schéma (autre notation, ou aucun "NxM" du tout)
+// s'affiche simplement en entier, sans erreur ni troncature incorrecte.
+function freinDisplayName(selOptFrein) {
+  if (!selOptFrein || selOptFrein.id !== 'frein_all') return selOptFrein ? selOptFrein.name : '';
+  const transOpt = (ALL_OPTIONS.transmission || []).find(o => o.id === selOpts.transmission);
+  if (!transOpt) return selOptFrein.name;
+  return transOpt.name.replace(/\s+\d+x\d+[Vv]?\s*$/, '');
+}
+
 function dtSyncSidebarDevisBtn() {
   const btn = document.getElementById('dtr-btn-devis');
   if (!btn) return;
@@ -2657,7 +2704,7 @@ function dtRenderPosts() {
       '<div class="post-hdr" data-toggle="' + p.id + '">' +
         '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (_isModDt ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#B08D57;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
-        (selOpt?'<span class="ph-sel">'+selOpt.name+'</span>':'<span class="ph-pending">choisir →</span>') +
+        (selOpt?'<span class="ph-sel">'+(p.id === 'frein' ? freinDisplayName(selOpt) : selOpt.name)+'</span>':'<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
       '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + tuningHtml + dimsHtml + '</div>' +
@@ -3266,7 +3313,7 @@ function dtRenderS4() {
               p.name +
               (isModified ? '<span style="width:6px;height:6px;border-radius:50%;background:#B08D57;display:inline-block;"></span>' : '') +
             '</div>' +
-            '<div style="font-size:13px;font-weight:500;color:'+(isModified?'#B08D57':'#999')+';">'+opt.name+'</div>' +
+            '<div style="font-size:13px;font-weight:500;color:'+(isModified?'#B08D57':'#999')+';">'+(p.id === 'frein' ? freinDisplayName(opt) : opt.name)+'</div>' +
           '</div>';
         }).join('') +
       '</div>' +
@@ -3453,7 +3500,7 @@ function dtRenderRecap() {
     const isModified = !!(window._activePreset && preset && Object.keys(preset).length && preset[p.id] !== selOpts[p.id]);
     return '<div class="dtr-row'+(isModified?' mod':'')+'">' +
       '<span class="dtr-lbl"><i class="ti '+(icons[p.id]||'ti-point')+'" style="font-size:8px;margin-right:3px;"></i>'+p.name+(isModified?'<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:#B08D57;margin-left:3px;vertical-align:middle;"></span>':'')+'</span>' +
-      '<span class="dtr-val">'+opt.name+'</span>' +
+      '<span class="dtr-val">'+(p.id === 'frein' ? freinDisplayName(opt) : opt.name)+'</span>' +
     '</div>';
   }).join('') + buildDelaiGlobalBanner();
 }
@@ -5934,7 +5981,7 @@ function p11RenderPosts() {
       '<div class="post-hdr" onclick="p11TogglePost(\'' + p.id + '\')">' +
         '<i class="ti ' + (p.icon||icons[p.id]||'ti-point') + ' ph-icon"></i>' +
         '<span class="ph-name">' + p.name + (isModified ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#B08D57;margin-left:6px;vertical-align:middle;"></span>' : '') + '</span>' +
-        (selOpt ? '<span class="ph-sel">' + selOpt.name + '</span>' : '<span class="ph-pending">choisir →</span>') +
+        (selOpt ? '<span class="ph-sel">' + (p.id === 'frein' ? freinDisplayName(selOpt) : selOpt.name) + '</span>' : '<span class="ph-pending">choisir →</span>') +
         '<i class="ti ti-chevron-down ph-chev' + (isOpen?' open':'') + '"></i>' +
       '</div>' +
       '<div class="post-opts' + (isOpen?' open':'') + '">' + optHtml + tuningHtmlP11 + dimsHtmlP11 + '</div>' +
