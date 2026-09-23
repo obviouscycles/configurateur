@@ -1777,7 +1777,14 @@ function v3GoTitaniumFromS1() {
   if (confirm) confirm.style.display = 'none';
 
   if (window.innerWidth < 768) {
-    p11UpdateStep(4);
+    // Écran dédié (formulaire libre), pas l'étape 4 générique (récapitulatif
+    // standard) — celle-ci n'a aucun rapport avec un projet hors catalogue.
+    document.querySelectorAll('.p11-step').forEach(s => { s.classList.remove('p11-active'); s.style.display = 'none'; });
+    const step = document.getElementById('p11-s4horsgamme');
+    if (step) { step.classList.add('p11-active'); step.style.display = 'block'; }
+    const bar = document.getElementById('p11-bottom-bar');
+    if (bar) bar.style.display = 'none';
+    window.scrollTo(0, 0);
     return;
   }
   dtStep = 4;
