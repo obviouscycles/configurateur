@@ -1948,6 +1948,7 @@ function dtRenderS1() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
+        buildMiniStats(m.id) +
         '<div class="mc-mode-buttons">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
             '<span class="mc-mode-btn-label">Vélo complet</span>' +
@@ -2335,6 +2336,23 @@ function computeCharacterStats(modelId, opts) {
   const out = {};
   crits.forEach(cr => { out[cr] = weights[cr] > 0 ? Math.round(sums[cr] / weights[cr]) : 0; });
   return out;
+}
+// V9 — Aperçu compact des 4 notes de caractère sur chaque carte modèle (page 1),
+// calculé sur le préconfig Signature (le plus haut de gamme, cohérent d'un modèle à
+// l'autre pour la comparaison). N'affecte jamais selOpts en cours — calcul isolé.
+function buildMiniStats(modelId) {
+  const preset = PRESETS[modelId] && PRESETS[modelId].Signature;
+  if (!preset) return '';
+  const cadreOpt = (ALL_OPTIONS.cadre || []).find(o => o.compat && o.compat.some(c => c.mid === modelId));
+  const opts = { ...preset, cadre: cadreOpt ? cadreOpt.id : preset.cadre };
+  const s = computeCharacterStats(modelId, opts);
+  const rows = [['R', s.rigidite], ['C', s.confort], ['A', s.aero], ['P', s.polyvalence]];
+  return '<div class="mc-mini-stats">' + rows.map(([label, val]) =>
+    '<div class="mc-mini-stat-row">' +
+      '<span class="mc-mini-stat-lbl">' + label + '</span>' +
+      '<div class="mc-mini-stat-bar"><div class="mc-mini-stat-fill" style="width:' + val + '%;"></div></div>' +
+    '</div>'
+  ).join('') + '</div>';
 }
 function buildStatBars(modelId) {
   return '<div class="v9-stats" id="v9-stats-box">' + statBarsInner(modelId) + '</div>';
