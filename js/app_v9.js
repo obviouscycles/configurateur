@@ -2346,7 +2346,7 @@ function buildMiniStats(modelId) {
   const cadreOpt = (ALL_OPTIONS.cadre || []).find(o => o.compat && o.compat.some(c => c.mid === modelId));
   const opts = { ...preset, cadre: cadreOpt ? cadreOpt.id : preset.cadre };
   const s = computeCharacterStats(modelId, opts);
-  const rows = [['R', s.rigidite], ['C', s.confort], ['A', s.aero], ['P', s.polyvalence]];
+  const rows = [['Rigidité', s.rigidite], ['Confort', s.confort], ['Aérodynamique', s.aero], ['Polyvalence', s.polyvalence]];
   return '<div class="mc-mini-stats">' + rows.map(([label, val]) =>
     '<div class="mc-mini-stat-row">' +
       '<span class="mc-mini-stat-lbl">' + label + '</span>' +
