@@ -2374,7 +2374,6 @@ function dtRenderS2() {
         '<span class="mc-desc">' + (model.desc||'') + '</span>' +
         '<button type="button" class="mc-geom-btn" onclick="openGeomModal(\'' + model.id + '\')"><i class="ti ti-ruler-2"></i> Géométrie du cadre</button>' +
         '<span class="mc-price">à partir de ' + ((window._kitCadre ? kitMinPrice(model.id) : tiMinPrice(model.id)).toLocaleString('fr-FR')) + ' €</span>' +
-        buildTelemetryHud(model.id) +
         buildStatBars(model.id) +
         '<div class="mc-switch-mode">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="dtSwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
       '</div>' +
@@ -3478,7 +3477,7 @@ function dtRenderRecap() {
   const model = MODELS.find(m => m.id === selModel);
   const get = id => document.getElementById(id);
   if (!model) {
-    [get('dtr-thumb'),get('dtr-model'),get('dtr-price'),get('dtr-sep')].forEach(el => { if(el) el.style.display='none'; });
+    [get('dtr-thumb'),get('dtr-model'),get('dtr-price'),get('dtr-weight'),get('dtr-sep')].forEach(el => { if(el) el.style.display='none'; });
     const mod = get('dtr-modif'); if (mod) mod.classList.remove('show');
     return;
   }
@@ -3490,7 +3489,7 @@ function dtRenderRecap() {
   }
   if (get('dtr-model')) { get('dtr-model').textContent = model.name; get('dtr-model').style.display = 'block'; }
   if (get('dtr-preset')) get('dtr-preset').textContent = window._activePreset || '';
-  const {price: bikePriceR} = computeTotals(selModel, selOpts);
+  const {price: bikePriceR, weight: bikeWeightR} = computeTotals(selModel, selOpts);
   const { surcharge: oodR, isMin: oodRMin } = computeOodSurcharge();
   const priceR = bikePriceR + oodR;
   const priceElR = get('dtr-price');
@@ -3507,6 +3506,21 @@ function dtRenderRecap() {
       const prevNum = parseFloat(prevRaw);
       if (prevNum !== priceR) v9AnimateNumber(priceElR, prevNum, priceR, v => prefix + Math.round(v).toLocaleString('fr-FR') + ' €');
       else priceElR.textContent = prefix + priceR.toLocaleString('fr-FR') + ' €';
+    }
+  }
+  // V9 — Poids estimé, à côté du prix (remplace l'ancien HUD à 3 éléments du
+  // panneau gauche, retiré) — même traitement "chiffres qui défilent".
+  const weightElR = get('dtr-weight');
+  if (weightElR) {
+    const prevWRaw = weightElR.dataset.raw;
+    weightElR.dataset.raw = bikeWeightR;
+    weightElR.style.display = 'block';
+    if (prevWRaw === undefined) {
+      weightElR.textContent = (bikeWeightR/1000).toFixed(1) + ' kg';
+    } else {
+      const prevWNum = parseFloat(prevWRaw);
+      if (prevWNum !== bikeWeightR) v9AnimateNumber(weightElR, prevWNum, bikeWeightR, v => (v/1000).toFixed(1) + ' kg');
+      else weightElR.textContent = (bikeWeightR/1000).toFixed(1) + ' kg';
     }
   }
   if (get('dtr-sep')) get('dtr-sep').style.display = 'block';
