@@ -1509,6 +1509,7 @@
   .dtr-model { font-family: var(--font-brand); text-transform: lowercase; letter-spacing: .01em; font-size: 13px; font-weight: 400; color: #EDEAE2; margin-bottom: 2px; }
   .dtr-preset { font-size: 10px; color: #948E7C; margin-bottom: .5rem; min-height: 1.2em; }
   .dtr-price { font-family: var(--font); font-size: 27px; font-weight: 600; color: #B08D57; letter-spacing: -.01em; margin-bottom: 4px; }
+  .dtr-weight { font-family: monospace; font-size: 13px; color: #8C8778; margin-bottom: 4px; }
   .dtr-modif { font-size: 11px; color: #444; margin-bottom: .75rem; display: none; align-items: center; gap: 5px; }
   .dtr-modif.show { display: flex; }
   .dtr-modif-dot { width: 6px; height: 6px; border-radius: 50%; background: #B08D57; flex-shrink: 0; }
@@ -2131,7 +2132,7 @@
           <div class="p11-dz-hint" style="font-size:11px;color:#888;margin-top:2px;">Croquis, photo, document utile</div>
         </div>
         <div style="display:flex;gap:.75rem;padding-bottom:1.5rem;">
-          <button onclick="p11Back()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
+          <button onclick="p11BackFromTitanium()" style="flex:1;background:none;border:0.5px solid #333;color:#888;padding:12px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;">← Retour</button>
           <button onclick="openTitaniumModal()" style="flex:2;background:#B08D57;border:none;color:#211C12;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border-radius:8px;">Envoyer mon projet →</button>
         </div>
       </div>
@@ -2906,7 +2907,10 @@
     </div>
     <div id="dtr-model" class="dtr-model" style="display:none;"></div>
     <div id="dtr-preset" class="dtr-preset"></div>
-    <div id="dtr-price" class="dtr-price" style="display:none;"></div>
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <div id="dtr-price" class="dtr-price" style="display:none;"></div>
+      <div id="dtr-weight" class="dtr-weight" style="display:none;"></div>
+    </div>
     <div class="dtr-modif" id="dtr-modif"><span class="dtr-modif-dot"></span><span id="dtr-modif-txt"></span></div>
     <hr class="dtr-sep" id="dtr-sep" style="display:none;">
     <div class="dtr-rows" id="dtr-rows"></div>
@@ -2968,6 +2972,21 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="confirmLeaveConfigurator()">Quitter le configurateur</button>
       <button class="btn-send" onclick="closeLeaveConfirmModal()">Continuer à créer mon vélo</button>
+    </div>
+  </div>
+</div>
+
+<!-- V9 — Popup si "Envoyer mon projet" est cliqué sans description remplie. -->
+<div class="modal-overlay" id="titanium-empty-modal" style="z-index:270;" onclick="if(event.target===this) closeTitaniumEmptyModal()">
+  <div class="modal" style="max-width:420px;text-align:center;position:relative;">
+    <button type="button" class="geom-modal-close" onclick="closeTitaniumEmptyModal()"><i class="ti ti-x"></i></button>
+    <h2 style="font-size:17px;margin-bottom:1rem;">Parlez-nous un peu de votre projet</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:1.5rem;">
+      Le champ de description est vide. Quelques mots sur votre vélo — type, usage,
+      inspirations — nous aident déjà beaucoup à cerner votre demande.
+    </p>
+    <div class="modal-actions">
+      <button class="btn-send" onclick="closeTitaniumEmptyModal()" style="width:100%;">Compris, j'y retourne</button>
     </div>
   </div>
 </div>
