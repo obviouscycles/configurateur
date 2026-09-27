@@ -2263,7 +2263,7 @@ function telemetryHudInner(modelId) {
   }).length;
   const total = posts.length;
   const statutLabel = filled === 0 ? 'Départ' : filled < total ? 'En cours' : 'Complet';
-  return '<div class="v9-hud-item"><div class="v9-hud-lbl">Poids est.</div><div class="v9-hud-val">' + (weight/1000).toFixed(1) + ' kg</div></div>' +
+  return '<div class="v9-hud-item"><div class="v9-hud-lbl">Poids est.</div><div class="v9-hud-val" id="v9-hud-weight" data-raw="' + weight + '">' + (weight/1000).toFixed(1) + ' kg</div></div>' +
     '<div class="v9-hud-item"><div class="v9-hud-lbl">Composants</div><div class="v9-hud-val">' + filled + '/' + total + '</div></div>' +
     '<div class="v9-hud-item"><div class="v9-hud-lbl">Statut</div><div class="v9-hud-val" style="color:#B08D57;">' + statutLabel + '</div></div>';
 }
@@ -2272,9 +2272,36 @@ function telemetryHudInner(modelId) {
 // composant pour un effet "en direct" sans coût de rendu inutile.
 function refreshTelemetryHud() {
   const box = document.getElementById('v9-hud-box');
+  const oldWeightEl = document.getElementById('v9-hud-weight');
+  const oldWeightRaw = oldWeightEl ? parseFloat(oldWeightEl.dataset.raw || '0') : null;
   if (box && selModel) box.innerHTML = telemetryHudInner(selModel);
+  // Chiffres qui défilent plutôt que de sauter directement à la nouvelle valeur —
+  // le HUD entier est reconstruit ci-dessus (innerHTML), donc l'élément est recréé ;
+  // on repart explicitement de l'ancienne valeur juste avant d'animer vers la
+  // nouvelle, déjà affichée par défaut dans le HTML frais.
+  const newWeightEl = document.getElementById('v9-hud-weight');
+  if (newWeightEl && oldWeightRaw !== null) {
+    const newWeightRaw = parseFloat(newWeightEl.dataset.raw || '0');
+    if (oldWeightRaw !== newWeightRaw) v9AnimateNumber(newWeightEl, oldWeightRaw, newWeightRaw, v => (v/1000).toFixed(1) + ' kg');
+  }
   const statsBox = document.getElementById('v9-stats-box');
   if (statsBox && selModel) statsBox.innerHTML = statBarsInner(selModel);
+}
+// V9 — Anime un élément texte d'une valeur numérique à une autre (chiffres qui
+// défilent plutôt que de sauter), ~350ms, easing simple. `format(valeurCourante)`
+// rend le texte affiché à chaque frame.
+function v9AnimateNumber(el, from, to, format) {
+  const duration = 350;
+  const t0 = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - t0) / duration);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    const current = from + (to - from) * eased;
+    el.textContent = format(current);
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = format(to);
+  }
+  requestAnimationFrame(step);
 }
 // V9 — Les 4 notes de caractère sont calculées EN DIRECT, pas fixes par modèle :
 // chaque option porte une note par critère (0-100, 0 = non-impactant — voir
@@ -3466,7 +3493,22 @@ function dtRenderRecap() {
   const {price: bikePriceR} = computeTotals(selModel, selOpts);
   const { surcharge: oodR, isMin: oodRMin } = computeOodSurcharge();
   const priceR = bikePriceR + oodR;
-  if (get('dtr-price')) { get('dtr-price').textContent = (oodRMin?'Dès ':'') + priceR.toLocaleString('fr-FR')+' €'; get('dtr-price').style.display = 'block'; }
+  const priceElR = get('dtr-price');
+  if (priceElR) {
+    const prevRaw = priceElR.dataset.raw;
+    priceElR.dataset.raw = priceR;
+    priceElR.style.display = 'block';
+    const prefix = oodRMin ? 'Dès ' : '';
+    if (prevRaw === undefined) {
+      // Premier affichage (élément encore vide/masqué) : pas d'animation depuis 0,
+      // qui donnerait l'impression trompeuse d'un prix parti de rien.
+      priceElR.textContent = prefix + priceR.toLocaleString('fr-FR') + ' €';
+    } else {
+      const prevNum = parseFloat(prevRaw);
+      if (prevNum !== priceR) v9AnimateNumber(priceElR, prevNum, priceR, v => prefix + Math.round(v).toLocaleString('fr-FR') + ' €');
+      else priceElR.textContent = prefix + priceR.toLocaleString('fr-FR') + ' €';
+    }
+  }
   if (get('dtr-sep')) get('dtr-sep').style.display = 'block';
 
   const mc = dtModifCount();
