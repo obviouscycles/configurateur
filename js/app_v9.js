@@ -1996,6 +1996,15 @@ function dtCheckS1ScrollHint() {
   });
 }
 
+// V9 — Clic sur le pill "faites défiler" : avance d'une demi-page (pratique courante
+// pour un indice de scroll, ni un saut brutal en bas ni un pas trop court pour être
+// perceptible), en douceur. Le pill lui-même reste ensuite visible ou se masque selon
+// dtCheckS1ScrollHint (déjà rappelé par le listener de scroll existant).
+function dtScrollHintClick(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  window.scrollBy({ top: window.innerHeight * 0.5, behavior: 'smooth' });
+}
+
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
 // (carte modèle ou bandeau Titanium) et se propage à tout le reste du parcours
 // (Cadre, Sur-mesure, Titanium, Personnalisation) via window._kitCadre.
