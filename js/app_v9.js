@@ -1948,7 +1948,7 @@ function dtRenderS1() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + (m.desc||'') + '</span>' +
-        buildMiniStats(m.id) +
+        buildMiniStats(m.id, (isCompletSel && window._activePreset) ? window._activePreset : null) +
         '<div class="mc-mode-buttons">' +
           '<button class="mc-mode-btn' + (isCompletSel ? ' active' : '') + '" onclick="dtSelectModelMode(\'' + m.id + '\', false)">' +
             '<span class="mc-mode-btn-label">Vélo complet</span>' +
@@ -2342,8 +2342,9 @@ function computeCharacterStats(modelId, opts) {
 // V9 — Aperçu compact des 4 notes de caractère sur chaque carte modèle (page 1),
 // calculé sur le préconfig Signature (le plus haut de gamme, cohérent d'un modèle à
 // l'autre pour la comparaison). N'affecte jamais selOpts en cours — calcul isolé.
-function buildMiniStats(modelId) {
-  const preset = PRESETS[modelId] && PRESETS[modelId].Signature;
+function buildMiniStats(modelId, presetDecl) {
+  const decl = (presetDecl && PRESETS[modelId] && PRESETS[modelId][presetDecl]) ? presetDecl : 'Signature';
+  const preset = PRESETS[modelId] && PRESETS[modelId][decl];
   if (!preset) return '';
   const cadreOpt = (ALL_OPTIONS.cadre || []).find(o => o.compat && o.compat.some(c => c.mid === modelId));
   const opts = { ...preset, cadre: cadreOpt ? cadreOpt.id : preset.cadre };
@@ -5850,7 +5851,7 @@ function p11RenderModels() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
-        (isExpanded ? buildMiniStats(m.id) : '') +
+        (isExpanded ? buildMiniStats(m.id, (isCompletSel && window._activePreset) ? window._activePreset : null) : '') +
         (isExpanded ?
           '<div class="mc-mode-buttons-stack">' +
             '<button class="mc-mode-btn-stack' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
