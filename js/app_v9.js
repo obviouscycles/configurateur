@@ -1858,6 +1858,7 @@ function dtGo(n) {
 function dtRender() {
   if (window.innerWidth < 768) return;
   const n = dtStep;
+  if (n !== 1) { const h = document.getElementById('dt-s1-scroll-hint'); if (h) h.style.display = 'none'; }
   dtSyncSidebarDevisBtn();
   // Activer "Nouvelle configuration" dès qu'un modèle est sélectionné
   const resetBtn = document.getElementById('dtr-btn-reset');
@@ -1963,6 +1964,36 @@ function dtRenderS1() {
       (hasPresets && isCompletSel ? dtPresetBar(m.id) : '') +
     '</div>';
   }).join('');
+  dtCheckS1ScrollHint();
+}
+
+// V9 — Indice visuel "il y a d'autres modèles plus bas" en étape 1 desktop : le grid
+// 2×2 dépasse souvent la hauteur d'écran (photos hautes), et sans repère la 2e rangée
+// passe inaperçue sous le bandeau cookies. On affiche un pill flottant SEULEMENT
+// quand la page dépasse réellement la fenêtre, et on le fait disparaître dès que le
+// visiteur commence à scroller (repère utile une fois, pas une gêne permanente).
+function dtCheckS1ScrollHint() {
+  const hint = document.getElementById('dt-s1-scroll-hint');
+  if (!hint) return;
+  if (window.innerWidth < 768 || dtStep !== 1) { hint.style.display = 'none'; return; }
+  // Laisser le DOM se poser avant de mesurer (photos/mini-stats tout juste injectées).
+  requestAnimationFrame(() => {
+    const overflow = document.documentElement.scrollHeight - window.innerHeight > 40;
+    hint.style.display = overflow ? 'flex' : 'none';
+    hint.classList.remove('hide');
+    // Rester au-dessus du bandeau cookies tant qu'il est affiché (sinon le pill se
+    // retrouve masqué derrière, invisible pile au moment où il servirait le plus).
+    const cookieBanner = document.getElementById('cookie-banner');
+    const cookieVisible = cookieBanner && getComputedStyle(cookieBanner).display !== 'none';
+    hint.style.bottom = cookieVisible ? (cookieBanner.offsetHeight + 14) + 'px' : '22px';
+    if (overflow && !window._dtS1ScrollListenerAttached) {
+      window._dtS1ScrollListenerAttached = true;
+      window.addEventListener('scroll', () => {
+        const h = document.getElementById('dt-s1-scroll-hint');
+        if (h) h.classList.toggle('hide', window.scrollY > 60);
+      }, { passive: true });
+    }
+  });
 }
 
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
