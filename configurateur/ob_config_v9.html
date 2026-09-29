@@ -1453,10 +1453,11 @@
     background: #1B1C20; border: 0.5px solid #B08D57; color: #E3D2AC;
     font-family: var(--font); font-size: 12.5px; letter-spacing: .02em;
     padding: 9px 18px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.45);
-    z-index: 40; cursor: default; pointer-events: none;
-    transition: opacity .25s, transform .25s;
+    z-index: 40; cursor: pointer; pointer-events: auto;
+    transition: opacity .25s, transform .25s, border-color .15s, background .15s;
     animation: dt-s1-hint-bounce 1.6s ease-in-out infinite;
   }
+  .dt-s1-scroll-hint:hover { background: #232428; border-color: #E3D2AC; }
   .dt-s1-scroll-hint.hide { opacity: 0; transform: translateX(-50%) translateY(8px); animation: none; }
   .dt-s1-scroll-hint i { font-size: 15px; color: #B08D57; }
   @keyframes dt-s1-hint-bounce {
