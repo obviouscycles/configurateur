@@ -2287,6 +2287,8 @@ function refreshTelemetryHud() {
   }
   const statsBox = document.getElementById('v9-stats-box');
   if (statsBox && selModel) statsBox.innerHTML = statBarsInner(selModel);
+  const statsBoxP11 = document.getElementById('v9-stats-box-p11');
+  if (statsBoxP11 && selModel) statsBoxP11.innerHTML = statBarsInner(selModel);
 }
 // V9 — Anime un élément texte d'une valeur numérique à une autre (chiffres qui
 // défilent plutôt que de sauter), ~350ms, easing simple. `format(valeurCourante)`
@@ -2354,8 +2356,8 @@ function buildMiniStats(modelId) {
     '</div>'
   ).join('') + '</div>';
 }
-function buildStatBars(modelId) {
-  return '<div class="v9-stats" id="v9-stats-box">' + statBarsInner(modelId) + '</div>';
+function buildStatBars(modelId, boxId) {
+  return '<div class="v9-stats" id="' + (boxId || 'v9-stats-box') + '">' + statBarsInner(modelId) + '</div>';
 }
 function statBarsInner(modelId) {
   if (typeof POST_CARAC_COEF === 'undefined') return '';
@@ -5848,6 +5850,7 @@ function p11RenderModels() {
         '<span class="mc-badge">' + m.badge + '</span>' +
         '<span class="mc-name">' + m.name + '</span>' +
         '<span class="mc-desc">' + m.desc + '</span>' +
+        (isExpanded ? buildMiniStats(m.id) : '') +
         (isExpanded ?
           '<div class="mc-mode-buttons-stack">' +
             '<button class="mc-mode-btn-stack' + (isCompletSel ? ' active' : '') + '" onclick="p11SelectModelMode(\'' + m.id + '\', false)">' +
@@ -5951,6 +5954,8 @@ function p11SelectModel(id) {
 function p11RenderPosts() {
   const container = document.getElementById('p11-posts-list');
   if (!container || !selModel) return;
+  const statsBoxP11 = document.getElementById('p11-stats-box');
+  if (statsBoxP11) statsBoxP11.innerHTML = buildStatBars(selModel, 'v9-stats-box-p11');
   const icons = { fourche:'ti-git-fork', roues:'ti-circle', pneus:'ti-circle-dotted', transmission:'ti-settings', power:'ti-activity', frein:'ti-hand-stop', pilotage:'ti-adjustments-horizontal', potence:'ti-adjustments-horizontal', cintre:'ti-arrows-horizontal', selle:'ti-armchair', tige:'ti-arrows-vertical', pedales:'ti-rotate-clockwise', fourche_kit:'ti-git-fork', potence_kit:'ti-adjustments-horizontal', cintre_kit:'ti-arrows-horizontal', tige_kit:'ti-arrows-vertical' };
   container.innerHTML =
     '<div class="mc-switch-mode" style="margin:0 0 12px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-top:0.5px solid var(--border);">Vous configurez : <strong>' + (window._kitCadre ? 'Kit cadre' : 'Vélo complet') + '</strong> — <a onclick="p11SwitchMode()">passer en ' + (window._kitCadre ? 'vélo complet' : 'kit cadre') + '</a></div>' +
