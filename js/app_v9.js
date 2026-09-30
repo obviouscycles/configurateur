@@ -1858,7 +1858,6 @@ function dtGo(n) {
 function dtRender() {
   if (window.innerWidth < 768) return;
   const n = dtStep;
-  if (n !== 1) { const h = document.getElementById('dt-s1-scroll-hint'); if (h) h.style.display = 'none'; }
   dtSyncSidebarDevisBtn();
   // Activer "Nouvelle configuration" dès qu'un modèle est sélectionné
   const resetBtn = document.getElementById('dtr-btn-reset');
@@ -1941,7 +1940,7 @@ function dtRenderS1() {
     const isFocusedOnly = sel && (window._kitCadre === null || window._kitCadre === undefined);
     const completPrice = tiMinPrice(m.id);
     const kitPrice = kitMinPrice(m.id);
-    return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
+    return '<div class="model-card' + (sel ? ' sel' : '') + (isFocusedOnly ? ' highlighted' : '') + '" data-model-id="' + m.id + '" onclick="dtHighlightCard(event, this, \'' + m.id + '\')">' +
       (sel ? '<div class="v9-corners-subtle" style="position:relative;"><span class="v9-corner v9-corner-tl"></span><span class="v9-corner v9-corner-tr"></span><span class="v9-corner v9-corner-bl"></span><span class="v9-corner v9-corner-br"></span>' : '') +
       '<img class="mc-photo" src="' + (m.photo||'') + '" alt="' + m.name + '" loading="lazy"' + (sel ? ' onclick="event.stopPropagation();dtOpenLightbox(\'' + (m.photo||'') + '\',\'' + m.name + '\')" style="cursor:zoom-in;"' : '') + '>' +
       (sel ? '</div>' : '') +
@@ -1964,45 +1963,53 @@ function dtRenderS1() {
       (hasPresets && isCompletSel ? dtPresetBar(m.id) : '') +
     '</div>';
   }).join('');
-  dtCheckS1ScrollHint();
+  dtRenderS1Nav();
 }
 
-// V9 — Indice visuel "il y a d'autres modèles plus bas" en étape 1 desktop : le grid
-// 2×2 dépasse souvent la hauteur d'écran (photos hautes), et sans repère la 2e rangée
-// passe inaperçue sous le bandeau cookies. On affiche un pill flottant SEULEMENT
-// quand la page dépasse réellement la fenêtre, et on le fait disparaître dès que le
-// visiteur commence à scroller (repère utile une fois, pas une gêne permanente).
-function dtCheckS1ScrollHint() {
-  const hint = document.getElementById('dt-s1-scroll-hint');
-  if (!hint) return;
-  if (window.innerWidth < 768 || dtStep !== 1) { hint.style.display = 'none'; return; }
-  // Laisser le DOM se poser avant de mesurer (photos/mini-stats tout juste injectées).
-  requestAnimationFrame(() => {
-    const overflow = document.documentElement.scrollHeight - window.innerHeight > 40;
-    hint.style.display = overflow ? 'flex' : 'none';
-    hint.classList.remove('hide');
-    // Rester au-dessus du bandeau cookies tant qu'il est affiché (sinon le pill se
-    // retrouve masqué derrière, invisible pile au moment où il servirait le plus).
-    const cookieBanner = document.getElementById('cookie-banner');
-    const cookieVisible = cookieBanner && getComputedStyle(cookieBanner).display !== 'none';
-    hint.style.bottom = cookieVisible ? (cookieBanner.offsetHeight + 14) + 'px' : '22px';
-    if (overflow && !window._dtS1ScrollListenerAttached) {
-      window._dtS1ScrollListenerAttached = true;
-      window.addEventListener('scroll', () => {
-        const h = document.getElementById('dt-s1-scroll-hint');
-        if (h) h.classList.toggle('hide', window.scrollY > 60);
-      }, { passive: true });
-    }
+// V9 — Mini-nav horizontale sticky (remplace l'ancien pill "faites défiler") : les 4
+// pratiques toujours nommées et cliquables en haut de la page Modèle, collée sous le
+// header dès que le visiteur scrolle. Un clic scrolle en douceur jusqu'à la carte
+// correspondante ; l'onglet actif suit la position de scroll (scroll-spy simple).
+function dtRenderS1Nav() {
+  const nav = document.getElementById('dt-s1-nav');
+  if (!nav) return;
+  nav.innerHTML = MODELS.map(m =>
+    '<button type="button" class="dt-s1-nav-item" data-model-id="' + m.id + '" onclick="dtScrollToModel(\'' + m.id + '\')">' + m.badge + '</button>'
+  ).join('');
+  if (!window._dtS1SpyAttached) {
+    window._dtS1SpyAttached = true;
+    window.addEventListener('scroll', dtUpdateS1NavActive, { passive: true });
+  }
+  requestAnimationFrame(dtUpdateS1NavActive);
+}
+
+function dtScrollToModel(modelId) {
+  const card = document.querySelector('#dt-model-grid .model-card[data-model-id="' + modelId + '"]');
+  const nav = document.getElementById('dt-s1-nav');
+  if (!card) return;
+  const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+  const headerHeight = 56;
+  const y = card.getBoundingClientRect().top + window.scrollY - headerHeight - navHeight - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+
+// Marque actif l'onglet du modèle dont la carte est la plus proche du haut visible
+// (juste sous la nav sticky) — ne fait rien hors étape 1 desktop.
+function dtUpdateS1NavActive() {
+  if (dtStep !== 1 || window.innerWidth < 768) return;
+  const nav = document.getElementById('dt-s1-nav');
+  if (!nav || getComputedStyle(nav).display === 'none') return;
+  const navBottom = nav.getBoundingClientRect().bottom;
+  const cards = document.querySelectorAll('#dt-model-grid .model-card');
+  let activeId = null, bestDist = Infinity;
+  cards.forEach(card => {
+    const d = Math.abs(card.getBoundingClientRect().top - navBottom);
+    if (card.getBoundingClientRect().top <= navBottom + 40 && d < bestDist) { bestDist = d; activeId = card.dataset.modelId; }
   });
-}
-
-// V9 — Clic sur le pill "faites défiler" : avance d'une demi-page (pratique courante
-// pour un indice de scroll, ni un saut brutal en bas ni un pas trop court pour être
-// perceptible), en douceur. Le pill lui-même reste ensuite visible ou se masque selon
-// dtCheckS1ScrollHint (déjà rappelé par le listener de scroll existant).
-function dtScrollHintClick(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  window.scrollBy({ top: window.innerHeight * 0.5, behavior: 'smooth' });
+  if (!activeId && cards[0]) activeId = cards[0].dataset.modelId;
+  nav.querySelectorAll('.dt-s1-nav-item').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.modelId === activeId)
+  );
 }
 
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
