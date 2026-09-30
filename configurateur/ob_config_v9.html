@@ -1470,7 +1470,9 @@
      reste du parcours le fait déjà en pratique) plutôt que .dt-step-body en interne —
      sinon "position: sticky" se cale sur un conteneur qui ne scrolle pas vraiment et
      la nav part hors-écran avec le reste. Overridé seulement pour l'étape 1. */
-  #dt-s1 .dt-step-body { overflow: visible; }
+  /* Pas de vide au-dessus de la nav à l'ouverture de la page — elle doit être aussi
+     compacte, collée sous le header, qu'une fois devenue sticky après un scroll. */
+  #dt-s1 .dt-step-body { overflow: visible; padding-top: 0; }
   #dt-s1 .model-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
