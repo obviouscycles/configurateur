@@ -1858,6 +1858,12 @@ function dtGo(n) {
 function dtRender() {
   if (window.innerWidth < 768) return;
   const n = dtStep;
+  // La nav sticky de l'étape 1 (.dt-s1-nav) a besoin que ce soit la fenêtre elle-même
+  // qui défile — sinon "position: sticky" se cale sur #dt-main (overflow-y:auto) qui,
+  // lui, ne scrolle jamais réellement en pratique, et la nav part hors-écran avec le
+  // reste. Réservé à l'étape 1 pour ne rien changer au comportement des autres étapes.
+  const dtMainEl = document.getElementById('dt-main');
+  if (dtMainEl) dtMainEl.style.overflowY = (n === 1) ? 'visible' : '';
   dtSyncSidebarDevisBtn();
   // Activer "Nouvelle configuration" dès qu'un modèle est sélectionné
   const resetBtn = document.getElementById('dtr-btn-reset');
@@ -1968,48 +1974,38 @@ function dtRenderS1() {
 
 // V9 — Mini-nav horizontale sticky (remplace l'ancien pill "faites défiler") : les 4
 // pratiques toujours nommées et cliquables en haut de la page Modèle, collée sous le
-// header dès que le visiteur scrolle. Un clic scrolle en douceur jusqu'à la carte
-// correspondante ; l'onglet actif suit la position de scroll (scroll-spy simple).
+// header dès que le visiteur scrolle. Rien n'est encadré tant que le visiteur n'a
+// rien choisi — l'onglet actif reflète simplement selModel (même état que le cadre
+// de la vignette), pas la position de scroll : un clic sur un titre fait exactement
+// ce qu'un clic sur la vignette ferait (mise au focus), puis scrolle jusqu'à elle.
 function dtRenderS1Nav() {
   const nav = document.getElementById('dt-s1-nav');
   if (!nav) return;
   nav.innerHTML = MODELS.map(m =>
-    '<button type="button" class="dt-s1-nav-item" data-model-id="' + m.id + '" onclick="dtScrollToModel(\'' + m.id + '\')">' + m.badge + '</button>'
+    '<button type="button" class="dt-s1-nav-item' + (m.id === selModel ? ' active' : '') + '" data-model-id="' + m.id + '" onclick="dtScrollToModel(\'' + m.id + '\')">' + m.badge + '</button>'
   ).join('');
-  if (!window._dtS1SpyAttached) {
-    window._dtS1SpyAttached = true;
-    window.addEventListener('scroll', dtUpdateS1NavActive, { passive: true });
-  }
-  requestAnimationFrame(dtUpdateS1NavActive);
 }
 
 function dtScrollToModel(modelId) {
-  const card = document.querySelector('#dt-model-grid .model-card[data-model-id="' + modelId + '"]');
-  const nav = document.getElementById('dt-s1-nav');
-  if (!card) return;
-  const navHeight = nav ? nav.getBoundingClientRect().height : 0;
-  const headerHeight = 56;
-  const y = card.getBoundingClientRect().top + window.scrollY - headerHeight - navHeight - 12;
-  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
-}
-
-// Marque actif l'onglet du modèle dont la carte est la plus proche du haut visible
-// (juste sous la nav sticky) — ne fait rien hors étape 1 desktop.
-function dtUpdateS1NavActive() {
-  if (dtStep !== 1 || window.innerWidth < 768) return;
-  const nav = document.getElementById('dt-s1-nav');
-  if (!nav || getComputedStyle(nav).display === 'none') return;
-  const navBottom = nav.getBoundingClientRect().bottom;
-  const cards = document.querySelectorAll('#dt-model-grid .model-card');
-  let activeId = null, bestDist = Infinity;
-  cards.forEach(card => {
-    const d = Math.abs(card.getBoundingClientRect().top - navBottom);
-    if (card.getBoundingClientRect().top <= navBottom + 40 && d < bestDist) { bestDist = d; activeId = card.dataset.modelId; }
+  // Même effet qu'un clic sur la vignette (dtHighlightCard) : mise au focus du modèle,
+  // sans choisir de mode — reconstruit la grille (carte + nav encadrées ensemble).
+  if (selModel !== modelId) {
+    selModel = modelId;
+    window._kitCadre = null;
+    dtRenderS1();
+    v9FlashEl(document.querySelector('.model-card.sel'));
+  }
+  // Laisser le DOM se poser (hauteurs de cartes potentiellement changées) avant de
+  // mesurer la position réelle de la carte pour le scroll.
+  requestAnimationFrame(() => {
+    const card = document.querySelector('#dt-model-grid .model-card[data-model-id="' + modelId + '"]');
+    const nav = document.getElementById('dt-s1-nav');
+    if (!card) return;
+    const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+    const headerHeight = 56;
+    const y = card.getBoundingClientRect().top + window.scrollY - headerHeight - navHeight - 12;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
   });
-  if (!activeId && cards[0]) activeId = cards[0].dataset.modelId;
-  nav.querySelectorAll('.dt-s1-nav-item').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.modelId === activeId)
-  );
 }
 
 // Choix "Vélo complet" / "Kit cadre seul" — se fait une seule fois en étape 1
