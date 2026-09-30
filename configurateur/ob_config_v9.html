@@ -1450,17 +1450,20 @@
      noms sont visibles dès l'arrivée, pas seulement un indice qu'il y a "plus bas"). */
   .dt-s1-nav {
     position: sticky; top: 56px; z-index: 9;
-    display: flex; gap: 4px; margin-bottom: 1.5rem;
+    display: flex; margin-bottom: 1.5rem;
     background: rgba(10,10,11,.92); backdrop-filter: blur(6px);
-    border-bottom: 0.5px solid var(--border); padding: 10px 0;
+    border-bottom: 0.5px solid var(--border); padding: 14px 0;
   }
   .dt-s1-nav-item {
-    background: none; border: 0.5px solid transparent; color: var(--text1);
-    font-family: var(--font); font-size: 12.5px; letter-spacing: .03em; text-transform: uppercase;
-    padding: 7px 14px; cursor: pointer; transition: color .15s, border-color .15s, background .15s;
+    flex: 1 1 25%; background: none; border: 0.5px solid transparent;
+    border-right: 0.5px solid var(--border); color: var(--text1);
+    font-family: var(--font); font-size: 15px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+    padding: 12px 14px; cursor: pointer; transition: color .15s, border-color .15s, background .15s;
   }
-  .dt-s1-nav-item:hover { color: #E3D2AC; border-color: #444; }
+  .dt-s1-nav-item:last-child { border-right-color: transparent; }
+  .dt-s1-nav-item:hover { color: #E3D2AC; }
   .dt-s1-nav-item.active { color: #E3D2AC; border-color: #B08D57; background: #1B1C20; }
+  .dt-s1-nav-item.active:last-child { border-right-color: #B08D57; }
 
   /* ── Étape 1 : grille modèles 2×2 ── */
   /* La nav sticky (.dt-s1-nav) a besoin que la fenêtre elle-même défile (comme le
