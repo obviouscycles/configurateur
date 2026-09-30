@@ -1444,28 +1444,30 @@
   }
   .dt-btn-back:hover { border-color: #555; color: #aaa; }
 
-  /* V9 — Indice "il y a d'autres modèles plus bas", affiché seulement quand la page
-     dépasse la hauteur visible (typiquement : les 2 premiers modèles remplissent déjà
-     l'écran) — flottant en bas de viewport, disparaît dès que le visiteur scrolle. */
-  .dt-s1-scroll-hint {
-    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px;
-    background: #1B1C20; border: 0.5px solid #B08D57; color: #E3D2AC;
-    font-family: var(--font); font-size: 12.5px; letter-spacing: .02em;
-    padding: 9px 18px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.45);
-    z-index: 40; cursor: pointer; pointer-events: auto;
-    transition: opacity .25s, transform .25s, border-color .15s, background .15s;
-    animation: dt-s1-hint-bounce 1.6s ease-in-out infinite;
+  /* V9 — Mini-nav horizontale sticky en étape 1 : les 4 pratiques toujours nommées et
+     cliquables, collée sous le header dès que le visiteur scrolle. Remplace l'ancien
+     pill "faites défiler" — plus élégant, et résout le problème à la racine (les 4
+     noms sont visibles dès l'arrivée, pas seulement un indice qu'il y a "plus bas"). */
+  .dt-s1-nav {
+    position: sticky; top: 56px; z-index: 9;
+    display: flex; gap: 4px; margin-bottom: 1.5rem;
+    background: rgba(10,10,11,.92); backdrop-filter: blur(6px);
+    border-bottom: 0.5px solid var(--border); padding: 10px 0;
   }
-  .dt-s1-scroll-hint:hover { background: #232428; border-color: #E3D2AC; }
-  .dt-s1-scroll-hint.hide { opacity: 0; transform: translateX(-50%) translateY(8px); animation: none; }
-  .dt-s1-scroll-hint i { font-size: 15px; color: #B08D57; }
-  @keyframes dt-s1-hint-bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(4px); }
+  .dt-s1-nav-item {
+    background: none; border: 0.5px solid transparent; color: #888;
+    font-family: var(--font); font-size: 12.5px; letter-spacing: .03em; text-transform: uppercase;
+    padding: 7px 14px; cursor: pointer; transition: color .15s, border-color .15s, background .15s;
   }
+  .dt-s1-nav-item:hover { color: #ccc; border-color: #444; }
+  .dt-s1-nav-item.active { color: #E3D2AC; border-color: #B08D57; background: #1B1C20; }
 
   /* ── Étape 1 : grille modèles 2×2 ── */
+  /* La nav sticky (.dt-s1-nav) a besoin que la fenêtre elle-même défile (comme le
+     reste du parcours le fait déjà en pratique) plutôt que .dt-step-body en interne —
+     sinon "position: sticky" se cale sur un conteneur qui ne scrolle pas vraiment et
+     la nav part hors-écran avec le reste. Overridé seulement pour l'étape 1. */
+  #dt-s1 .dt-step-body { overflow: visible; }
   #dt-s1 .model-grid {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -2626,14 +2628,10 @@
     <!-- ÉTAPE 1 : Modèle -->
     <div class="dt-step-content active" id="dt-s1">
       <div class="dt-step-body">
-        <p class="section-title" style="color:#EDEAE2;margin-bottom:1.5rem;">Choisissez votre modèle</p>
-      
-        <div class="model-grid" id="dt-model-grid"></div>
+        <p class="section-title" style="color:#EDEAE2;margin-bottom:1rem;">Choisissez votre modèle</p>
+        <div id="dt-s1-nav" class="dt-s1-nav"></div>
 
-        <div id="dt-s1-scroll-hint" class="dt-s1-scroll-hint" style="display:none;" onclick="dtScrollHintClick(event)">
-          <span id="dt-s1-scroll-hint-txt">4 modèles disponibles — faites défiler</span>
-          <i class="ti ti-chevron-down"></i>
-        </div>
+        <div class="model-grid" id="dt-model-grid"></div>
 
         <div id="titanium-banner-inline" onclick="v3GoTitaniumFromS1()" style="margin-top:1.25rem;background:#1B1C20;border:1px solid #B08D57;border-radius:0;padding:1.25rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:16px;">
           <div style="width:44px;height:44px;border-radius:50%;background:#211C12;border:1px solid #B08D57;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -3256,7 +3254,6 @@
   var consent = localStorage.getItem('obv_cookie_consent');
   if (consent === null) {
     document.getElementById('cookie-banner').style.display = 'flex';
-    if (typeof dtCheckS1ScrollHint === 'function') dtCheckS1ScrollHint();
   } else if (consent === 'true') {
     enableGA();
   }
@@ -3266,7 +3263,6 @@ function cookieChoice(accepted) {
   localStorage.setItem('obv_cookie_consent', accepted ? 'true' : 'false');
   document.getElementById('cookie-banner').style.display = 'none';
   if (accepted) enableGA();
-  if (typeof dtCheckS1ScrollHint === 'function') dtCheckS1ScrollHint();
 }
 
 function enableGA() {
